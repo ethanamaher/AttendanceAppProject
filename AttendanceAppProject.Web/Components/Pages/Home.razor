@@ -28,7 +28,9 @@
 	private void Submit()
 	{
 		System.Diagnostics.Debug.WriteLine("Submitted Form");
-		System.Diagnostics.Debug.WriteLine(studentInfo?.ToString());
+		studentInfo.convertToDict();
+
+		System.Diagnostics.Debug.WriteLine(studentInfo.ToString());
 
 		ClearFields();
 	}
@@ -41,15 +43,22 @@
 
 	public class StudentInfo
 	{
+		public List<string>? dict;
+
 		public string? studentID { get; set; }
 		public string? name {get; set; }
+
+		public void convertToDict()
+		{
+			dict = new List<string>(){ studentID, name };
+		}
 
 		public override string ToString()
 		{
 			string ret = "";
-			ret += "ID: " + studentID + "\n";
-			ret += "Name: " + name;
-
+			foreach(string s in dict) {
+				ret += s + "\n";
+			}
 			return ret;
 		}
 	}
