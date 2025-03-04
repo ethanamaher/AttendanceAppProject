@@ -1,17 +1,17 @@
 ﻿@page "/"
 
 <PageTitle>Student Submission Form</PageTitle>
-<EditForm Model="studentInfo" OnSubmit="Submit" FormName="Student_Info_Form">
+<EditForm Model="studentResponse" OnSubmit="Submit" FormName="Student_Response_Form">
 	<div>
 		<label>
 			Student ID:
-			<InputText @bind-Value="studentInfo!.studentID"/>
+			<InputText @bind-Value="studentResponse!.studentID"/>
 		</label>
 	</div>
 	<div>
 		<label>
 			Name:
-			<InputText @bind-Value="studentInfo!.name" />
+			<InputText @bind-Value="studentResponse!.name" />
 		</label>
 	</div>
 	<button type="submit">Submit</button>
@@ -19,47 +19,53 @@
 
 @code {
 	[SupplyParameterFromForm]
-	private StudentInfo? studentInfo { get; set; }
+	private StudentResponse? studentResponse { get; set; }
+
+	// take student info from form put into student object backend
 
 	protected override void OnInitialized() {
-		studentInfo ??= new();
+		studentResponse ??= new();
 	}
 
+	/*
+	 *	Change to OnValidSubmit and OnInvalidSubmit when doing input validation
+	 */
 	private void Submit()
 	{
 		System.Diagnostics.Debug.WriteLine("Submitted Form");
-		studentInfo.convertToDict();
-
-		System.Diagnostics.Debug.WriteLine(studentInfo.ToString());
-
+		studentResponse.convertResponseToStudent();
+		System.Diagnostics.Debug.WriteLine(studentResponse.ToString());
 		ClearFields();
 	}
 
 	private void ClearFields()
 	{
-		studentInfo.studentID = "";
-		studentInfo.name = "";
+		studentResponse.studentID = "";
+		studentResponse.name = "";
 	}
 
-	public class StudentInfo
+		/*	Class for compiling student info from input form
+		 *	will need to move to outside class eventually but in here is fine for testing
+		 */
+	public class StudentResponse
 	{
-		public List<string>? dict;
+		// student dict will be
+		// key = studentid
+		// value = student
+		public Student? student{ get; set; }
 
 		public string? studentID { get; set; }
-		public string? name {get; set; }
+		public string? name { get; set; }
 
-		public void convertToDict()
+		// add student info variables to dict list
+		public void convertResponseToStudent()
 		{
-			dict = new List<string>(){ studentID, name };
+			student = new Student(studentID, name);
 		}
 
 		public override string ToString()
 		{
-			string ret = "";
-			foreach(string s in dict) {
-				ret += s + "\n";
-			}
-			return ret;
+			return student.ToString();
 		}
 	}
 }
