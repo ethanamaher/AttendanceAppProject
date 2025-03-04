@@ -1,29 +1,56 @@
 ﻿@page "/"
 
-<PageTitle>Student Submission</PageTitle>
+<PageTitle>Student Submission Form</PageTitle>
+<EditForm Model="studentInfo" OnSubmit="Submit" FormName="Student_Info_Form">
+	<div>
+		<label>
+			Student ID:
+			<InputText @bind-Value="studentInfo!.studentID"/>
+		</label>
+	</div>
+	<div>
+		<label>
+			Name:
+			<InputText @bind-Value="studentInfo!.name" />
+		</label>
+	</div>
+	<button type="submit">Submit</button>
+</EditForm>
 
-<h1>Student Submission</h1>
-<ul>
-	<li>
-		<label>First Name</label>
-		<input type="text"><input>
-	</li>
-	<li>
-		<label>Last Name</label>
-		<input type="text"><input>
-	</li>
-	<li>
-		<label>UTD_ID</label>
-		<input type="number"><input>
-	</li>
-	<li>
-		<label>Class_Code</label>
-		<input type="password"><input>
-	</li>
-	<li>
-		<button type="Submit">Submit</button>
-	</li>
-</ul>
-Welcome to your new app.
+@code {
+	[SupplyParameterFromForm]
+	private StudentInfo? studentInfo { get; set; }
 
-<h2>testing github</h2>
+	protected override void OnInitialized() {
+		studentInfo ??= new();
+	}
+
+	private void Submit()
+	{
+		System.Diagnostics.Debug.WriteLine("Submitted Form");
+		System.Diagnostics.Debug.WriteLine(studentInfo?.ToString());
+
+		ClearFields();
+	}
+
+	private void ClearFields()
+	{
+		studentInfo.studentID = "";
+		studentInfo.name = "";
+	}
+
+	public class StudentInfo
+	{
+		public string? studentID { get; set; }
+		public string? name {get; set; }
+
+		public override string ToString()
+		{
+			string ret = "";
+			ret += "ID: " + studentID + "\n";
+			ret += "Name: " + name;
+
+			return ret;
+		}
+	}
+}
