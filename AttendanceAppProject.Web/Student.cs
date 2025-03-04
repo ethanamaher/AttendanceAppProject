@@ -11,6 +11,11 @@
       this.name = name;
     }
 
+    public Boolean Exists()
+    {
+      return id?.Length > 0 && name?.Length > 0;
+    }
+
     public override string ToString()
     {
       return id + ", " + name;

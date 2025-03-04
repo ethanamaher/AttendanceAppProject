@@ -28,7 +28,8 @@
 	}
 
 	/*
-	 *	Change to OnValidSubmit and OnInvalidSubmit when doing input validation
+	 * Change to OnValidSubmit and OnInvalidSubmit when doing input validation
+	 * - all fields should be required
 	 */
 	private void Submit()
 	{
@@ -44,9 +45,10 @@
 		studentResponse.name = "";
 	}
 
-		/*	Class for compiling student info from input form
-		 *	will need to move to outside class eventually but in here is fine for testing
-		 */
+	/*	Class for getting student info responses from form
+	 * 
+	 * takes information from response and creates a Student object with that information
+	 */
 	public class StudentResponse
 	{
 		// student dict will be
@@ -65,7 +67,13 @@
 
 		public override string ToString()
 		{
-			return student.ToString();
+			if (student.Exists())
+			{
+				return student.ToString();
+			} else
+			{
+				return "No Valid Response Found";
+			}
 		}
 	}
 }
