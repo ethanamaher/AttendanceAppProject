@@ -1,12 +1,14 @@
 # Configuring the Database
 ## Step 1. Importing Database Dump
 - Make sure you have MySQL and MySQL Workbench installed and set up.
+- download the two .sql files in this `/db` folder
 - Open up MySQL Workbench and go to Server > Data Import
 - Select “Import from Self-Contained File” and choose the database schema dump file (`schema.sql` file in this directory).
 - Click "new..." to create a new database with this imported schema 
 - To add the sample data, with your newly imported database schema open, do Server > Data Import again, and choose the name of your new database as the target schema to import from `test_data.sql`
 ## Step 2. Add Database Credentials to Connection String 
-- `AttendanceAppProject.ApiService/appsettings.json` will house the connection string which requires your credentials to connect to the database. Since each of us will have a different password, we need to remove this from git so we don't overwrite each other's passwords.
+- switch to this branch (`git checkout -b database_setup origin/database_setup`)
+-  `AttendanceAppProject.ApiService/appsettings.json` will house the connection string which requires your credentials to connect to the database. Since each of us will have a different password, we need to remove this from git so we don't overwrite each other's passwords.
 - In this branch, `AttendanceAppProject.ApiService/appsettings.json` has been already been added to `.gitignore`, meaning any new commits won't include changes to `AttendanceAppProject.ApiService`.
 - However, `AttendanceAppProject.ApiService/appsettings.json` must first be removed your local git repository as well in order for this to work for any future commits from your end. So run `cd AttendanceAppProject.ApiService` then `git rm --cached appsettings.json`.
 - Now, go to `AttendanceAppProject.ApiService/appsettings.json`, and add the following with your credentials:
