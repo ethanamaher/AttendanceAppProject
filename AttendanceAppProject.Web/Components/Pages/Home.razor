@@ -1,9 +1,96 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Student Submission Form</PageTitle>
+<EditForm Model="studentResponse" OnSubmit="Submit" FormName="Student_Response_Form">
+	<div>
+		<label>
+			Student ID:
+			<InputText @bind-Value="studentResponse!.studentID"/>
+		</label>
+	</div>
+	<div>
+		<label>
+			Name:
+			<InputText @bind-Value="studentResponse!.name" />
+		</label>
+	</div>
+	<div>
+		<label>
+			Password:
+			<InputText @bind-Value="studentResponse!.formPassword"/>
+		</label>
+	</div>
+	<button type="submit">Submit</button>
+</EditForm>
 
-<h1>Hello, world!</h1>
+@code {
+	[SupplyParameterFromForm]
+	private StudentResponse? studentResponse { get; set; }
 
-Welcome to your new app.
+	protected override void OnInitialized() {
+		studentResponse ??= new();
+	}
 
-<h2>testing github</h2>
+	/*
+	* Change to OnValidSubmit and OnInvalidSubmit when doing input validation
+	* - all fields should be required
+	*/
+	private void Submit()
+	{
+		System.Diagnostics.Debug.WriteLine("Form Submission Detected");
+
+		studentResponse.convertResponseToStudent();
+
+		if(studentResponse.student != null) {
+			System.Diagnostics.Debug.WriteLine(studentResponse.ToString());
+		} else {
+			System.Diagnostics.Debug.WriteLine("Error in creating student");
+		}
+
+		ClearFields();
+	}
+
+	private void ClearFields()
+	{
+		studentResponse.studentID = "";
+		studentResponse.name = "";
+		studentResponse.formPassword = "";
+	}
+	/*	Class for getting student info responses from form
+		* 
+		* takes information from form response and creates a Student object with that information
+		*/
+	public class StudentResponse
+	{
+		// student dict will be
+		// key = studentid
+		// value = student
+		public Student? student{ get; set; }
+
+		public string? studentID { get; set; }
+		public string? name { get; set; }
+		public string? formPassword { get; set; }
+
+		// add student info variables to dict list
+		public void convertResponseToStudent()
+		{
+			// validate password first
+			if(formPassword != "password") {
+				return;
+			}
+
+			if(studentID.Length > 0 && name.Length > 0) {
+				student = new Student(studentID, name);
+			}
+		}
+
+		private bool validateEntry() {
+			return studentID != null && name != null;
+		}
+
+		public override string ToString()
+		{
+			return student.ToString();
+		}
+	}
+}
