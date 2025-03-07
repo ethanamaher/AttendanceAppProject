@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Pomelo.EntityFrameworkCore.MySql.Scaffolding.Internal;
+using AttendanceAppProject.Shared.Models;
 
-namespace AttendanceAppProject.ApiService.Models;
+namespace AttendanceAppProject.ApiService.Data;
 
 public partial class ApplicationDbContext : DbContext
 {

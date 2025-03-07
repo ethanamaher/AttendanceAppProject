@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AttendanceAppProject.ServiceDefaults\AttendanceAppProject.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\AttendanceAppProject.Shared\AttendanceAppProject.Shared.csproj" />
   </ItemGroup>
 
 </Project>

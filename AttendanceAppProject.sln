@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35825.156 d17.13
+VisualStudioVersion = 17.13.35825.156
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AttendanceAppProject.AppHost", "AttendanceAppProject.AppHost\AttendanceAppProject.AppHost.csproj", "{F2E962F5-A9B2-4E33-B12B-436E8BBF8AEC}"
 EndProject
@@ -9,6 +9,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AttendanceAppProject.ApiService", "AttendanceAppProject.ApiService\AttendanceAppProject.ApiService.csproj", "{E44A4AD7-A9AA-B170-CDC2-A3B654DE1966}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AttendanceAppProject.Web", "AttendanceAppProject.Web\AttendanceAppProject.Web.csproj", "{F19D5A4A-D8D4-3980-80AB-AD93468C2376}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AttendanceAppProject.Shared", "AttendanceAppProject.Shared\AttendanceAppProject.Shared.csproj", "{C9C86FEC-84AE-4B60-99C7-986AB61314B4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,6 +34,10 @@ Global
 		{F19D5A4A-D8D4-3980-80AB-AD93468C2376}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F19D5A4A-D8D4-3980-80AB-AD93468C2376}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F19D5A4A-D8D4-3980-80AB-AD93468C2376}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9C86FEC-84AE-4B60-99C7-986AB61314B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9C86FEC-84AE-4B60-99C7-986AB61314B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9C86FEC-84AE-4B60-99C7-986AB61314B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9C86FEC-84AE-4B60-99C7-986AB61314B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,42 @@
+﻿@page "/dbtest"
+@inject HttpClient Http
+@using AttendanceAppProject.Shared.Models
+
+<h3>DbTest - Student List</h3>
+
+@if (students == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>UTD ID</th>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var student in students)
+            {
+                <tr>
+                    <td>@student.UtdId</td>
+                    <DbTest />
+                    <td>@student.FirstName</td>
+                    <td>@student.LastName</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Student> students = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        students = await Http.GetFromJsonAsync<List<Student>>("api/student");
+    }
+}

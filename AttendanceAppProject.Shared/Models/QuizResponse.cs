@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace AttendanceAppProject.ApiService.Models;
+namespace AttendanceAppProject.Shared.Models;
 
 public partial class QuizResponse
 {
