@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Load environment variables 
+builder.Configuration.AddEnvironmentVariables();
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Add service defaults & Aspire client integrations.
