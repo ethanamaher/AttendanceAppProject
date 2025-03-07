@@ -14,6 +14,12 @@
 			<InputText @bind-Value="studentResponse!.name" />
 		</label>
 	</div>
+	<div>
+		<label>
+			Password:
+			<InputText @bind-Value="studentResponse!.formPassword"/>
+		</label>
+	</div>
 	<button type="submit">Submit</button>
 </EditForm>
 
@@ -21,21 +27,26 @@
 	[SupplyParameterFromForm]
 	private StudentResponse? studentResponse { get; set; }
 
-	// take student info from form put into student object backend
-
 	protected override void OnInitialized() {
 		studentResponse ??= new();
 	}
 
 	/*
-	 * Change to OnValidSubmit and OnInvalidSubmit when doing input validation
-	 * - all fields should be required
-	 */
+	* Change to OnValidSubmit and OnInvalidSubmit when doing input validation
+	* - all fields should be required
+	*/
 	private void Submit()
 	{
-		System.Diagnostics.Debug.WriteLine("Submitted Form");
+		System.Diagnostics.Debug.WriteLine("Form Submission Detected");
+
 		studentResponse.convertResponseToStudent();
-		System.Diagnostics.Debug.WriteLine(studentResponse.ToString());
+
+		if(studentResponse.student != null) {
+			System.Diagnostics.Debug.WriteLine(studentResponse.ToString());
+		} else {
+			System.Diagnostics.Debug.WriteLine("Error in creating student");
+		}
+
 		ClearFields();
 	}
 
@@ -43,12 +54,12 @@
 	{
 		studentResponse.studentID = "";
 		studentResponse.name = "";
+		studentResponse.formPassword = "";
 	}
-
 	/*	Class for getting student info responses from form
-	 * 
-	 * takes information from response and creates a Student object with that information
-	 */
+		* 
+		* takes information from form response and creates a Student object with that information
+		*/
 	public class StudentResponse
 	{
 		// student dict will be
@@ -58,22 +69,28 @@
 
 		public string? studentID { get; set; }
 		public string? name { get; set; }
+		public string? formPassword { get; set; }
 
 		// add student info variables to dict list
 		public void convertResponseToStudent()
 		{
-			student = new Student(studentID, name);
+			// validate password first
+			if(formPassword != "password") {
+				return;
+			}
+
+			if(studentID.Length > 0 && name.Length > 0) {
+				student = new Student(studentID, name);
+			}
+		}
+
+		private bool validateEntry() {
+			return studentID != null && name != null;
 		}
 
 		public override string ToString()
 		{
-			if (student.Exists())
-			{
-				return student.ToString();
-			} else
-			{
-				return "No Valid Response Found";
-			}
+			return student.ToString();
 		}
 	}
 }
