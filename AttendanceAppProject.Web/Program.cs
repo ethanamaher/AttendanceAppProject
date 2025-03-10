@@ -1,4 +1,4 @@
-using AttendanceAppProject.Web;
+using AttendanceAppProject.Web.Models;
 using AttendanceAppProject.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);

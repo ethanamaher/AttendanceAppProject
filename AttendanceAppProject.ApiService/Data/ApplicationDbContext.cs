@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Pomelo.EntityFrameworkCore.MySql.Scaffolding.Internal;
-using AttendanceAppProject.Shared.Models;
+using AttendanceAppProject.ApiService.Data.Models;
 
 namespace AttendanceAppProject.ApiService.Data;
 

@@ -10,8 +10,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AttendanceAppProject.ApiSer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AttendanceAppProject.Web", "AttendanceAppProject.Web\AttendanceAppProject.Web.csproj", "{F19D5A4A-D8D4-3980-80AB-AD93468C2376}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AttendanceAppProject.Shared", "AttendanceAppProject.Shared\AttendanceAppProject.Shared.csproj", "{C9C86FEC-84AE-4B60-99C7-986AB61314B4}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,10 +32,6 @@ Global
 		{F19D5A4A-D8D4-3980-80AB-AD93468C2376}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F19D5A4A-D8D4-3980-80AB-AD93468C2376}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F19D5A4A-D8D4-3980-80AB-AD93468C2376}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C9C86FEC-84AE-4B60-99C7-986AB61314B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C9C86FEC-84AE-4B60-99C7-986AB61314B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C9C86FEC-84AE-4B60-99C7-986AB61314B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C9C86FEC-84AE-4B60-99C7-986AB61314B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,6 +1,6 @@
 ﻿@page "/dbtest"
 @inject HttpClient Http
-@using AttendanceAppProject.Shared.Models
+@using AttendanceAppProject.Web.Models
 
 <h3>DbTest - Student List</h3>
 
@@ -23,7 +23,6 @@ else
             {
                 <tr>
                     <td>@student.UtdId</td>
-                    <DbTest />
                     <td>@student.FirstName</td>
                     <td>@student.LastName</td>
                 </tr>
@@ -33,10 +32,10 @@ else
 }
 
 @code {
-    private List<Student> students = new();
+    private List<StudentDto> students = new();
 
     protected override async Task OnInitializedAsync()
     {
-        students = await Http.GetFromJsonAsync<List<Student>>("api/student");
+        students = await Http.GetFromJsonAsync<List<StudentDto>>("api/student");
     }
 }
