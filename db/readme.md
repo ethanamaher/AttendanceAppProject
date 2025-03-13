@@ -61,6 +61,7 @@ In order to run the project properly, we need both the API and Web projects to b
 <img width="990" alt="image" src="https://github.com/user-attachments/assets/73a80d2f-33fa-4e33-985f-af91f3278552" />
 - You can also try going to `http://localhost:7530/api/student` to see the JSON response from the API with the same data:
 <img width="980" alt="image" src="https://github.com/user-attachments/assets/49288d91-c14c-4118-b305-740ab3a6059e" />
+
 - (If it doesn't show up at first or throws an error, try refreshing a couple of times)
 - This confirms a connection to the database
 
