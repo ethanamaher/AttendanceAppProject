@@ -15,7 +15,7 @@ So the structure is like this: my initial MySQL Database -> EFcore scaffold -> E
 ### Database Connection String
 - In this branch, `AttendanceAppProject.ApiService/appsettings.json` has been already been added to `.gitignore`, meaning any new commits won't include changes to `AttendanceAppProject.ApiService/appsettings.json`. This is because this contains your connection string and credentials, so we need to make sure future commits won't overlap each others credentials.
 - However, `AttendanceAppProject.ApiService/appsettings.json` must first be **removed your local git repository** as well in order for this to work for any future commits from your end. You may already have this file in your local git repository so we must remove it from being tracked by git in that case. So run `cd AttendanceAppProject.ApiService` then `git rm --cached appsettings.json`.
-- If you don't see `AttendanceAppProject.ApiService/appsettings.json`, and instead you see something like `AttendanceAppProject.ApiService/appsettings.Development.json`, simply create a new file called `appsettings.json` in `AttendanceAppProject.ApiService` (right click the API project > add new item), make sure it is removed from git (`git rm --cached appsettings.json`) and add the following to it:
+- If you don't see `AttendanceAppProject.ApiService/appsettings.json`, and instead you see something like `AttendanceAppProject.ApiService/appsettings.Development.json`, simply create a new file called `appsettings.json` in `AttendanceAppProject.ApiService` (right click the API project > add new item), click show all files <img width="277" alt="image" src="https://github.com/user-attachments/assets/482de1d3-888e-4e76-b53a-0816c53e2cc7" /> to see it in solution explorer if you don't already see it, and make sure it is removed from git (it should have a red dot next to it, otherwise run `git rm --cached appsettings.json`) and add the following to it:
 ```
 {
   "Logging": {
@@ -49,7 +49,7 @@ So the structure is like this: my initial MySQL Database -> EFcore scaffold -> E
     }
 }
 ```
-  - Now, open a PowerShell terminal, (`view > terminal` at the top) and run `dotnet ef database update`. This will create a new MySQL database from the EFcore models. Go ahead and open MySQL Workbench and verify a new schema exists with the name you defined in the connection string.
+  - Now, open a PowerShell terminal, (`view > terminal` at the top), cd to API project, and run `dotnet ef database update`. This will create a new MySQL database from the EFcore models. Go ahead and open MySQL Workbench, refresh all schemas, and verify a new schema exists with the name you defined in the connection string.
     - If for some reason you don't see it, or you get an error, make sure the password you put is the same one you set when first installing MySQL, make sure the server and port you are using is correct (you can verify this on the homepage of MySQL Workbench or in server>server status in workbench), and make sure there are no typos or formatting issues with the JSON. 
 ### Running the Project
 In order to run the project properly, we need both the API and Web projects to be running at the same time, as the API interacts with the data, while the front-end sends HTTP requests to fetch the data from the API.
