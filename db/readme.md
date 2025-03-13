@@ -9,7 +9,7 @@ So the structure is like this: my initial MySQL Database -> EFcore scaffold -> E
 ## Steps
 ### Setup
 - Make sure you have MySQL and MySQL Workbench installed and a password set up already.
-- switch to this branch (`git checkout -b database_setup origin/database_setup`) or pull the latest changes if you already have the branch locally. Make sure the project `AttendanceAppProject.Shared` is not there, as it shouldn't be after pulling the latest changes. This was removed in the latest commit since it is no longer needed and was from a previous version.
+- switch to this branch (`git checkout -b database_setup origin/database_setup`) and pull the latest changes. Make sure the project `AttendanceAppProject.Shared` is not there if you already have a previous version of this branch locally, as it shouldn't be after pulling the latest changes. This was removed in the latest commit since it is no longer needed and was from a previous version.
 - We will need 2 packages - `Pomelo.EntityFrameworkCore.MySql` and `Microsoft.EntityFrameworkCore.Design`. They should already be installed after you pull this branch, but in case they aren't for some reason, run ` dotnet add package Pomelo.EntityFrameworkCore.MySql --version 8.0.3` and `dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0.13`.
 
 ### Database Connection String
