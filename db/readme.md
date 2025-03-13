@@ -71,3 +71,12 @@ The overall structure is using EFcore to act as a bridge between the database an
 - A couple of changes were made in `Program.cs` of both the API project to connect to the database, and of the Web project to connect to the API.
 - In the Web project, you will also see a directory called `Models`, housing the DTOs (data transfer objects) or classes that we use to encapsulate only the relevant data from the API's JSON response.
 - In the Web project, under Components > Pages, you will see the `DbTest.razor` page, which has the code for displaying student information after making an HTTP request to the API endpoint we had defined in the `StudentController.cs` in the API project.
+
+Some resources for more info:
+- https://learn.microsoft.com/en-us/ef/core/
+- https://medium.com/@sandunissts/implementing-net-core-web-api-with-entity-framework-1914167ba058
+- https://learn.microsoft.com/en-us/ef/core/managing-schemas/scaffolding/?tabs=dotnet-core-cli
+- https://www.learnentityframeworkcore.com/walkthroughs/existing-database
+- https://dotnettutorials.net/lesson/controllers-in-asp-net-core-web-api/
+- https://dotnettutorials.net/lesson/models-in-asp-net-core-web-api/
+- https://learn.microsoft.com/en-us/dotnet/csharp/linq/get-started/features-that-support-linq
