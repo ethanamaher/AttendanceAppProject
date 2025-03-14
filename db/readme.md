@@ -62,7 +62,7 @@ In order to run the project properly, we need both the API and Web projects to b
   4. Set both ApiService and Web to “Start”. 
 - This will ensure both are running at the same time so the API can query the data and the front-end can send a HTTP GET request to fetch the data from the API.
 - Now press start to run both the Api and Web projects, and once it is running add `/dbtest` to the URL. You should see the sample student data on that page from the database. It should look like this:
-<img width="990" alt="image" src="https://github.com/user-attachments/assets/73a80d2f-33fa-4e33-985f-af91f3278552" />
+<img width="974" alt="image" src="https://github.com/user-attachments/assets/ba581da9-ddd7-4f46-aef2-cfddbe36d4c3" />
 - You can also try going to `http://localhost:7530/api/student` to see the JSON response from the API with the same data:
 <img width="980" alt="image" src="https://github.com/user-attachments/assets/49288d91-c14c-4118-b305-740ab3a6059e" />
 
