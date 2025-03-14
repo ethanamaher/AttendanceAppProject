@@ -14,6 +14,13 @@
 			<InputSelect @bind-Value="studentResponse!.classID">
 				@if (studentResponse!.classID is null)
 				{
+					<option selected value="">none</option>
+				}
+				@foreach (Class c in studentResponse!.classes) {
+					<option value="@c.classID">@c.className</option>
+				}
+				@if (studentResponse.classID is not null)
+				{
 					<option value="">none</option>
 				}
 			</InputSelect>
@@ -35,6 +42,10 @@
 	protected override void OnInitialized()
 	{
 		studentResponse ??= new();
+
+
+		studentResponse.classes = Enumerable.Range(0, 10)
+			.Select(i => new Class { classID = i.ToString(), className = $"Class{i}" });
 	}
 
 		/*
@@ -80,6 +91,12 @@
 		public string? classID { get; set; }
 		public string? formPassword { get; set; }
 
+		public IEnumerable<Class> classes = Enumerable.Empty<Class>();
+		public IEnumerable<Class> unSelectedClasses => classes.Where(c => c.classID != this.classID);
+
+		public Class? selectedClass => this.classID != null ?
+			classes.First(c => c.classID == this.classID) : default(Class);
+
 		// add student info variables to dict list
 		public void convertResponseToStudent()
 		{
@@ -104,5 +121,11 @@
 		{
 			return student.ToString();
 		}
+	}
+
+	public class Class
+	{
+		public string? classID { get; set; }
+		public string? className { get; set; }
 	}
 }
