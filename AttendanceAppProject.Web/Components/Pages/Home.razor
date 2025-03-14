@@ -1,23 +1,28 @@
 ﻿@page "/"
 
-<PageTitle>Student Submission Form</PageTitle>
+<PageTitle>Attendance Form</PageTitle>
 <EditForm Model="studentResponse" OnSubmit="Submit" FormName="Student_Response_Form">
 	<div>
 		<label>
 			Student ID:
-			<InputText @bind-Value="studentResponse!.studentID"/>
+			<InputText @bind-Value="studentResponse!.studentID" />
 		</label>
 	</div>
 	<div>
 		<label>
-			Name:
-			<InputText @bind-Value="studentResponse!.name" />
+			Class:
+			<InputSelect @bind-Value="studentResponse!.classID">
+				@if (studentResponse!.classID is null)
+				{
+					<option value="">none</option>
+				}
+			</InputSelect>
 		</label>
 	</div>
 	<div>
 		<label>
 			Password:
-			<InputText @bind-Value="studentResponse!.formPassword"/>
+			<InputText @bind-Value="studentResponse!.formPassword" />
 		</label>
 	</div>
 	<button type="submit">Submit</button>
@@ -27,23 +32,27 @@
 	[SupplyParameterFromForm]
 	private StudentResponse? studentResponse { get; set; }
 
-	protected override void OnInitialized() {
+	protected override void OnInitialized()
+	{
 		studentResponse ??= new();
 	}
 
-	/*
-	* Change to OnValidSubmit and OnInvalidSubmit when doing input validation
-	* - all fields should be required
-	*/
+		/*
+		* Change to OnValidSubmit and OnInvalidSubmit when doing input validation
+		* - all fields should be required
+		*/
 	private void Submit()
 	{
 		System.Diagnostics.Debug.WriteLine("Form Submission Detected");
 
 		studentResponse.convertResponseToStudent();
 
-		if(studentResponse.student != null) {
+		if (studentResponse.student != null)
+		{
 			System.Diagnostics.Debug.WriteLine(studentResponse.ToString());
-		} else {
+		}
+		else
+		{
 			System.Diagnostics.Debug.WriteLine("Error in creating student");
 		}
 
@@ -53,39 +62,42 @@
 	private void ClearFields()
 	{
 		studentResponse.studentID = "";
-		studentResponse.name = "";
+		studentResponse.classID = null;
 		studentResponse.formPassword = "";
 	}
-	/*	Class for getting student info responses from form
-		* 
-		* takes information from form response and creates a Student object with that information
-		*/
+		/*	Class for getting student info responses from form
+			*
+			* takes information from form response and creates a Student object with that information
+			*/
 	public class StudentResponse
 	{
 		// student dict will be
 		// key = studentid
 		// value = student
-		public Student? student{ get; set; }
+		public Student? student { get; set; }
 
 		public string? studentID { get; set; }
-		public string? name { get; set; }
+		public string? classID { get; set; }
 		public string? formPassword { get; set; }
 
 		// add student info variables to dict list
 		public void convertResponseToStudent()
 		{
 			// validate password first
-			if(formPassword != "password") {
+			if (formPassword != "password")
+			{
 				return;
 			}
 
-			if(studentID.Length > 0 && name.Length > 0) {
-				student = new Student(studentID, name);
+			if (studentID.Length > 0 && classID.Length > 0)
+			{
+				student = new Student(studentID, classID);
 			}
 		}
 
-		private bool validateEntry() {
-			return studentID != null && name != null;
+		private bool validateEntry()
+		{
+			return studentID != null && classID != null;
 		}
 
 		public override string ToString()
