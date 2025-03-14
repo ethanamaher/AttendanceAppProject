@@ -10,7 +10,7 @@ So the structure is like this: my initial MySQL Database -> EFcore scaffold -> E
 ### Setup
 - Make sure you have MySQL and MySQL Workbench installed and a password set up already.
 - switch to this branch (`git checkout -b database_setup origin/database_setup`) and pull the latest changes. Make sure the project `AttendanceAppProject.Shared` is not there if you already have a previous version of this branch locally, as it shouldn't be after pulling the latest changes. This was removed in the latest commit since it is no longer needed and was from a previous version.
-- We will need 2 packages - `Pomelo.EntityFrameworkCore.MySql` and `Microsoft.EntityFrameworkCore.Design`. They should already be installed after you pull this branch, but in case they aren't for some reason, run ` dotnet add package Pomelo.EntityFrameworkCore.MySql --version 8.0.3` and `dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0.13`. Also in the terminal, run `dotnet tool install --global dotnet-ef`.
+- We will need 2 packages - `Pomelo.EntityFrameworkCore.MySql` and `Microsoft.EntityFrameworkCore.Design`. They should already be installed after you pull this branch, but in case they aren't for some reason, run ` dotnet add package Pomelo.EntityFrameworkCore.MySql --version 8.0.3` and `dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0.13`. 
 
 ### Database Connection String
 - In this branch, `AttendanceAppProject.ApiService/appsettings.json` has been already been added to `.gitignore`, meaning any new commits won't include changes to `AttendanceAppProject.ApiService/appsettings.json`. This is because this contains your connection string and credentials, so we need to make sure future commits won't overlap each others credentials.
@@ -50,7 +50,7 @@ So the structure is like this: my initial MySQL Database -> EFcore scaffold -> E
     }
 }
 ```
-  - Now, open a PowerShell terminal, (`view > terminal` at the top), cd to API project, and run `dotnet ef database update`. This will create a new MySQL database from the EFcore models. Go ahead and open MySQL Workbench, refresh all schemas, and verify a new schema exists with the name you defined in the connection string.
+  - Now, open a PowerShell terminal, (`view > terminal` at the top), cd to API project, and first run `dotnet tool install --global dotnet-ef` to ensure the dotnet CLI tools are installed. Then run `dotnet ef database update`. This will create a new MySQL database from the EFcore models. Go ahead and open MySQL Workbench, refresh all schemas, and verify a new schema exists with the name you defined in the connection string.
     - If the command didn't work, scroll up and install the 2 packages from above.
     - If for some reason you don't see it, or you get an error, make sure the password you put is the same one you set when first installing MySQL, make sure the server and port you are using is correct (you can verify this on the homepage of MySQL Workbench or in server>server status in workbench), and make sure there are no typos or formatting issues with the JSON.
 - Now that you have your schema, insert some sample tuples into the students relation. 
