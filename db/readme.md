@@ -2,9 +2,9 @@
 
 One of the core functionalities of EFcore is scaffolding (converting) an existing database to C#. Once we have scaffolded the database, we already have models automatically generated for every relation in the DB (`Api/Data/Models`) as well as the context (`Api/Data/ApplicationDbContext.cs`), and we cannot connect that to any other database other than the database from which it was scaffolded as it was created based on that original database. 
 
-So in order for everyone to be able to connect to the database locally, the correct way is to pull the latest changes from this branch, including all the EFcore generated context for the database, and then **from those models, creating a local MySQL database that will be connected to your project**. This is done by running a simple command in the terminal and should create a database that is the exactly the same.
+So in order for everyone to be able to connect to the database locally, the correct way is to pull the latest changes from this branch, including all the EFcore generated context for the database, and then **from those models, creating a local MySQL database that will be connected to your project**. This is called a migration in EFcore and is done by running a simple command in the terminal and should create a database that is the exactly the same.
 
-So the structure is like this: my initial MySQL Database -> EFcore scaffold -> EFcore Data Models / Context in C# -> your local git repository + Data Models / Context -> your local MySQL database generated from EFcore context
+So the structure is like this: my initial MySQL Database -> EFcore scaffold -> EFcore Data Models / Context in C# -> your local git repository + Data Models / Context -> your local MySQL database migrated from EFcore context
 
 ## Steps
 ### Setup
