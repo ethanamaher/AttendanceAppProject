@@ -1,70 +1,84 @@
 ﻿@page "/"
+@inject HttpClient Http
+@using AttendanceAppProject.Web.Models
 
 <PageTitle>Attendance Form</PageTitle>
-<EditForm Model="studentResponse" OnSubmit="Submit" FormName="Student_Response_Form">
-	<div>
-		<label>
-			Student ID:
-			<InputText @bind-Value="studentResponse!.studentID" />
-		</label>
-	</div>
-	<div>
-		<label>
-			Class:
-			<InputSelect @bind-Value="studentResponse!.classID">
-				@if (studentResponse!.classID is null)
-				{
-					<option selected value="">none</option>
-				}
-				@foreach (Class c in studentResponse!.classes) {
-					<option value="@c.classID">@c.className</option>
-				}
-				@if (studentResponse.classID is not null)
-				{
-					<option value="">none</option>
-				}
-			</InputSelect>
-		</label>
-	</div>
-	<div>
-		<label>
-			Password:
-			<InputText @bind-Value="studentResponse!.formPassword" />
-		</label>
-	</div>
-	<button type="submit">Submit</button>
-</EditForm>
+
+
+<link rel="stylesheet" href="output.css" />
+<body class="bg-utdMint">
+	<EditForm Model="@studentResponse" OnValidSubmit="Submit" FormName="Student">
+		<DataAnnotationsValidator />
+		<ValidationSummary />
+		<div class="grid grid-rows-7">
+
+			<div class="row-span-2 m-4 flex flex-col items-center">
+				<label for="UTD-ID" class="text-2xl text-xl font-bold">UTD ID</label>
+				<InputText id="UTD-ID" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="studentResponse.UTDID" />
+				<ValidationMessage For="@(() => studentResponse.UTDID)" />
+			</div>
+
+
+
+
+
+			<div class="row-span-2 m-4 flex flex-col items-center">
+				<label for="UTD-ID" class="text-2xl text-xl font-bold">Class</label>
+				<InputSelect @bind-Value="studentResponse!.classId">
+					@if (studentResponse!.classId is null)
+					{
+						<option selected value="">none</option>
+					}
+					@foreach (ClassDto c in classes)
+					{
+						<option value="@c.ClassId">@c.ClassName</option>
+					}
+					@if (studentResponse.classId is not null)
+					{
+						<option value="">none</option>
+					}
+				</InputSelect>
+				<ValidationMessage For="@(() => studentResponse.classId)" />
+			</div>
+
+
+
+
+
+			<div class="row-span-2 m-4 flex flex-col items-center">
+				<label for="UTD-ID" class="text-2xl text-xl font-bold">Password</label>
+				<InputText id="UTD-ID" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="studentResponse.classPassword" />
+				<ValidationMessage For="@(() => studentResponse.classPassword)" />
+			</div>
+
+
+			<button type="submit" class="border-2 bg-utdForest mx-64 rounded-xl border-orange-400 font-bold text-white">Submit</button>
+		</div>
+	</EditForm>
+</body>
 
 @code {
 	[SupplyParameterFromForm]
 	private StudentResponse? studentResponse { get; set; }
+	private List<ClassDto> classes = new();
 
-	protected override void OnInitialized()
+	protected override async Task OnInitializedAsync()
 	{
 		studentResponse ??= new();
-
-
-		studentResponse.classes = Enumerable.Range(0, 10)
-			.Select(i => new Class { classID = i.ToString(), className = $"Class{i}" });
+		classes = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
+		studentResponse.classes = classes;
 	}
 
-		/*
-		* Change to OnValidSubmit and OnInvalidSubmit when doing input validation
-		* - all fields should be required
-		*/
+	/*
+	* Change to OnValidSubmit and OnInvalidSubmit when doing input validation
+	* - all fields should be required
+	*/
 	private void Submit()
 	{
 		System.Diagnostics.Debug.WriteLine("Form Submission Detected");
 
-		studentResponse.convertResponseToStudent();
-
-		if (studentResponse.student != null)
-		{
+		if(studentResponse.validateEntry()) {
 			System.Diagnostics.Debug.WriteLine(studentResponse.ToString());
-		}
-		else
-		{
-			System.Diagnostics.Debug.WriteLine("Error in creating student");
 		}
 
 		ClearFields();
@@ -72,54 +86,51 @@
 
 	private void ClearFields()
 	{
-		studentResponse.studentID = "";
-		studentResponse.classID = null;
-		studentResponse.formPassword = "";
+		studentResponse.UTDID = null;
+		studentResponse.classId = null;
+		studentResponse.classPassword = null;
 	}
-		/*	Class for getting student info responses from form
-			*
-			* takes information from form response and creates a Student object with that information
-			*/
+	/*	Class for getting student info responses from form
+		*
+		* takes information from form response and creates a Student object with that information
+		*/
 	public class StudentResponse
 	{
 		// student dict will be
 		// key = studentid
 		// value = student
-		public Student? student { get; set; }
 
-		public string? studentID { get; set; }
-		public string? classID { get; set; }
-		public string? formPassword { get; set; }
+		public string? UTDID { get; set; }
+		public Guid? classId { get; set; }
+		public string? classPassword { get; set; }
 
-		public IEnumerable<Class> classes = Enumerable.Empty<Class>();
-		public IEnumerable<Class> unSelectedClasses => classes.Where(c => c.classID != this.classID);
 
-		public Class? selectedClass => this.classID != null ?
-			classes.First(c => c.classID == this.classID) : default(Class);
+		public List<ClassDto> classes = new();
+		ClassDto selectedClass { get; set; }
 
-		// add student info variables to dict list
-		public void convertResponseToStudent()
+		public bool validateEntry()
 		{
-			// validate password first
-			if (formPassword != "password")
-			{
-				return;
+			foreach (ClassDto classDto in classes) {
+				if(classDto.ClassId == classId) {
+					selectedClass = classDto;
+					return UTDID != null;
+				}
 			}
+			return false;
 
-			if (studentID.Length > 0 && classID.Length > 0)
-			{
-				student = new Student(studentID, classID);
-			}
-		}
-
-		private bool validateEntry()
-		{
-			return studentID != null && classID != null;
 		}
 
 		public override string ToString()
 		{
-			return student.ToString();
+			string output = "";
+
+			output += "------FORM SUBMISSION------\n";
+			output += "STUDENT ID: " + UTDID + "\n";
+			output += "Class Name: " + selectedClass.ClassName + "\n";
+			output += "Class Id: " + selectedClass.ClassId + "\n";
+			
+
+			return output;
 		}
 	}
 

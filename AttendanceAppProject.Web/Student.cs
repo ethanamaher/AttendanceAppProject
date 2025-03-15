@@ -5,7 +5,6 @@
     public string id;
     public string name;
 
-
     public Student(string id, string name)
     {
       this.id = id;
