@@ -1,9 +1,53 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Student Attendance Forum</PageTitle>
 
-<h1>Hello, world!</h1>
+<!--Christopher Palmer Css
+    Green 950 - dark Forest
+    orange 400 
+    green 300 - utd mint green
+-->
+<link rel="stylesheet" href="output.css" />
+<body class="bg-utdMint">
+    <EditForm Model="@studentResponse" OnValidSubmit="ValidSubmit" FormName="Student">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="grid grid-rows-7">
+            <div class="row-span-2 m-4 flex flex-col items-center">
+                <label for="UTD-ID" class="text-2xl text-xl font-bold">UTD ID</label>
+                <InputText id="UTD-ID" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="studentResponse.UTDID" />
+                <ValidationMessage For="@(() => studentResponse.UTDID)" />
+            </div>
+            <div class="row-span-2 m-4 flex flex-col items-center">
+                <label for="FName" class="text-2xl font-bold">First Name</label>
+                <InputText id="FName" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="studentResponse.FName" />
+                <ValidationMessage For="@(() => studentResponse.UTDID)" />
+            </div>
+            <div class="row-span-2 m-4 flex flex-col items-center">
+                <label for="LName" class="text-2xl font-bold">Last Name</label>
+                <InputText id="LName" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="studentResponse.LName" />
+                <ValidationMessage For="@(() => studentResponse.UTDID)" />
+            </div>
+            <button type="submit" class="border-2 bg-utdForest mx-64 rounded-xl border-orange-400 font-bold text-white">Submit</button>
+        </div>
+    </EditForm>
+</body>
 
-Welcome to your new app.
+@code{
+    private Student studentResponse = new Student();
+    public class Student(){
+        public string UTDID;
+        public string FName;
+        public string LName;
+        //public string
+    }
 
-<h2>testing github</h2>
+    private void ValidSubmit()
+    {
+        // Handle valid form submission here
+        Console.WriteLine("Form submitted successfully!");
+        Console.WriteLine($"First Name: {studentResponse.FName}");
+        Console.WriteLine($"Last Name: {studentResponse.LName}");
+        Console.WriteLine($"Email: {studentResponse.UTDID}");
+    }
+}
