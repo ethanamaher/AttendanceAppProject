@@ -55,8 +55,15 @@ green 300 - utd mint green
 				<ValidationMessage For="@(() => formResponse.classPassword)" />
 			</div>
 
+			<!-- 
+			make so it doesnt reload page?
+			right now it reinitialized page on submit but not really sure how to fix
 
-			<button type="submit" class="border-2 bg-utdForest mx-64 rounded-xl border-orange-400 font-bold text-white">Submit</button>
+			it doesnt take a lot of time but i think would be cleaner to not do that and rely on user reloading page to re-pull classes from db
+
+			Ethan
+			-->
+			<button @onclick="() => Submit()" value="Submit" class="border-2 bg-utdForest mx-64 rounded-xl border-orange-400 font-bold text-white">Submit</button>
 		</div>
 	</EditForm>
 </body>
