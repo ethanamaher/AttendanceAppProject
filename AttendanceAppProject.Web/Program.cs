@@ -1,4 +1,4 @@
-using AttendanceAppProject.Web;
+using AttendanceAppProject.Web.Models;
 using AttendanceAppProject.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,13 +11,18 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddOutputCache();
+// Connect to API URL from appsettings.json
+var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? throw new InvalidOperationException("API Base URL is missing");
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
 
+/*
 builder.Services.AddHttpClient<WeatherApiClient>(client =>
     {
         // This URL uses "https+http://" to indicate HTTPS is preferred over HTTP.
         // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
         client.BaseAddress = new("https+http://apiservice");
     });
+*/
 
 var app = builder.Build();
 
