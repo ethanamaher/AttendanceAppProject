@@ -4,7 +4,11 @@
 
 <PageTitle>Attendance Form</PageTitle>
 
-
+<!--Christopher Palmer Css
+	Green 950 - dark Forest
+	orange 400
+	green 300 - utd mint green
+-->
 <link rel="stylesheet" href="output.css" />
 <body class="bg-utdMint">
 	<EditForm Model="@studentResponse" OnValidSubmit="Submit" FormName="Student">
@@ -20,22 +24,25 @@
 
 
 
+			<!-- 
+			dropdown form for class selection
+
+			loops through cached database classes to display in dropdown
 
 
+
+			Ethan Maher
+			-->
 			<div class="row-span-2 m-4 flex flex-col items-center">
-				<label for="UTD-ID" class="text-2xl text-xl font-bold">Class</label>
-				<InputSelect @bind-Value="studentResponse!.classId">
+				<label for="dropdown" class="text-2xl text-xl font-bold">Class</label>
+				<InputSelect id="UTD-ID" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="studentResponse!.classId">
 					@if (studentResponse!.classId is null)
 					{
 						<option selected value="">none</option>
 					}
-					@foreach (ClassDto c in classes)
+					@foreach (ClassDto classDto in studentResponse!.classes)
 					{
-						<option value="@c.ClassId">@c.ClassName</option>
-					}
-					@if (studentResponse.classId is not null)
-					{
-						<option value="">none</option>
+						<option value="@classDto.ClassId">@classDto.ClassName</option>
 					}
 				</InputSelect>
 				<ValidationMessage For="@(() => studentResponse.classId)" />
@@ -60,25 +67,31 @@
 @code {
 	[SupplyParameterFromForm]
 	private StudentResponse? studentResponse { get; set; }
-	private List<ClassDto> classes = new();
+	
 
 	protected override async Task OnInitializedAsync()
 	{
 		studentResponse ??= new();
-		classes = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
-		studentResponse.classes = classes;
+
+		// pull classes list from database
+		// done on initialization of page, should not need live updating
+		studentResponse.classes = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
 	}
 
 	/*
-	* Change to OnValidSubmit and OnInvalidSubmit when doing input validation
+	* function called when submit is clicked on form
+	* 
+	* should split to an onValid and onInvalid to guide program flow
 	* - all fields should be required
 	*/
 	private void Submit()
 	{
 		System.Diagnostics.Debug.WriteLine("Form Submission Detected");
 
-		if(studentResponse.validateEntry()) {
+		if(studentResponse.isValidEntry()) {
 			System.Diagnostics.Debug.WriteLine(studentResponse.ToString());
+		} else {
+			System.Diagnostics.Debug.WriteLine("Form Submission was Invalid");
 		}
 
 		ClearFields();
@@ -91,25 +104,21 @@
 		studentResponse.classPassword = null;
 	}
 	/*	Class for getting student info responses from form
-		*
-		* takes information from form response and creates a Student object with that information
-		*/
+	*/
 	public class StudentResponse
 	{
-		// student dict will be
-		// key = studentid
-		// value = student
-
 		public string? UTDID { get; set; }
 		public Guid? classId { get; set; }
 		public string? classPassword { get; set; }
 
-
 		public List<ClassDto> classes = new();
+
+
 		ClassDto selectedClass { get; set; }
 
-		public bool validateEntry()
+		public bool isValidEntry()
 		{
+			// check if class does not exist
 			foreach (ClassDto classDto in classes) {
 				if(classDto.ClassId == classId) {
 					selectedClass = classDto;
