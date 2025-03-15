@@ -11,15 +11,15 @@
 -->
 <link rel="stylesheet" href="output.css" />
 <body class="bg-utdMint">
-	<EditForm Model="@studentResponse" OnValidSubmit="Submit" FormName="Student">
+	<EditForm Model="@formResponse" OnValidSubmit="Submit" FormName="Student">
 		<DataAnnotationsValidator />
 		<ValidationSummary />
 		<div class="grid grid-rows-7">
 
 			<div class="row-span-2 m-4 flex flex-col items-center">
 				<label for="UTD-ID" class="text-2xl text-xl font-bold">UTD ID</label>
-				<InputText id="UTD-ID" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="studentResponse.UTDID" />
-				<ValidationMessage For="@(() => studentResponse.UTDID)" />
+				<InputText id="UTD-ID" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="formResponse.UTDID" />
+				<ValidationMessage For="@(() => formResponse.UTDID)" />
 			</div>
 
 
@@ -35,17 +35,17 @@
 			-->
 			<div class="row-span-2 m-4 flex flex-col items-center">
 				<label for="dropdown" class="text-2xl text-xl font-bold">Class</label>
-				<InputSelect id="UTD-ID" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="studentResponse!.classId">
-					@if (studentResponse!.classId is null)
+				<InputSelect id="UTD-ID" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="formResponse!.classId">
+					@if (formResponse!.classId is null)
 					{
 						<option selected value="">none</option>
 					}
-					@foreach (ClassDto classDto in studentResponse!.classes)
+					@foreach (ClassDto classDto in formResponse!.classes)
 					{
 						<option value="@classDto.ClassId">@classDto.ClassName</option>
 					}
 				</InputSelect>
-				<ValidationMessage For="@(() => studentResponse.classId)" />
+				<ValidationMessage For="@(() => formResponse.classId)" />
 			</div>
 
 
@@ -54,8 +54,8 @@
 
 			<div class="row-span-2 m-4 flex flex-col items-center">
 				<label for="UTD-ID" class="text-2xl text-xl font-bold">Password</label>
-				<InputText id="UTD-ID" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="studentResponse.classPassword" />
-				<ValidationMessage For="@(() => studentResponse.classPassword)" />
+				<InputText id="UTD-ID" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="formResponse.classPassword" />
+				<ValidationMessage For="@(() => formResponse.classPassword)" />
 			</div>
 
 
@@ -66,16 +66,16 @@
 
 @code {
 	[SupplyParameterFromForm]
-	private StudentResponse? studentResponse { get; set; }
+	private FormResponse? formResponse { get; set; }
 	
 
 	protected override async Task OnInitializedAsync()
 	{
-		studentResponse ??= new();
+		formResponse ??= new();
 
 		// pull classes list from database
 		// done on initialization of page, should not need live updating
-		studentResponse.classes = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
+		formResponse.classes = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
 	}
 
 	/*
@@ -88,8 +88,8 @@
 	{
 		System.Diagnostics.Debug.WriteLine("Form Submission Detected");
 
-		if(studentResponse.isValidEntry()) {
-			System.Diagnostics.Debug.WriteLine(studentResponse.ToString());
+		if(formResponse.isValidEntry()) {
+			System.Diagnostics.Debug.WriteLine(formResponse.ToString());
 		} else {
 			System.Diagnostics.Debug.WriteLine("Form Submission was Invalid");
 		}
@@ -99,22 +99,26 @@
 
 	private void ClearFields()
 	{
-		studentResponse.UTDID = null;
-		studentResponse.classId = null;
-		studentResponse.classPassword = null;
+		formResponse.UTDID = null;
+		formResponse.classId = null;
+		formResponse.classPassword = null;
 	}
+
+
 	/*	Class for getting student info responses from form
 	*/
-	public class StudentResponse
+	public class FormResponse
 	{
 		public string? UTDID { get; set; }
 		public Guid? classId { get; set; }
 		public string? classPassword { get; set; }
 
+
+
+		// cache for classes pulled from database
 		public List<ClassDto> classes = new();
-
-
 		ClassDto selectedClass { get; set; }
+		
 
 		public bool isValidEntry()
 		{
@@ -126,7 +130,6 @@
 				}
 			}
 			return false;
-
 		}
 
 		public override string ToString()
