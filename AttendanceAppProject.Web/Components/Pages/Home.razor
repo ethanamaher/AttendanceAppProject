@@ -5,9 +5,9 @@
 <PageTitle>Attendance Form</PageTitle>
 
 <!--Christopher Palmer Css
-	Green 950 - dark Forest
-	orange 400
-	green 300 - utd mint green
+Green 950 - dark Forest
+orange 400
+green 300 - utd mint green
 -->
 <link rel="stylesheet" href="output.css" />
 <body class="bg-utdMint">
@@ -16,6 +16,7 @@
 		<ValidationSummary />
 		<div class="grid grid-rows-7">
 
+			<!-- Student ID Entry -->
 			<div class="row-span-2 m-4 flex flex-col items-center">
 				<label for="UTD-ID" class="text-2xl text-xl font-bold">UTD ID</label>
 				<InputText id="UTD-ID" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="formResponse.UTDID" />
@@ -25,20 +26,16 @@
 
 
 			<!-- 
-			dropdown form for class selection
+			Class selection dropdown
 
 			loops through cached database classes to display in dropdown
-
-
-
-			Ethan Maher
 			-->
 			<div class="row-span-2 m-4 flex flex-col items-center">
 				<label for="dropdown" class="text-2xl text-xl font-bold">Class</label>
 				<InputSelect id="UTD-ID" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="formResponse!.classId">
 					@if (formResponse!.classId is null)
 					{
-						<option selected value="">none</option>
+						<option selected value="@Guid.Empty">none</option>
 					}
 					@foreach (ClassDto classDto in formResponse!.classes)
 					{
@@ -51,7 +48,7 @@
 
 
 
-
+			<!-- Password Entry -->
 			<div class="row-span-2 m-4 flex flex-col items-center">
 				<label for="UTD-ID" class="text-2xl text-xl font-bold">Password</label>
 				<InputText id="UTD-ID" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="formResponse.classPassword" />
@@ -67,7 +64,6 @@
 @code {
 	[SupplyParameterFromForm]
 	private FormResponse? formResponse { get; set; }
-	
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -79,7 +75,7 @@
 	}
 
 	/*
-	* function called when submit is clicked on form
+	* function called when form is submitted
 	* 
 	* should split to an onValid and onInvalid to guide program flow
 	* - all fields should be required
@@ -88,11 +84,22 @@
 	{
 		System.Diagnostics.Debug.WriteLine("Form Submission Detected");
 
-		if(formResponse.isValidEntry()) {
-			System.Diagnostics.Debug.WriteLine(formResponse.ToString());
-		} else {
-			System.Diagnostics.Debug.WriteLine("Form Submission was Invalid");
+
+
+		if(!formResponse.ClassExists()) {
+			System.Diagnostics.Debug.WriteLine("Class does not exist");
+			ClearFields();
+			return;
 		}
+
+		if(!formResponse.PasswordCheck()) {
+			System.Diagnostics.Debug.WriteLine("Invalid Password");
+			ClearFields();
+			return;
+		}
+
+
+		System.Diagnostics.Debug.WriteLine(formResponse.ToString());
 
 		ClearFields();
 	}
@@ -118,18 +125,23 @@
 		// cache for classes pulled from database
 		public List<ClassDto> classes = new();
 		ClassDto selectedClass { get; set; }
-		
 
-		public bool isValidEntry()
+		public bool ClassExists()
 		{
-			// check if class does not exist
-			foreach (ClassDto classDto in classes) {
-				if(classDto.ClassId == classId) {
+			foreach (ClassDto classDto in classes)
+			{
+				if (classDto.ClassId == classId)
+				{
 					selectedClass = classDto;
-					return UTDID != null;
+					return true;
 				}
 			}
+
 			return false;
+		}
+
+		public bool PasswordCheck() {
+			return classPassword == "password";
 		}
 
 		public override string ToString()
