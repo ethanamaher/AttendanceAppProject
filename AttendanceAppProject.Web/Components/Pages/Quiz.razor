@@ -1,0 +1,225 @@
+﻿@page "/quiz"
+@using System.Timers
+@implements IDisposable
+@inject NavigationManager NavigationManager
+
+<PageTitle>Student Quiz</PageTitle>
+
+<!-- Override any browser default styles -->
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        height: 100%;
+        width: 100%;
+    }
+</style>
+
+<div class="quiz-page">
+    <!-- Background container -->
+    <div class="quiz-page-background"></div>
+
+    <!-- Content container with z-index to appear above background -->
+    <div class="quiz-container">
+        <div class="header">
+            <div class="datetime-display">@currentTime</div>
+        </div>
+
+        <div class="student-info">
+            <div class="info-item">Student ID: <span>@studentId</span></div>
+            <div class="info-item">Class: <span>@className</span></div>
+        </div>
+
+        @if (quizCompleted)
+        {
+            <div class="quiz-completed">
+                <h2>Quiz Completed!</h2>
+                <div class="score">Your Score: @score / 1</div>
+                <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
+            </div>
+        }
+        else if (!isValidStudent)
+        {
+            <div class="invalid-access">
+                <h2>Invalid Access</h2>
+                <p>You must log in through the home page to access this quiz.</p>
+                <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
+            </div>
+        }
+        else
+        {
+            <div class="quiz-question">
+                <div class="question-number">Question 1 of 1</div>
+                <div class="question">@quizQuestion.QuestionText</div>
+
+                <div class="answer-container">
+                    <label for="answer">Your Answer:</label>
+                    <input type="text" id="answer" @bind="userAnswer" @bind:event="oninput" @onkeypress="HandleKeyPress" />
+                </div>
+
+                @if (showFeedback)
+                {
+                    <div class="feedback @feedbackClass">
+                        @feedback
+                    </div>
+                }
+
+                <div class="button-container">
+                    <button @onclick="SubmitAnswer" class="submit-button"></button>
+                    @if (questionAnswered)
+                    {
+                        <button @onclick="FinishQuiz" class="auto-finish-button" style="display: none;"></button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
+    private Timer? secondsTimer;
+
+    // Student information from query parameters
+    private string studentId = "";
+    private string className = "";
+    private bool isValidStudent = false;
+
+    // Quiz state
+    private QuizQuestion quizQuestion = new QuizQuestion();
+    private string userAnswer = "";
+    private bool showFeedback = false;
+    private string feedback = "";
+    private string feedbackClass = "";
+    private bool questionAnswered = false;
+    private bool quizCompleted = false;
+    private int score = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get query parameters from URL
+        var uri = new Uri(NavigationManager.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        studentId = query["studentId"] ?? "";
+        className = query["className"] ?? "";
+
+        // Validate that student info exists
+        isValidStudent = !string.IsNullOrEmpty(studentId) && !string.IsNullOrEmpty(className);
+
+        // Set up timer for current time display
+        secondsTimer = new Timer(1000);
+        secondsTimer.Enabled = true;
+        secondsTimer.AutoReset = true;
+        secondsTimer.Elapsed += (sender, e) => UpdateTime();
+
+        // Only load quiz question if student is valid
+        if (isValidStudent)
+        {
+            // Load quiz question
+            await LoadQuizQuestion();
+        }
+    }
+
+    private async Task LoadQuizQuestion()
+    {
+        // In a real app, this would fetch a question from a database
+        // Simulating database fetch with a delay
+        await Task.Delay(300);
+
+        // Single quiz question
+        quizQuestion = new QuizQuestion
+            {
+                Id = 1,
+                QuestionText = "What does HTML stand for?",
+                CorrectAnswer = "hypertext markup language",
+                Points = 1
+            };
+    }
+
+    private void UpdateTime()
+    {
+        currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
+        InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+
+    private void SubmitAnswer()
+    {
+        if (string.IsNullOrWhiteSpace(userAnswer))
+        {
+            feedback = "Please enter an answer before submitting.";
+            feedbackClass = "warning";
+            showFeedback = true;
+            return;
+        }
+
+        // Check if answer is correct (case-insensitive)
+        bool isCorrect = userAnswer.Trim().ToLower() == quizQuestion.CorrectAnswer.ToLower();
+
+        if (isCorrect)
+        {
+            feedback = "Correct!";
+            feedbackClass = "correct";
+            score = quizQuestion.Points;
+        }
+        else
+        {
+            feedback = $"Incorrect. The correct answer is: {quizQuestion.CorrectAnswer}";
+            feedbackClass = "incorrect";
+            score = 0;
+        }
+
+        showFeedback = true;
+        questionAnswered = true;
+
+        // Automatically finish quiz after a short delay
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(2000); // 2 second delay
+            await InvokeAsync(() =>
+            {
+                FinishQuiz();
+                StateHasChanged();
+            });
+        });
+    }
+
+    private void FinishQuiz()
+    {
+        if (questionAnswered)
+        {
+            quizCompleted = true;
+        }
+    }
+
+    private void ReturnToHome()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            SubmitAnswer();
+        }
+    }
+
+    public void Dispose()
+    {
+        secondsTimer?.Dispose();
+    }
+
+    // Quiz question model
+    public class QuizQuestion
+    {
+        public int Id { get; set; }
+        public string QuestionText { get; set; } = "";
+        public string CorrectAnswer { get; set; } = "";
+        public int Points { get; set; } = 1;
+    }
+}

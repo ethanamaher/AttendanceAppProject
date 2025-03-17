@@ -1,0 +1,319 @@
+﻿/* Ensure page fills entire viewport with no margin or padding */
+.quiz-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    background-color: white; /* Fill any gaps with white */
+}
+
+/* Aggressively reset ALL possible background styles */
+::deep body,
+::deep html,
+::deep .page,
+::deep app,
+::deep .main,
+::deep .content,
+::deep div[role="main"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-image: none !important;
+}
+
+/* Background container with no fading */
+.quiz-page-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white !important;
+    background-image: url('/AttendanceQuiz.png') !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-size: contain !important; /* Changed to contain to prevent stretching */
+    z-index: 0 !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: none !important;
+}
+
+/* Quiz container with transparent background */
+.quiz-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    z-index: 1;
+    overflow: hidden;
+}
+
+/* Header section */
+.header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 15px;
+}
+
+.datetime-display {
+    font-size: 14px;
+    color: #7f8c8d;
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-right: 100px;
+}
+
+.student-info {
+    margin-top: 70px;
+    display: flex;
+    justify-content: center; /* Center the items horizontally */
+    gap: 20px;
+    padding: 15px;
+    width: 100%; /* Ensure it takes full width of its container */
+}
+
+.info-item {
+    font-size: 16px;
+    color: #34495e;
+    text-align: center; /* Center the text within each item */
+}
+
+    .info-item span {
+        font-weight: bold;
+    }
+
+/* Center the quiz content but position it higher */
+.quiz-question {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; /* Changed from center to flex-start */
+    padding: 20px;
+    margin-top: 30px; /* Add space from the top */
+}
+
+.question-number {
+    font-size: 18px;
+    color: #7f8c8d;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.question {
+    font-size: 40px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    line-height: 1.5;
+    color: #2c3e50;
+    text-align: center;
+}
+
+/* Answer container with proper centering and transparency */
+.answer-container {
+    margin-bottom: 20px;
+    margin-top: 88px;
+    width: 87%;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center all children */
+    background-color: transparent; /* Make container transparent */
+}
+
+    .answer-container label {
+        display: block;
+        margin-bottom: 12px;
+        font-weight: bold;
+        color: #34495e;
+        text-align: center;
+        font-size: 28px;
+        font-family: 'Comic Sans MS', cursive, sans-serif;
+        width: 100%;
+        background-color: transparent; /* Make label background transparent */
+    }
+
+    .answer-container input {
+        width: 80%; /* Adjust this value to control input width */
+        padding: 12px;
+        font-size: 30px;
+        font-family: 'Comic Sans MS', cursive, sans-serif;
+        border: none;
+        border-radius: 4px;
+        transition: border-color 0.3s;
+        margin-top: 32px;
+        background-color: transparent; /* Make input background transparent */
+    }
+
+        .answer-container input:focus {
+            border-color: none;
+            outline: none;
+        }
+
+.feedback {
+    margin: 15px 0;
+    padding: 12px;
+    border-radius: 4px;
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+}
+
+    .feedback.correct {
+        background-color: rgba(212, 237, 218, 0.8);
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .feedback.incorrect {
+        background-color: rgba(248, 215, 218, 0.8);
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .feedback.warning {
+        background-color: rgba(255, 243, 205, 0.8);
+        color: #856404;
+        border: 1px solid #ffeeba;
+    }
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    width: 100%;
+}
+
+/* Completely transparent button with hover/active effects */
+button {
+    margin-top: 180px;
+    padding: 36px 265px;
+    font-size: 0; /* Hide text completely */
+    font-weight: normal;
+    border: none !important;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    background-color: rgba(0, 0, 0, 0) !important; /* Fully transparent */
+    color: transparent !important; /* Transparent text */
+    text-shadow: none;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+    /* Hover effect - black border */
+    button:hover:not([disabled]) {
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.7) !important; /* Black border on hover */
+        transform: translateY(-2px);
+    }
+
+    /* Active/clicked effect - red border */
+    button:active:not([disabled]) {
+        box-shadow: 0 0 0 2px rgba(255, 0, 0, 1) !important; /* Red border when clicked */
+        transform: translateY(0);
+    }
+
+    button[disabled] {
+        opacity: 0;
+        cursor: not-allowed;
+    }
+
+/* Submit button - completely transparent */
+.submit-button {
+    background-color: transparent !important;
+    color: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+    .submit-button:hover:not([disabled]) {
+        background-color: transparent !important;
+    }
+
+.auto-finish-button {
+    display: none;
+}
+
+.return-button {
+    background-color: rgba(231, 76, 60, 0.9);
+    color: white;
+}
+
+    .return-button:hover {
+        background-color: rgba(192, 57, 43, 0.9);
+    }
+
+.quiz-completed {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 30px;
+}
+
+    .quiz-completed h2 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+    }
+
+.score {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    color: #3498db;
+}
+
+.invalid-access {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 30px;
+}
+
+    .invalid-access h2 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+    }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
+    }
+
+    .student-info {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
