@@ -93,7 +93,13 @@ green 300 - utd mint green
 
 
 
-		if(!formResponse.ClassExists()) {
+		/*
+		 * Class and password check separate to tailor error messages for now
+		 * 
+		 * surely there is a cleaner way to do this
+		 * Ethan
+		 */
+		if(!formResponse.ClassCheck()) {
 			System.Diagnostics.Debug.WriteLine("Class does not exist");
 			ClearFields();
 			return;
@@ -105,8 +111,10 @@ green 300 - utd mint green
 			return;
 		}
 
-
+		// if it gets here the submission is valid
 		System.Diagnostics.Debug.WriteLine(formResponse.ToString());
+
+		// needs to go to a quiz popup pulled from database
 
 		ClearFields();
 	}
@@ -133,7 +141,7 @@ green 300 - utd mint green
 		public List<ClassDto> classes = new();
 		ClassDto selectedClass { get; set; }
 
-		public bool ClassExists()
+		public bool ClassCheck()
 		{
 			foreach (ClassDto classDto in classes)
 			{
