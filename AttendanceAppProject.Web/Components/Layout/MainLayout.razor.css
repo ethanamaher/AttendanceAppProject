@@ -1,18 +1,4 @@
-.page {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    background-color: #FFFFFF;
-    background-image: url('StudentLogin.png');
-    background-size: contain;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    min-height: 100vh;
-    width: 100vw; /* Ensure full width */
-    margin: 0;
-    padding: 0;
-}
+
 
 main {
     flex: 1;

@@ -8,18 +8,34 @@
 <!-- Background container for home page -->
 <div class="page"></div>
 
+<!-- UTD Text Logo -->
+<div class="logo-container">
+    <div class="utd-text-logo">UTD</div>
+</div>
+
+<!-- Page title -->
+<div class="page-title">Student Attendance</div>
+
 <!-- Date and time display -->
 <div class="datetime-display">
     @currentTime
 </div>
 
 <div class="form-container">
+    @if (showLoginError)
+    {
+        <div class="error-message">
+            Incorrect Student Information. Please try again.
+        </div>
+    }
     <EditForm Model="studentResponse" OnValidSubmit="Submit" FormName="Student_Response_Form">
         <div class="student-id-field">
-            <InputText @bind-Value="studentResponse!.studentID" placeholder="Student ID" />
+            <label class="field-label">Student ID</label>
+            <InputText @bind-Value="studentResponse!.studentID" placeholder="Enter your student ID" />
         </div>
         <div class="class-field">
-            <InputSelect @bind-Value="studentResponse!.className" class="form-control">
+            <label class="field-label">Class</label>
+            <InputSelect @bind-Value="studentResponse!.className">
                 <option value="">Select a Class</option>
                 @foreach (var className in classList)
                 {
@@ -28,7 +44,8 @@
             </InputSelect>
         </div>
         <div class="password-field">
-            <InputText type="password" @bind-Value="studentResponse!.formPassword" placeholder="Password" />
+            <label class="field-label">Password</label>
+            <InputText type="password" @bind-Value="studentResponse!.formPassword" placeholder="Enter your password" />
         </div>
         <div class="submit-button-container">
             <button type="submit">Submit</button>
@@ -41,6 +58,7 @@
     private StudentResponse? studentResponse { get; set; }
     private string currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
     private Timer? secondsTimer;
+    private bool showLoginError = false;
 
     // List to store class names
     private List<string> classList = new List<string>();
@@ -135,6 +153,9 @@
 
         if (studentResponse.student != null)
         {
+            // Login successful, reset error flag
+            showLoginError = false;
+
             System.Diagnostics.Debug.WriteLine($"Login successful for: {studentResponse}");
             System.Diagnostics.Debug.WriteLine("Navigating to: /quiz");
 
@@ -143,8 +164,9 @@
         }
         else
         {
-            // Incorrect credentials - do nothing
-            System.Diagnostics.Debug.WriteLine("Login failed - incorrect information. No action taken.");
+            // Incorrect credentials - show error message
+            showLoginError = true;
+            System.Diagnostics.Debug.WriteLine("Login failed - incorrect information. Showing error message.");
 
             // Clear only the password field for retry
             studentResponse.formPassword = "";
