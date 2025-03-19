@@ -1,181 +1,237 @@
 ﻿@page "/"
-@inject HttpClient Http
-@using AttendanceAppProject.Web.Models
+@using System.Timers
+@implements IDisposable
+@inject NavigationManager NavigationManager
 
-<PageTitle>Attendance Form</PageTitle>
+<PageTitle>Student Submission Form</PageTitle>
 
-<!--Christopher Palmer Css
-Green 950 - dark Forest
-orange 400
-green 300 - utd mint green
--->
-<link rel="stylesheet" href="output.css" />
-<body class="bg-utdMint">
-	<EditForm Model="@formResponse" OnValidSubmit="Submit" FormName="Student">
-		<DataAnnotationsValidator />
-		<ValidationSummary />
-		<div class="grid grid-rows-7">
+<!-- Background container for home page -->
+<div class="page"></div>
 
-			<!-- Student ID Entry -->
-			<div class="row-span-2 m-4 flex flex-col items-center">
-				<label for="UTD-ID" class="text-2xl text-xl font-bold">UTD ID</label>
-				<InputText id="UTD-ID" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="formResponse.UTDID" />
-				<ValidationMessage For="@(() => formResponse.UTDID)" />
-			</div>
+<!-- UTD Text Logo -->
+<div class="logo-container">
+    <div class="utd-text-logo">UTD</div>
+</div>
 
+<!-- Page title -->
+<div class="page-title">Student Attendance</div>
 
+<!-- Date and time display -->
+<div class="datetime-display">
+    @currentTime
+</div>
 
-			<!-- 
-			Class selection dropdown
-
-			loops through cached database classes to display in dropdown
-			-->
-			<div class="row-span-2 m-4 flex flex-col items-center">
-				<label for="dropdown" class="text-2xl text-xl font-bold">Class</label>
-				<InputSelect id="UTD-ID" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="formResponse!.classId">
-					@if (formResponse!.classId is null)
-					{
-						<option selected value="@Guid.Empty">none</option>
-					}
-					@foreach (ClassDto classDto in formResponse!.classes)
-					{
-						<option value="@classDto.ClassId">@classDto.ClassName</option>
-					}
-				</InputSelect>
-				<ValidationMessage For="@(() => formResponse.classId)" />
-			</div>
-
-
-
-
-			<!-- Password Entry -->
-			<div class="row-span-2 m-4 flex flex-col items-center">
-				<label for="UTD-ID" class="text-2xl text-xl font-bold">Password</label>
-				<InputText id="UTD-ID" class="border-2 rounded-md border-orange-400 bg-orange-200" @bind-Value="formResponse.classPassword" />
-				<ValidationMessage For="@(() => formResponse.classPassword)" />
-			</div>
-
-			<!-- 
-			make so it doesnt reload page?
-			right now it reinitialized page on submit but not really sure how to fix
-
-			it doesnt take a lot of time but i think would be cleaner to not do that and rely on user reloading page to re-pull classes from db
-
-			Ethan
-			-->
-			<button @onclick="() => Submit()" value="Submit" class="border-2 bg-utdForest mx-64 rounded-xl border-orange-400 font-bold text-white">Submit</button>
-		</div>
-	</EditForm>
-</body>
+<div class="form-container">
+    @if (showLoginError)
+    {
+        <div class="error-message">
+            Incorrect Student Information. Please try again.
+        </div>
+    }
+    <EditForm Model="studentResponse" OnValidSubmit="Submit" FormName="Student_Response_Form">
+        <div class="student-id-field">
+            <label class="field-label">Student ID</label>
+            <InputText @bind-Value="studentResponse!.studentID" placeholder="Enter your student ID" />
+        </div>
+        <div class="class-field">
+            <label class="field-label">Class</label>
+            <InputSelect @bind-Value="studentResponse!.className">
+                <option value="">Select a Class</option>
+                @foreach (var className in classList)
+                {
+                    <option value="@className">@className</option>
+                }
+            </InputSelect>
+        </div>
+        <div class="password-field">
+            <label class="field-label">Password</label>
+            <InputText type="password" @bind-Value="studentResponse!.formPassword" placeholder="Enter your password" />
+        </div>
+        <div class="submit-button-container">
+            <button type="submit">Submit</button>
+        </div>
+    </EditForm>
+</div>
 
 @code {
-	[SupplyParameterFromForm]
-	private FormResponse? formResponse { get; set; }
+    [SupplyParameterFromForm]
+    private StudentResponse? studentResponse { get; set; }
+    private string currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
+    private Timer? secondsTimer;
+    private bool showLoginError = false;
 
-	protected override async Task OnInitializedAsync()
-	{
-		formResponse ??= new();
+    // List to store class names
+    private List<string> classList = new List<string>();
 
-		// pull classes list from database
-		// done on initialization of page, should not need live updating
-		formResponse.classes = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
-	}
+    // Student database for validation
+    private List<StudentRecord> studentDatabase = new List<StudentRecord>();
 
-	/*
-	* function called when form is submitted
-	* 
-	* should split to an onValid and onInvalid to guide program flow
-	* - all fields should be required
-	*/
-	private void Submit()
-	{
-		System.Diagnostics.Debug.WriteLine("Form Submission Detected");
+    protected override async Task OnInitializedAsync()
+    {
+        studentResponse ??= new();
 
+        // Set up timer using System.Timers.Timer
+        secondsTimer = new Timer(1000);
+        secondsTimer.Enabled = true;
+        secondsTimer.AutoReset = true;
+        secondsTimer.Elapsed += (sender, e) => UpdateTime();
 
+        // Load classes and student database
+        await LoadClassesAsync();
+        InitializeStudentDatabase();
 
-		/*
-		 * Class and password check separate to tailor error messages for now
-		 * 
-		 * surely there is a cleaner way to do this
-		 * Ethan
-		 */
-		if(!formResponse.ClassCheck()) {
-			System.Diagnostics.Debug.WriteLine("Class does not exist");
-			ClearFields();
-			return;
-		}
+        System.Diagnostics.Debug.WriteLine("Home component initialized");
+    }
 
-		if(!formResponse.PasswordCheck()) {
-			System.Diagnostics.Debug.WriteLine("Invalid Password");
-			ClearFields();
-			return;
-		}
+    private void InitializeStudentDatabase()
+    {
+        // In a real app, this would load from a database
+        // Here we're using a sample hardcoded record
+        studentDatabase.Add(new StudentRecord
+            {
+                StudentID = "chn210001",
+                Password = "american",
+                ClassName = "Computer Science"
+            });
 
-		// if it gets here the submission is valid
-		System.Diagnostics.Debug.WriteLine(formResponse.ToString());
+        // You can add more student records here as needed
+        studentDatabase.Add(new StudentRecord
+            {
+                StudentID = "abc123456",
+                Password = "password",
+                ClassName = "Mathematics"
+            });
+    }
 
-		// needs to go to a quiz popup pulled from database
+    private async Task LoadClassesAsync()
+    {
+        // In a real app, this would be a database call
+        // Simulating database fetch with a delay
+        await Task.Delay(100);
 
-		ClearFields();
-	}
+        // Sample data
+        classList = new List<string>
+        {
+            "Mathematics",
+            "Science",
+            "English",
+            "History",
+            "Computer Science",
+            "Physics",
+            "Chemistry",
+            "Biology",
+            "Art",
+            "Music"
+        };
+    }
 
-	private void ClearFields()
-	{
-		formResponse.UTDID = null;
-		formResponse.classId = null;
-		formResponse.classPassword = null;
-	}
+    private void UpdateTime()
+    {
+        currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
+        InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
 
+    // Clean up timer when component is disposed
+    public void Dispose()
+    {
+        secondsTimer?.Dispose();
+    }
 
-	/*	Class for getting student info responses from form
-	*/
-	public class FormResponse
-	{
-		public string? UTDID { get; set; }
-		public Guid? classId { get; set; }
-		public string? classPassword { get; set; }
+    private void Submit()
+    {
+        System.Diagnostics.Debug.WriteLine("Form Submission Detected");
 
+        // Debug the current state
+        System.Diagnostics.Debug.WriteLine($"StudentID: {studentResponse!.studentID}");
+        System.Diagnostics.Debug.WriteLine($"ClassName: {studentResponse.className}");
 
+        // Validate against student database
+        ValidateStudentCredentials();
 
-		// cache for classes pulled from database
-		public List<ClassDto> classes = new();
-		ClassDto selectedClass { get; set; }
+        if (studentResponse.student != null)
+        {
+            // Login successful, reset error flag
+            showLoginError = false;
 
-		public bool ClassCheck()
-		{
-			foreach (ClassDto classDto in classes)
-			{
-				if (classDto.ClassId == classId)
-				{
-					selectedClass = classDto;
-					return true;
-				}
-			}
+            System.Diagnostics.Debug.WriteLine($"Login successful for: {studentResponse}");
+            System.Diagnostics.Debug.WriteLine("Navigating to: /quiz");
 
-			return false;
-		}
+            // Login successful, redirect to Quiz.razor with query parameters
+            NavigationManager.NavigateTo($"/quiz?studentId={Uri.EscapeDataString(studentResponse.student.StudentID)}&className={Uri.EscapeDataString(studentResponse.student.ClassName)}");
+        }
+        else
+        {
+            // Incorrect credentials - show error message
+            showLoginError = true;
+            System.Diagnostics.Debug.WriteLine("Login failed - incorrect information. Showing error message.");
 
-		public bool PasswordCheck() {
-			return classPassword == "password";
-		}
+            // Clear only the password field for retry
+            studentResponse.formPassword = "";
+        }
+    }
 
-		public override string ToString()
-		{
-			string output = "";
+    private void ValidateStudentCredentials()
+    {
+        // Check if student exists in the database with matching credentials
+        var matchingStudent = studentDatabase.FirstOrDefault(s =>
+            s.StudentID == studentResponse.studentID &&
+            s.Password == studentResponse.formPassword &&
+            s.ClassName == studentResponse.className);
 
-			output += "------FORM SUBMISSION------\n";
-			output += "STUDENT ID: " + UTDID + "\n";
-			output += "Class Name: " + selectedClass.ClassName + "\n";
-			output += "Class Id: " + selectedClass.ClassId + "\n";
-			
+        if (matchingStudent != null)
+        {
+            // Valid student - create a Student object
+            studentResponse.student = new Student(matchingStudent.StudentID, matchingStudent.ClassName);
+            System.Diagnostics.Debug.WriteLine($"Student validated: {matchingStudent.StudentID}");
+        }
+        else
+        {
+            // No matching student found
+            studentResponse.student = null;
+            System.Diagnostics.Debug.WriteLine("Student validation failed");
+        }
+    }
 
-			return output;
-		}
-	}
+    // Student record model for database comparison
+    public class StudentRecord
+    {
+        public string StudentID { get; set; } = "";
+        public string Password { get; set; } = "";
+        public string ClassName { get; set; } = "";
+    }
 
-	public class Class
-	{
-		public string? classID { get; set; }
-		public string? className { get; set; }
-	}
+    /*  Class for getting student info responses from form */
+    public class StudentResponse
+    {
+        public Student? student { get; set; }
+        public string? studentID { get; set; }
+        public string? className { get; set; }
+        public string? formPassword { get; set; }
+
+        public override string ToString()
+        {
+            return student != null ? student.ToString() : "No student data";
+        }
+    }
+
+    // Make sure Student class is defined properly
+    public class Student
+    {
+        public string StudentID { get; set; }
+        public string ClassName { get; set; }
+
+        public Student(string studentID, string className)
+        {
+            StudentID = studentID;
+            ClassName = className;
+        }
+
+        public override string ToString()
+        {
+            return $"StudentID: {StudentID}, Class: {ClassName}";
+        }
+    }
 }
