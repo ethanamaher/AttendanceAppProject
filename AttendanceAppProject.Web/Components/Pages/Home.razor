@@ -2,6 +2,8 @@
 @using System.Timers
 @implements IDisposable
 @inject NavigationManager NavigationManager
+@inject HttpClient Http
+@using AttendanceAppProject.Web.Models
 
 <PageTitle>Student Submission Form</PageTitle>
 
@@ -29,27 +31,46 @@
         </div>
     }
     <EditForm Model="studentResponse" OnValidSubmit="Submit" FormName="Student_Response_Form">
+
+
         <div class="student-id-field">
             <label class="field-label">Student ID</label>
             <InputText @bind-Value="studentResponse!.studentID" placeholder="Enter your student ID" />
         </div>
+
+
+
+
+
         <div class="class-field">
             <label class="field-label">Class</label>
-            <InputSelect @bind-Value="studentResponse!.className">
-                <option value="">Select a Class</option>
-                @foreach (var className in classList)
+            <InputSelect @bind-Value="studentResponse!.classId">
+                <option value="@Guid.Empty">Select a Class</option>
+                @foreach (ClassDto classDto in studentResponse!.classes)
                 {
-                    <option value="@className">@className</option>
+                    <option value="@classDto.ClassId">@classDto.ClassName</option>
                 }
             </InputSelect>
         </div>
+
+
+
+
         <div class="password-field">
             <label class="field-label">Password</label>
             <InputText type="password" @bind-Value="studentResponse!.formPassword" placeholder="Enter your password" />
         </div>
+
+
+
+
         <div class="submit-button-container">
             <button type="submit">Submit</button>
         </div>
+
+
+
+
     </EditForm>
 </div>
 
@@ -91,7 +112,7 @@
             {
                 StudentID = "chn210001",
                 Password = "american",
-                ClassName = "Computer Science"
+                //ClassName = "Computer Science"
             });
 
         // You can add more student records here as needed
@@ -99,7 +120,14 @@
             {
                 StudentID = "abc123456",
                 Password = "password",
-                ClassName = "Mathematics"
+                //ClassName = "Mathematics"
+            });
+
+        studentDatabase.Add(new StudentRecord
+            {
+                StudentID = "eam200004",
+                Password = "password",
+                //ClassName = "Computer Science"
             });
     }
 
@@ -107,22 +135,7 @@
     {
         // In a real app, this would be a database call
         // Simulating database fetch with a delay
-        await Task.Delay(100);
-
-        // Sample data
-        classList = new List<string>
-        {
-            "Mathematics",
-            "Science",
-            "English",
-            "History",
-            "Computer Science",
-            "Physics",
-            "Chemistry",
-            "Biology",
-            "Art",
-            "Music"
-        };
+        studentResponse.classes = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
     }
 
     private void UpdateTime()
@@ -144,9 +157,13 @@
     {
         System.Diagnostics.Debug.WriteLine("Form Submission Detected");
 
+        if(studentResponse.studentID == null || studentResponse.classId == null || studentResponse.formPassword == null) {
+            System.Diagnostics.Debug.WriteLine("Invalid information input");
+        }
+
         // Debug the current state
         System.Diagnostics.Debug.WriteLine($"StudentID: {studentResponse!.studentID}");
-        System.Diagnostics.Debug.WriteLine($"ClassName: {studentResponse.className}");
+        System.Diagnostics.Debug.WriteLine($"ClassID: {studentResponse.classId}");
 
         // Validate against student database
         ValidateStudentCredentials();
@@ -176,15 +193,16 @@
     private void ValidateStudentCredentials()
     {
         // Check if student exists in the database with matching credentials
+
+        // add check for student being enrolled in selected class
         var matchingStudent = studentDatabase.FirstOrDefault(s =>
             s.StudentID == studentResponse.studentID &&
-            s.Password == studentResponse.formPassword &&
-            s.ClassName == studentResponse.className);
+            s.Password == studentResponse.formPassword);
 
         if (matchingStudent != null)
         {
             // Valid student - create a Student object
-            studentResponse.student = new Student(matchingStudent.StudentID, matchingStudent.ClassName);
+            studentResponse.student = new Student(matchingStudent.StudentID, matchingStudent.className);
             System.Diagnostics.Debug.WriteLine($"Student validated: {matchingStudent.StudentID}");
         }
         else
@@ -200,16 +218,36 @@
     {
         public string StudentID { get; set; } = "";
         public string Password { get; set; } = "";
-        public string ClassName { get; set; } = "";
+        public string className { get; set; } = "";
     }
 
     /*  Class for getting student info responses from form */
     public class StudentResponse
     {
         public Student? student { get; set; }
+
         public string? studentID { get; set; }
-        public string? className { get; set; }
+        public Guid? classId { get; set; }
+
         public string? formPassword { get; set; }
+
+
+
+        public List<ClassDto> classes = new();
+        ClassDto selectedClass { get; set; }
+
+        public bool ClassExists() {
+            foreach (ClassDto classDto in classes)
+            {
+                if (classDto.ClassId == classId)
+                {
+                    selectedClass = classDto;
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         public override string ToString()
         {
@@ -233,5 +271,11 @@
         {
             return $"StudentID: {StudentID}, Class: {ClassName}";
         }
+    }
+
+    public class Class
+    {
+        public Guid? classID { get; set; }
+        public string? className { get; set; }
     }
 }
