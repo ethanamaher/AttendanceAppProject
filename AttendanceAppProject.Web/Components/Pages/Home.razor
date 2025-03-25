@@ -77,7 +77,6 @@
 @code {
     [SupplyParameterFromForm]
     private StudentResponse? studentResponse { get; set; }
-    //private string currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
     private string currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
     private Timer? secondsTimer;
     private bool showLoginError = false;
@@ -88,7 +87,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm:ss");
         // Set up timer using System.Timers.Timer
         secondsTimer = new Timer(1000);
         secondsTimer.Enabled = true;
@@ -131,7 +129,7 @@
             {
                 StudentID = "eam200004",
                 Password = "password",
-                //ClassName = "Computer Science"
+                ClassId = new Guid("d94db2a0-f96d-11ef-ac73-c5cdb5259684")
             });
     }
 
@@ -140,8 +138,11 @@
         // In a real app, this would be a database call
         // Simulating database fetch with a delay
 
-        // can we use controllers for this somehow?
         classesList = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
+
+        if(classesList == null) {
+            System.Diagnostics.Debug.WriteLine("Error fetching classes from api");
+        }
     }
 
     private void UpdateTime()
@@ -184,7 +185,9 @@
             System.Diagnostics.Debug.WriteLine("Navigating to: /quiz");
 
             // Login successful, redirect to Quiz.razor with query parameters
-            NavigationManager.NavigateTo($"/quiz?studentId={Uri.EscapeDataString(studentResponse.student.StudentID)}&className={Uri.EscapeDataString(studentResponse.student.ClassName)}");
+
+            NavigationManager.NavigateTo($"/quiz?studentId={Uri.EscapeDataString(studentResponse.student.StudentID)}&class={Uri.EscapeDataString(studentResponse.student.ClassId.ToString())}");
+            
         }
         else
         {
@@ -207,7 +210,7 @@
         if (matchingStudent != null)
         {
             // Valid student - create a Student object
-            studentResponse.student = new Student(matchingStudent.StudentID, matchingStudent.className);
+            studentResponse.student = new Student(matchingStudent.StudentID, studentResponse.classId.Value);
             System.Diagnostics.Debug.WriteLine($"Student validated: {matchingStudent.StudentID}");
         }
         else
@@ -223,7 +226,7 @@
     {
         public string StudentID { get; set; } = "";
         public string Password { get; set; } = "";
-        public string className { get; set; } = "";
+        public Guid ClassId { get; set; } = Guid.Empty;
     }
 
     /*  Class for getting student info responses from form */
@@ -248,17 +251,17 @@
     public class Student
     {
         public string StudentID { get; set; }
-        public string ClassName { get; set; }
+        public Guid ClassId { get; set; }
 
-        public Student(string studentID, string className)
+        public Student(string studentID, Guid classId)
         {
             StudentID = studentID;
-            ClassName = className;
+            ClassId = classId;
         }
 
         public override string ToString()
         {
-            return $"StudentID: {StudentID}, Class: {ClassName}";
+            return $"StudentID: {StudentID}, Class: {ClassId}";
         }
     }
 }

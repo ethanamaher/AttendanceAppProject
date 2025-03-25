@@ -108,7 +108,7 @@
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
 
         studentId = query["studentId"] ?? "";
-        className = query["className"] ?? "";
+        className = query["class"] ?? "";
 
         // Validate that student info exists
         isValidStudent = !string.IsNullOrEmpty(studentId) && !string.IsNullOrEmpty(className);
