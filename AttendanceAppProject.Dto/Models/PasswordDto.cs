@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace AttendanceAppProject.Shared.Models;
+namespace AttendanceAppProject.Dto.Models;
 
 public class PasswordDto
 {

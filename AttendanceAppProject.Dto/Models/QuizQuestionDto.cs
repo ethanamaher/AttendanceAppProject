@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace AttendanceAppProject.Web.Models;
+namespace AttendanceAppProject.Dto.Models;
 
 public class QuizQuestionDto
 {
