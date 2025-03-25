@@ -1,25 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace AttendanceAppProject.ApiService.Data.Models;
+﻿namespace AttendanceAppProject.ApiService.Data.Models;
 
 public partial class AttendanceInstance
 {
-    public Guid AttendanceId { get; set; }
+	public Guid AttendanceId { get; set; }
 
-    public string StudentId { get; set; } = null!;
+	public string StudentId { get; set; } = null!;
 
-    public Guid ClassId { get; set; }
+	public Guid ClassId { get; set; }
 
-    public string? IpAddress { get; set; }
+	public string? IpAddress { get; set; }
 
-    public bool? IsLate { get; set; }
+	public bool? IsLate { get; set; }
 
-    public bool? ExcusedAbsence { get; set; }
+	public bool? ExcusedAbsence { get; set; }
 
-    public DateTime? DateTime { get; set; }
+	public DateTime? DateTime { get; set; }
 
-    public virtual Class Class { get; set; } = null!;
+	public virtual Class Class { get; set; } = null!;
 
-    public virtual Student Student { get; set; } = null!;
+	public virtual Student Student { get; set; } = null!;
 }

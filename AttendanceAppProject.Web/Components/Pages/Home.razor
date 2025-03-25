@@ -46,7 +46,7 @@
             <label class="field-label">Class</label>
             <InputSelect @bind-Value="studentResponse!.classId">
                 <option value="@Guid.Empty">Select a Class</option>
-                @foreach (ClassDto classDto in studentResponse!.classes)
+                @foreach (ClassDto classDto in classesList)
                 {
                     <option value="@classDto.ClassId">@classDto.ClassName</option>
                 }
@@ -77,26 +77,25 @@
 @code {
     [SupplyParameterFromForm]
     private StudentResponse? studentResponse { get; set; }
+    //private string currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
     private string currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
     private Timer? secondsTimer;
     private bool showLoginError = false;
 
-    // List to store class names
-    private List<string> classList = new List<string>();
-
     // Student database for validation
     private List<StudentRecord> studentDatabase = new List<StudentRecord>();
+    public List<ClassDto> classesList = new List<ClassDto>();
 
     protected override async Task OnInitializedAsync()
     {
-        studentResponse ??= new();
-
+        currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm:ss");
         // Set up timer using System.Timers.Timer
         secondsTimer = new Timer(1000);
         secondsTimer.Enabled = true;
         secondsTimer.AutoReset = true;
         secondsTimer.Elapsed += (sender, e) => UpdateTime();
 
+        studentResponse ??= new();
         // Load classes and student database
         await LoadClassesAsync();
         InitializeStudentDatabase();
@@ -104,6 +103,11 @@
         System.Diagnostics.Debug.WriteLine("Home component initialized");
     }
 
+    /*
+    * probably should not store student information on webpage
+    * 
+    * send response to backend and check there
+    */
     private void InitializeStudentDatabase()
     {
         // In a real app, this would load from a database
@@ -135,14 +139,17 @@
     {
         // In a real app, this would be a database call
         // Simulating database fetch with a delay
-        studentResponse.classes = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
+
+        // can we use controllers for this somehow?
+        classesList = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
     }
 
     private void UpdateTime()
     {
-        currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
         InvokeAsync(() =>
         {
+            currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
+            System.Diagnostics.Debug.WriteLine(currentTime);
             StateHasChanged();
         });
     }
@@ -193,8 +200,6 @@
     private void ValidateStudentCredentials()
     {
         // Check if student exists in the database with matching credentials
-
-        // add check for student being enrolled in selected class
         var matchingStudent = studentDatabase.FirstOrDefault(s =>
             s.StudentID == studentResponse.studentID &&
             s.Password == studentResponse.formPassword);
@@ -231,24 +236,6 @@
 
         public string? formPassword { get; set; }
 
-
-
-        public List<ClassDto> classes = new();
-        ClassDto selectedClass { get; set; }
-
-        public bool ClassExists() {
-            foreach (ClassDto classDto in classes)
-            {
-                if (classDto.ClassId == classId)
-                {
-                    selectedClass = classDto;
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         public override string ToString()
         {
             return student != null ? student.ToString() : "No student data";
@@ -256,6 +243,8 @@
     }
 
     // Make sure Student class is defined properly
+
+    // define outside of this file probably
     public class Student
     {
         public string StudentID { get; set; }
@@ -271,11 +260,5 @@
         {
             return $"StudentID: {StudentID}, Class: {ClassName}";
         }
-    }
-
-    public class Class
-    {
-        public Guid? classID { get; set; }
-        public string? className { get; set; }
     }
 }

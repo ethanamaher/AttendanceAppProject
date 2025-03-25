@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AttendanceAppProject.ApiService.Data;
 using AttendanceAppProject.ApiService.Data.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using AttendanceAppProject.ApiService.Data;
 
 namespace AttendanceAppProject.ApiService.Controllers
 {

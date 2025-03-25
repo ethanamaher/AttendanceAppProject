@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace AttendanceAppProject.Web.Models;
+﻿namespace AttendanceAppProject.Web.Models;
 
 public partial class QuizResponseDto
 {
-    public Guid ResponseId { get; set; }
+	public Guid ResponseId { get; set; }
 
-    public string StudentId { get; set; } = null!;
+	public string StudentId { get; set; } = null!;
 
-    public Guid QuizQuestionId { get; set; }
+	public Guid QuizQuestionId { get; set; }
 
-    public Guid QuizInstanceId { get; set; }
+	public Guid QuizInstanceId { get; set; }
 }

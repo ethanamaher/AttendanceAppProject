@@ -1,7 +1,5 @@
-using AttendanceAppProject.ApiService.Data.Models;
-using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Data;
-using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("DefaultConnection is missing in appsettings.json");
+	?? throw new InvalidOperationException("DefaultConnection is missing in appsettings.json");
 
 // Add service defaults & Aspire client integrations.
 // builder.AddServiceDefaults();
@@ -19,8 +17,8 @@ builder.Services.AddProblemDetails();
 
 // Register EF Core with MySQL, add database context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
-        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
+	options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
+		ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
 
 // Enable Controllers
 builder.Services.AddControllers();
@@ -28,10 +26,10 @@ builder.Services.AddControllers();
 // Add CORS Policy 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        policy => policy.AllowAnyOrigin()
-                        .AllowAnyMethod()
-                        .AllowAnyHeader());
+	options.AddPolicy("AllowAll",
+		policy => policy.AllowAnyOrigin()
+						.AllowAnyMethod()
+						.AllowAnyHeader());
 });
 
 var app = builder.Build();
@@ -46,15 +44,15 @@ string[] summaries = ["Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "
 
 app.MapGet("/weatherforecast", () =>
 {
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
+	var forecast = Enumerable.Range(1, 5).Select(index =>
+		new WeatherForecast
+		(
+			DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+			Random.Shared.Next(-20, 55),
+			summaries[Random.Shared.Next(summaries.Length)]
+		))
+		.ToArray();
+	return forecast;
 })
 .WithName("GetWeatherForecast");
 
@@ -65,5 +63,5 @@ app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+	public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
