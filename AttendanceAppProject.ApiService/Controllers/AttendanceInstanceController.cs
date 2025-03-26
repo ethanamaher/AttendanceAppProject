@@ -30,7 +30,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         {
             var attendance = new AttendanceInstance
             {
-                AttendanceId = dto.AttendanceId,
+                AttendanceId = Guid.NewGuid(), // Auto-generate
                 StudentId = dto.StudentId,
                 ClassId = dto.ClassId,
                 IpAddress = dto.IpAddress,
