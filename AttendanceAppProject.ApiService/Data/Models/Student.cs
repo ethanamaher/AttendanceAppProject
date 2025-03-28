@@ -16,4 +16,7 @@ public partial class Student
     public virtual ICollection<AttendanceInstance> AttendanceInstances { get; set; } = new List<AttendanceInstance>();
 
     public virtual ICollection<QuizResponse> QuizResponses { get; set; } = new List<QuizResponse>();
+
+    //added this for new StudentClass model
+    public virtual ICollection<StudentClass> StudentClasses { get; set; } = new List<StudentClass>();
 }

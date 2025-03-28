@@ -35,6 +35,8 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<Student> Students { get; set; }
 
+    public virtual DbSet<StudentClass> StudentClasses { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
@@ -305,6 +307,36 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.Username)
                 .HasMaxLength(9)
                 .IsFixedLength();
+        });
+
+        modelBuilder.Entity<StudentClass>(entity =>
+        {
+            entity.HasKey(e => e.StudentClassId).HasName("PRIMARY");
+
+            entity.ToTable("student_class");
+
+            entity.Property(e => e.StudentClassId).HasColumnName("Student_class_id");
+
+            entity.Property(e => e.StudentId)
+                .HasMaxLength(10)
+                .IsFixedLength()
+                .HasColumnName("Student_id"); // Column name in DB
+
+            entity.Property(e => e.ClassId)
+                .HasColumnName("Class_id");
+
+            entity.HasOne(d => d.Student)
+                .WithMany(p => p.StudentClasses)
+                .HasForeignKey(d => d.StudentId) 
+                .HasPrincipalKey(s => s.UtdId)   // Explicitly map StudentClass.StudentId to Student.UtdId
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_studentclass_student");
+
+            entity.HasOne(d => d.Class)
+                .WithMany(p => p.StudentClasses)
+                .HasForeignKey(d => d.ClassId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_studentclass_class");
         });
 
         OnModelCreatingPartial(modelBuilder);

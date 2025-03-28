@@ -32,4 +32,7 @@ public partial class Class
     public virtual Professor ProfUtd { get; set; } = null!;
 
     public virtual ICollection<QuizInstance> QuizInstances { get; set; } = new List<QuizInstance>();
+
+    // added this for new StudentClass model
+    public virtual ICollection<StudentClass> StudentClasses { get; set; } = new List<StudentClass>();
 }
