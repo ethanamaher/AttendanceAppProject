@@ -41,5 +41,17 @@ namespace AttendanceAppProject.ApiService.Controllers
             return CreatedAtAction(nameof(GetStudentClasses), new { id = studentClass.StudentClassId }, studentClass);
         }
 
+        // check if a student is enrolled in a particular class using EnrollmentCheckDto which contains StudentDto and ClassDto
+        // we encapsulate the input of a student DTO and class DTO into a single DTO (EnrollmentCheckDto) and validate the IDs from there
+        // POST: api/StudentClass/exists
+        [HttpPost("exists")]
+        public async Task<ActionResult<bool>> IsStudentEnrolled([FromBody] EnrollmentCheckDto dto)
+        {
+            var exists = await _context.StudentClasses
+                .AnyAsync(sc => sc.StudentId == dto.Student.UtdId && sc.ClassId == dto.Class.ClassId);
+
+            return Ok(exists); // true if enrolled, false otherwise
+        }
+
     }
 }
