@@ -32,6 +32,37 @@
 | POST   | `api/Student` | Create | Add a student | `StudentDto` | `Student` entity (deserialized into `StudentDto` if used by client) |
 | POST   | `api/Student/exists` | Read | Check if a student exists in the database | `StudentDto` | `true` or `false` (Boolean) |
 
+## Example Usage in Blazor Front-End
+To retrieve a list of all students:
+```
+var studentList = await Http.GetFromJsonAsync<List<StudentDto>>("api/Student");
+```
+
+To add a student to the database:
+```
+await Http.PostAsJsonAsync("api/Student", newStudentDto);
+```
+
+To see if a student exists in the database:
+```
+var existsResponse = await Http.PostAsJsonAsync("api/Student/exists", inputStudentDto);
+```
+
+To check if a student is enrolled in a particular class:
+```
+var isEnrolled = await Http.PostAsJsonAsync("api/StudentClass/check-enrollment", new EnrollmentCheckDto { Student = newStudentDto, Class = databaseClassDto });
+``` 
+or 
+```
+var checkDto = new EnrollmentCheckDto
+{
+    Student = newStudentDto,
+    Class = databaseClassDto
+};
+await Http.PostAsJsonAsync("api/studentclass/check-enrollment", checkDto); 
+```
+
+
 ## API Flow
 ```
 Blazor Frontend 
