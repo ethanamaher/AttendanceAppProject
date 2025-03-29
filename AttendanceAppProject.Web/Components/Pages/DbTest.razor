@@ -3,6 +3,8 @@
 @rendermode InteractiveServer
 @using AttendanceAppProject.Dto.Models
 
+@* DB Test page used to test connection to the database by sending HTTP requests to the API*@
+
 <h3>DbTest - Student List</h3>
 
 @if (students == null)
@@ -11,6 +13,7 @@
 }
 else
 {
+    @*Table containing list of students and their information retrieved from the database*@
     <table class="table">
         <thead>
             <tr>
@@ -34,6 +37,7 @@ else
     </table>
 }
 
+@* Form to test POST request by adding new student to the database based on input*@
 <div class="form-wrapper">
     <div class="form-container">
         <div class="form-group">
@@ -63,8 +67,8 @@ else
 
 @code {
 
-    private List<StudentDto> students = new();
-    private StudentDto newStudent = new(); // Holds data from input fields
+    private List<StudentDto> students = new(); // Holds the list of students retrieved from the database as StudentDtos
+    private StudentDto newStudent = new(); // Holds data from input fields in the above form
 
     protected override async Task OnInitializedAsync()
     {
