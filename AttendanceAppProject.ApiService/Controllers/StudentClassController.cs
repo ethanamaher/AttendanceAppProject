@@ -33,7 +33,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         /* POST: api/StudentClass
          * Add a StudentClass record to the database
          * - request body: StudentClassDto
-         * - response body: none
+         * - response body: StudentClass
          */
         [HttpPost]
         public async Task<ActionResult<StudentClass>> AddStudentClass([FromBody] StudentClassDto dto)

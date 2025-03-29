@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Data;
 using AttendanceAppProject.Dto.Models;
 
+// API controller for Class
+
 namespace AttendanceAppProject.ApiService.Controllers
 {
 	[Route("api/[controller]")] // Automatically becomes "api/class"
@@ -17,14 +19,22 @@ namespace AttendanceAppProject.ApiService.Controllers
 			_context = context;
 		}
 
-		// GET: api/Class
-		[HttpGet]
+        /* GET: api/Class
+		 * Get all classes
+		 * - request body: none
+		 * - response body: Classes
+		 */
+        [HttpGet]
 		public async Task<ActionResult<IEnumerable<Class>>> GetClasses()
 		{
 			return await _context.Classes.ToListAsync();
 		}
 
-        // POST: api/Class
+        /* POST: api/Class
+         * Add a class to the database
+         * - request body: ClassDto
+         * - response body: Class
+         */
         [HttpPost]
         public async Task<ActionResult<Class>> AddClass([FromBody] ClassDto dto)
         {

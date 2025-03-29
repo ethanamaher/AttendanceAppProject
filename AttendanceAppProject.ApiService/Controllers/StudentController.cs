@@ -17,14 +17,22 @@ namespace AttendanceAppProject.ApiService.Controllers
             _context = context;
         }
 
-        // GET: api/Student
+        /* GET: api/Student
+         * Get all students from the database
+         * - request body: none
+         * - response body: students
+         */
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Student>>> GetStudents()
         {
             return await _context.Students.ToListAsync();
         }
 
-        // POST: api/Student
+        /* POST: api/Student
+         * Add a student to the database
+         * - request body: StudentDto
+         * - response body: Student
+         */
         [HttpPost]
         public async Task<ActionResult<Student>> AddStudent([FromBody] StudentDto dto)
         {
@@ -42,7 +50,11 @@ namespace AttendanceAppProject.ApiService.Controllers
             return CreatedAtAction(nameof(GetStudents), new { id = student.UtdId }, student);
         }
 
-        // POST: api/student/exists
+        /* POST: api/student/exists
+         * Check if a student exists in the database by validating the UtdId of a given StudentDto passed in by the client side
+         * - request body: StudentDto
+         * - response body: Student
+         */
         [HttpPost("exists")]
         public async Task<ActionResult<bool>> StudentExists([FromBody] StudentDto dto)
         {

@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Data;
 using AttendanceAppProject.Dto.Models;
 
+// API controller for Professor
+
 namespace AttendanceAppProject.ApiService.Controllers
 {
     [Route("api/[controller]")] // Automatically becomes "api/professor"
@@ -17,14 +19,22 @@ namespace AttendanceAppProject.ApiService.Controllers
             _context = context;
         }
 
-        // GET: api/Professor
+        /* GET: api/professor
+         * Get all professor records
+         * - request body: none
+         * - response body: Professors
+         */
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Professor>>> GetProfessors()
         {
             return await _context.Professors.ToListAsync();
         }
 
-        // POST: api/Professor
+        /* POST: api/Professor
+         * Add a professor to the database
+         * - request body: ProfessorDto
+         * - response body: Professor
+         */
         [HttpPost]
         public async Task<ActionResult<Student>> AddProfessor([FromBody] ProfessorDto dto)
         {
