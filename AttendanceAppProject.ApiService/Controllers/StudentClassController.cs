@@ -4,9 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Data;
 using AttendanceAppProject.Dto.Models;
 
+// API controller for StudentClass relation
+
 namespace AttendanceAppProject.ApiService.Controllers
 {
-    [Route("api/[controller]")] // Automatically becomes "api/studentclass"
+    [Route("api/[controller]")] // Automatically becomes "api/StudentClass" (case-insensitive)
     [ApiController]
     public class StudentClassController : ControllerBase
     {
@@ -17,16 +19,24 @@ namespace AttendanceAppProject.ApiService.Controllers
             _context = context;
         }
 
-        // GET: api/StudentClass
+        /* GET: api/StudentClass
+         * Get all StudentClass records
+         * - request body: none
+         * - response body: StudentClasses
+         */
         [HttpGet]
         public async Task<ActionResult<IEnumerable<StudentClass>>> GetStudentClasses()
         {
             return await _context.StudentClasses.ToListAsync();
         }
 
-        // POST: api/StudentClass
+        /* POST: api/StudentClass
+         * Add a StudentClass record to the database
+         * - request body: StudentClassDto
+         * - response body: none
+         */
         [HttpPost]
-        public async Task<ActionResult<Student>> AddStudentClass([FromBody] StudentClassDto dto)
+        public async Task<ActionResult<StudentClass>> AddStudentClass([FromBody] StudentClassDto dto)
         {
             var studentClass = new StudentClass
             {
@@ -41,17 +51,33 @@ namespace AttendanceAppProject.ApiService.Controllers
             return CreatedAtAction(nameof(GetStudentClasses), new { id = studentClass.StudentClassId }, studentClass);
         }
 
-        // check if a student is enrolled in a particular class using EnrollmentCheckDto which contains StudentDto and ClassDto
-        // we encapsulate the input of a student DTO and class DTO into a single DTO (EnrollmentCheckDto) and validate the IDs from there
-        // POST: api/StudentClass/exists
-        [HttpPost("exists")]
-        public async Task<ActionResult<bool>> IsStudentEnrolled([FromBody] EnrollmentCheckDto dto)
+        /* POST: api/StudentClass/check-enrollment
+         * Check if a student is enrolled in a particular class using EnrollmentCheckDto which is a wrapper DTO that contains StudentDto and ClassDto.
+         * The client side encapsulates student DTO and class DTO into a single DTO (EnrollmentCheckDto), sends a POST request to the server and the server side uses that EnrollmentCheckDto validate the IDs from there
+         * - request body: EnrollmentCheckDto 
+         * - response body: true if enrolled, false otherwise
+            Example usage on how to send the request on the client side:
+                var checkDto = new EnrollmentCheckDto
+                {
+                    Student = studentDto,
+                    Class = classDto
+                };
+                await Http.PostAsJsonAsync("api/studentclass/check-enrollment", checkDto); 
+         */
+        [HttpPost("check-enrollment")]
+        public async Task<ActionResult<bool>> CheckEnrollment([FromBody] EnrollmentCheckDto dto)
         {
             var exists = await _context.StudentClasses
-                .AnyAsync(sc => sc.StudentId == dto.Student.UtdId && sc.ClassId == dto.Class.ClassId);
+                .AnyAsync(sc => sc.StudentId == dto.Student.UtdId && sc.ClassId == dto.Class.ClassId); // sc is StudentClass object within the database
 
             return Ok(exists); // true if enrolled, false otherwise
         }
 
     }
 }
+
+
+
+       
+         
+         
