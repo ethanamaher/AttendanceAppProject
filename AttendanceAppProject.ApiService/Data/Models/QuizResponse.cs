@@ -5,13 +5,13 @@ namespace AttendanceAppProject.ApiService.Data.Models;
 
 public partial class QuizResponse
 {
-    public Guid ResponseId { get; set; }
+    public Guid ResponseId { get; set; } // PK
 
-    public string StudentId { get; set; } = null!;
+    public string StudentId { get; set; } = null!; // FK1
 
-    public Guid QuizQuestionId { get; set; }
+    public Guid QuizQuestionId { get; set; } // FK2
 
-    public Guid QuizInstanceId { get; set; }
+    public Guid QuizInstanceId { get; set; } // FK3
 
     public virtual QuizInstance QuizInstance { get; set; } = null!;
 
