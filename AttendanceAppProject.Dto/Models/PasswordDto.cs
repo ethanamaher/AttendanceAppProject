@@ -5,9 +5,9 @@ namespace AttendanceAppProject.Dto.Models;
 
 public class PasswordDto
 {
-    public Guid PasswordId { get; set; }
+    public Guid PasswordId { get; set; } // PK
 
-    public Guid ClassId { get; set; }
+    public Guid ClassId { get; set; } // FK
 
     public DateOnly? DateAssigned { get; set; }
 

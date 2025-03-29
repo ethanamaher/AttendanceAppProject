@@ -5,11 +5,11 @@ namespace AttendanceAppProject.Dto.Models;
 
 public partial class QuizResponseDto
 {
-    public Guid ResponseId { get; set; }
+    public Guid ResponseId { get; set; } // PK
 
-    public string StudentId { get; set; } = null!;
+    public string StudentId { get; set; } = null!; // FK1
 
-    public Guid QuizQuestionId { get; set; }
+    public Guid QuizQuestionId { get; set; } // FK2
 
-    public Guid QuizInstanceId { get; set; }
+    public Guid QuizInstanceId { get; set; } // FK3
 }

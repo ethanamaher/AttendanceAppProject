@@ -5,9 +5,9 @@ namespace AttendanceAppProject.Dto.Models;
 
 public class QuizQuestionDto
 {
-    public Guid QuestionId { get; set; }
+    public Guid QuestionId { get; set; } // PK
 
-    public Guid QuizId { get; set; }
+    public Guid QuizId { get; set; } // FK
 
     public string CorrectAnswer { get; set; } = null!;
 

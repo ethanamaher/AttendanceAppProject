@@ -5,7 +5,7 @@ namespace AttendanceAppProject.Dto.Models;
 
 public class StudentDto
 {
-    public string UtdId { get; set; } = null!;
+    public string UtdId { get; set; } = null!; // PK
 
     public string FirstName { get; set; } = null!;
 

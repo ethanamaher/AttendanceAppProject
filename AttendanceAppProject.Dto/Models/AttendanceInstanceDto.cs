@@ -3,13 +3,18 @@ using System.Collections.Generic;
 
 namespace AttendanceAppProject.Dto.Models;
 
+/* DTO (data transfer object) for AttendanceInstance
+ * DTOs are used to transfer data between the server and client side without the server side having to share the database models directly
+ * These only contain relevant data for the client side, and are used to encapsulate the data into a single object that can be easily interacted with
+ */ 
+
 public class AttendanceInstanceDto
 {
-    public Guid AttendanceId { get; set; }
+    public Guid AttendanceId { get; set; } // PK
 
-    public string StudentId { get; set; } = null!;
+    public string StudentId { get; set; } = null!; // FK1
 
-    public Guid ClassId { get; set; }
+    public Guid ClassId { get; set; } // FK2
 
     public string? IpAddress { get; set; }
 

@@ -5,9 +5,9 @@ namespace AttendanceAppProject.Dto.Models;
 
 public class ClassDto
 {
-    public Guid ClassId { get; set; }
+    public Guid ClassId { get; set; } // PK
 
-    public string ProfUtdId { get; set; } = null!;
+    public string ProfUtdId { get; set; } = null!; // FK
 
     public string? ClassPrefix { get; set; }
 

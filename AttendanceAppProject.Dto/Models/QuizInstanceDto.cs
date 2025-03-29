@@ -5,9 +5,9 @@ namespace AttendanceAppProject.Dto.Models;
 
 public partial class QuizInstanceDto
 {
-    public Guid QuizId { get; set; }
+    public Guid QuizId { get; set; } // PK
 
-    public Guid ClassId { get; set; }
+    public Guid ClassId { get; set; } // FK
 
     public DateTime? StartTime { get; set; }
 
