@@ -10,4 +10,8 @@
     <ProjectReference Include="..\AttendanceAppProject.ServiceDefaults\AttendanceAppProject.ServiceDefaults.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.0.0" />
+  </ItemGroup>
+
 </Project>
