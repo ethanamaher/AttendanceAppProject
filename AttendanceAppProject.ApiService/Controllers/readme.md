@@ -39,7 +39,21 @@
 | POST   | `api/Password` | Create | Add a password record | `PasswordDto` | `Password` entity (deserialized into `PasswordDto` if used by client) |
 | POST   | `api/Password/validate` | Read | Check if a password is valid for a given class and date | `PasswordDto` (containing `ClassId`, `PasswordText`, and `DateAssigned` sent over by client side) | `true` or `false` (Boolean) |
 
-Note: The full response body of standard POST requests which simply add another resource to the database is the HTTP 201 created code and a Location header pointing to where the new resource can be found, and the new resource itself in the response body.
+Note: The full response body of standard create POST requests which simply add another resource to the database is the HTTP 201 created code and a Location header pointing to where the new resource can be found, and the new resource itself in the response body. From the Blazor front-end we can check if a POST request was successful this way:
+```
+var response = await Http.PostAsJsonAsync("api/student", newStudentDto);
+
+if (response.StatusCode == System.Net.HttpStatusCode.Created)
+{
+    // POST was successful
+    Console.WriteLine("A new student was added successfully!");
+}
+else
+{
+    // Handle failure
+    Console.WriteLine($"Failed to add student. Status: {response.StatusCode}");
+}
+```
 
 Note: UUIDs MUST be created on the server side only. The client side can retrieve UUIDs upon retrieval of a resource from the database in DTO form but it should not create any. When the client side sends a DTO to the API in order to add a new resource, it should not contain any UUID as that will be auto-generated from the server side only.
 
