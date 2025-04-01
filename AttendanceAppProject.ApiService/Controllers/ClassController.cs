@@ -2,7 +2,6 @@
 using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using AttendanceAppProject.ApiService.Data;
 using AttendanceAppProject.Dto.Models;
 
 // API controller for Class

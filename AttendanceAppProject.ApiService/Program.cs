@@ -1,3 +1,5 @@
+using AttendanceAppProject.ApiService.Data.Models;
+using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Data;
 using Microsoft.AspNetCore.Builder;
 using AttendanceAppProject.Dto.Models;

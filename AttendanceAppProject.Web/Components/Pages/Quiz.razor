@@ -35,7 +35,7 @@
 
         <div class="student-info">
             <div class="info-item">Student ID: <span>@studentId</span></div>
-            <div class="info-item">Class: <span>@classId</span></div>
+            <div class="info-item">Class: <span>@className</span></div>
         </div>
 
         @if (quizCompleted)
@@ -121,7 +121,7 @@
             className = classItem.ClassName;
         }
 
-        System.Diagnostics.Debug.WriteLine($"Class Selected: {classItem.ClassName}");
+        System.Diagnostics.Debug.WriteLine($"Class Selected: {className}");
 
 
         // Validate that student info exists
@@ -132,8 +132,6 @@
         secondsTimer.Enabled = true;
         secondsTimer.AutoReset = true;
         secondsTimer.Elapsed += (sender, e) => UpdateTime();
-
-        ClassDto selectedClass = await Http.GetFromJsonAsync<ClassDto>("api/class");
 
         // Only load quiz question if student is valid
         if (isValidStudent)
