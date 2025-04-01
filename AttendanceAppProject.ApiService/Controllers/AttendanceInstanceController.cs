@@ -19,7 +19,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         }
 
         /* GET: api/AttendanceInstance
-         * Get all attendnace instances from the database
+         * Get all attendance instances from the database
          * - request body: none
          * - response body: AttendanceInstances
          */
