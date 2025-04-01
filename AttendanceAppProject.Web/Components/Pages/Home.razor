@@ -46,7 +46,7 @@
             <label class="field-label">Class</label>
             <InputSelect @bind-Value="studentResponse!.classId">
                 <option value="@Guid.Empty">Select a Class</option>
-                @foreach (ClassDto classDto in studentResponse!.classes)
+                @foreach (ClassDto classDto in classesList)
                 {
                     <option value="@classDto.ClassId">@classDto.ClassName</option>
                 }
@@ -81,11 +81,11 @@
     private Timer? secondsTimer;
     private bool showLoginError = false;
 
-    // List to store class names
-    private List<string> classList = new List<string>();
-
-    // Student database for validation
+    // List to store student information for now
     private List<StudentRecord> studentDatabase = new List<StudentRecord>();
+
+    // list to store classes for dropdown
+    public List<ClassDto> classesList = new List<ClassDto>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -133,9 +133,7 @@
 
     private async Task LoadClassesAsync()
     {
-        // In a real app, this would be a database call
-        // Simulating database fetch with a delay
-        studentResponse.classes = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
+        classesList = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
     }
 
     private void UpdateTime()
@@ -143,6 +141,8 @@
         currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
         InvokeAsync(() =>
         {
+            currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
+            System.Diagnostics.Debug.WriteLine(currentTime);
             StateHasChanged();
         });
     }
@@ -177,7 +177,7 @@
             System.Diagnostics.Debug.WriteLine("Navigating to: /quiz");
 
             // Login successful, redirect to Quiz.razor with query parameters
-            NavigationManager.NavigateTo($"/quiz?studentId={Uri.EscapeDataString(studentResponse.student.StudentID)}&className={Uri.EscapeDataString(studentResponse.student.ClassName)}");
+            NavigationManager.NavigateTo($"/quiz?studentId={Uri.EscapeDataString(studentResponse.student.StudentID)}&class={Uri.EscapeDataString(studentResponse.classId.ToString())}");
         }
         else
         {
@@ -193,8 +193,6 @@
     private void ValidateStudentCredentials()
     {
         // Check if student exists in the database with matching credentials
-
-        // add check for student being enrolled in selected class
         var matchingStudent = studentDatabase.FirstOrDefault(s =>
             s.StudentID == studentResponse.studentID &&
             s.Password == studentResponse.formPassword);
@@ -202,7 +200,7 @@
         if (matchingStudent != null)
         {
             // Valid student - create a Student object
-            studentResponse.student = new Student(matchingStudent.StudentID, matchingStudent.className);
+            studentResponse.student = new Student(matchingStudent.StudentID, studentResponse.classId.Value);
             System.Diagnostics.Debug.WriteLine($"Student validated: {matchingStudent.StudentID}");
         }
         else
@@ -218,7 +216,7 @@
     {
         public string StudentID { get; set; } = "";
         public string Password { get; set; } = "";
-        public string className { get; set; } = "";
+        public Guid ClassId { get; set; } = Guid.Empty;
     }
 
     /*  Class for getting student info responses from form */
@@ -231,24 +229,6 @@
 
         public string? formPassword { get; set; }
 
-
-
-        public List<ClassDto> classes = new();
-        ClassDto selectedClass { get; set; }
-
-        public bool ClassExists() {
-            foreach (ClassDto classDto in classes)
-            {
-                if (classDto.ClassId == classId)
-                {
-                    selectedClass = classDto;
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         public override string ToString()
         {
             return student != null ? student.ToString() : "No student data";
@@ -259,23 +239,17 @@
     public class Student
     {
         public string StudentID { get; set; }
-        public string ClassName { get; set; }
+        public Guid ClassId { get; set; }
 
-        public Student(string studentID, string className)
+        public Student(string studentID, Guid classId)
         {
             StudentID = studentID;
-            ClassName = className;
+            ClassId = classId;
         }
 
         public override string ToString()
         {
-            return $"StudentID: {StudentID}, Class: {ClassName}";
+            return $"StudentID: {StudentID}, Class: {ClassId}";
         }
-    }
-
-    public class Class
-    {
-        public Guid? classID { get; set; }
-        public string? className { get; set; }
     }
 }

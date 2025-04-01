@@ -2,17 +2,19 @@
 @using System.Timers
 @implements IDisposable
 @inject NavigationManager NavigationManager
+@inject HttpClient Http
+@using AttendanceAppProject.Dto.Models
 
 <PageTitle>Student Quiz</PageTitle>
 
 <!-- Override any browser default styles -->
 <style>
     body, html {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        height: 100%;
-        width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
     }
 </style>
 
@@ -88,7 +90,9 @@
 
     // Student information from query parameters
     private string studentId = "";
+    private Guid classId = Guid.Empty;
     private string className = "";
+
     private bool isValidStudent = false;
 
     // Quiz state
@@ -108,7 +112,17 @@
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
 
         studentId = query["studentId"] ?? "";
-        className = query["className"] ?? "";
+        classId = new Guid(query["class"] ?? "");
+        System.Diagnostics.Debug.WriteLine($"Query Class ID: {classId.ToString()}");
+
+        // pull class from database where classId mntches query
+        var classItem = await Http.GetFromJsonAsync<ClassDto>($"api/class/{classId.ToString()}");
+        if(classItem != null) {
+            className = classItem.ClassName;
+        }
+
+        System.Diagnostics.Debug.WriteLine($"Class Selected: {classItem.ClassName}");
+
 
         // Validate that student info exists
         isValidStudent = !string.IsNullOrEmpty(studentId) && !string.IsNullOrEmpty(className);
@@ -145,9 +159,9 @@
 
     private void UpdateTime()
     {
-        currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
         InvokeAsync(() =>
         {
+            currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
             StateHasChanged();
         });
     }
