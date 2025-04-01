@@ -16,7 +16,7 @@ namespace AttendanceAppProject.ApiService.Controllers
 			_context = context;
 		}
 
-		// GET: api/Student
+		// GET: api/class
 		[HttpGet]
 		public async Task<ActionResult<IEnumerable<Class>>> GetClasses()
 		{

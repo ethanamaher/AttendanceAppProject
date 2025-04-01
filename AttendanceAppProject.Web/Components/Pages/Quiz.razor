@@ -2,6 +2,8 @@
 @using System.Timers
 @implements IDisposable
 @inject NavigationManager NavigationManager
+@inject HttpClient Http
+@using AttendanceAppProject.Web.Models
 
 <PageTitle>Student Quiz</PageTitle>
 
@@ -33,7 +35,7 @@
 
         <div class="student-info">
             <div class="info-item">Student ID: <span>@studentId</span></div>
-            <div class="info-item">Class: <span>@className</span></div>
+            <div class="info-item">Class: <span>@classId</span></div>
         </div>
 
         @if (quizCompleted)
@@ -88,7 +90,7 @@
 
     // Student information from query parameters
     private string studentId = "";
-    private string className = "";
+    private Guid classId = Guid.Empty;
     private bool isValidStudent = false;
 
     // Quiz state
@@ -108,16 +110,18 @@
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
 
         studentId = query["studentId"] ?? "";
-        className = query["class"] ?? "";
+        classId = new Guid(query["class"] ?? "");
 
         // Validate that student info exists
-        isValidStudent = !string.IsNullOrEmpty(studentId) && !string.IsNullOrEmpty(className);
+        isValidStudent = !string.IsNullOrEmpty(studentId) && classId != Guid.Empty;
 
         // Set up timer for current time display
         secondsTimer = new Timer(1000);
         secondsTimer.Enabled = true;
         secondsTimer.AutoReset = true;
         secondsTimer.Elapsed += (sender, e) => UpdateTime();
+
+        ClassDto selectedClass = await Http.GetFromJsonAsync<ClassDto>("api/class");
 
         // Only load quiz question if student is valid
         if (isValidStudent)
