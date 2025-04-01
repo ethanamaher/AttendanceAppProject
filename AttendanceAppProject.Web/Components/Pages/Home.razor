@@ -81,8 +81,11 @@
     private Timer? secondsTimer;
     private bool showLoginError = false;
 
-    // Student database for validation
+    // List to store student information for now
     private List<StudentRecord> studentDatabase = new List<StudentRecord>();
+    public List<ClassDto> classesList = new List<ClassDto>();
+
+    // list to store classes for dropdown
     public List<ClassDto> classesList = new List<ClassDto>();
 
     protected override async Task OnInitializedAsync()
@@ -135,14 +138,7 @@
 
     private async Task LoadClassesAsync()
     {
-        // In a real app, this would be a database call
-        // Simulating database fetch with a delay
-
         classesList = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
-
-        if(classesList == null) {
-            System.Diagnostics.Debug.WriteLine("Error fetching classes from api");
-        }
     }
 
     private void UpdateTime()
@@ -185,9 +181,7 @@
             System.Diagnostics.Debug.WriteLine("Navigating to: /quiz");
 
             // Login successful, redirect to Quiz.razor with query parameters
-
-            NavigationManager.NavigateTo($"/quiz?studentId={Uri.EscapeDataString(studentResponse.student.StudentID)}&class={Uri.EscapeDataString(studentResponse.student.ClassId.ToString())}");
-            
+            NavigationManager.NavigateTo($"/quiz?studentId={Uri.EscapeDataString(studentResponse.student.StudentID)}&class={Uri.EscapeDataString(studentResponse.classId.ToString())}");
         }
         else
         {

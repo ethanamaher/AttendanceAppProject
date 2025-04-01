@@ -9,16 +9,16 @@ using AttendanceAppProject.Dto.Models;
 
 namespace AttendanceAppProject.ApiService.Controllers
 {
-	[Route("api/[controller]")] // Automatically becomes "api/class"
-	[ApiController]
-	public class ClassController : ControllerBase
-	{
-		private readonly ApplicationDbContext _context;
+    [Route("api/[controller]")] // Automatically becomes "api/class"
+    [ApiController]
+    public class ClassController : ControllerBase
+    {
+        private readonly ApplicationDbContext _context;
 
-		public ClassController(ApplicationDbContext context)
-		{
-			_context = context;
-		}
+        public ClassController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
 
         /* GET: api/Class
 		 * Get all classes
@@ -26,17 +26,38 @@ namespace AttendanceAppProject.ApiService.Controllers
 		 * - response body: Classes
 		 */
         [HttpGet]
-		public async Task<ActionResult<IEnumerable<Class>>> GetClasses()
+        public async Task<ActionResult<IEnumerable<Class>>> GetClasses()
+        {
+            return await _context.Classes.ToListAsync();
+        }
+
+		/* GET: api/Class/{id}
+		 * Get class whose classId private key = id
+		 * - request body: Guid classId
+		 * - response body: Class
+		 */
+		[HttpGet("{id}")]
+		public async Task<ActionResult<Class>> GetClass(Guid id)
 		{
-			return await _context.Classes.ToListAsync();
+            System.Diagnostics.Debug.WriteLine($"-----CLASS CONTROLLER-----");
+            System.Diagnostics.Debug.WriteLine($"{id}");
+            var classItem = await _context.Classes.FirstOrDefaultAsync(c => c.ClassId == id);
+			System.Diagnostics.Debug.WriteLine($"{classItem.ToString()}");
+
+			if (classItem == null)
+            {
+                return NotFound();
+            }
+
+            return classItem;
 		}
 
-        /* POST: api/Class
+		/* POST: api/Class
          * Add a class to the database
          * - request body: ClassDto
          * - response body: Class
          */
-        [HttpPost]
+		[HttpPost]
         public async Task<ActionResult<Class>> AddClass([FromBody] ClassDto dto)
         {
             var newClass = new Class
