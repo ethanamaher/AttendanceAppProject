@@ -76,7 +76,11 @@ await Http.PostAsJsonAsync("api/studentclass/check-enrollment", checkDto);
 ## Postman Examples
 <img width="912" alt="image" src="https://github.com/user-attachments/assets/21523f7c-93e9-4309-9580-f441709a8354" />
 
+
+
 <img width="914" alt="image" src="https://github.com/user-attachments/assets/38e3d657-63dd-4c03-8e5a-1640b81c85d1" />
+
+
 
 <img width="906" alt="image" src="https://github.com/user-attachments/assets/239b5826-2554-487b-aad7-c3ac6958ae05" />
 
