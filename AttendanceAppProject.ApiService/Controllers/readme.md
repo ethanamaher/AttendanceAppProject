@@ -32,6 +32,17 @@
 | POST   | `api/Student` | Create | Add a student | `StudentDto` | `Student` entity (deserialized into `StudentDto` if used by client) |
 | POST   | `api/Student/exists` | Read | Check if a student exists in the database | `StudentDto` | `true` or `false` (Boolean) |
 
+### Password
+| Method | URI | Operation | Description | Request Body | Response Body |
+|--------|-----|-----------|-------------|--------------|----------------|
+| GET    | `api/Password` | Read | Get all password records | none | List of `Password` entities (deserialized into `List<PasswordDto>` on client) |
+| POST   | `api/Password` | Create | Add a password record | `PasswordDto` | `Password` entity (deserialized into `PasswordDto` if used by client) |
+| POST   | `api/Password/validate` | Read | Check if a password is valid for a given class and date | `PasswordDto` (containing `ClassId`, `PasswordText`, and `DateAssigned` sent over by client side) | `true` or `false` (Boolean) |
+
+Note: The full response body of standard POST requests which simply add another resource to the database is the HTTP 201 created code and a Location header pointing to where the new resource can be found, and the new resource itself in the response body.
+
+Note: UUIDs MUST be created on the server side only. The client side can retrieve UUIDs upon retrieval of a resource from the database in DTO form but it should not create any. When the client side sends a DTO to the API in order to add a new resource, it should not contain any UUID as that will be auto-generated from the server side only.
+
 ## Example Usage in Blazor Front-End
 To retrieve a list of all students:
 ```
@@ -61,6 +72,14 @@ var checkDto = new EnrollmentCheckDto
 };
 await Http.PostAsJsonAsync("api/studentclass/check-enrollment", checkDto); 
 ```
+
+## Postman Examples
+<img width="912" alt="image" src="https://github.com/user-attachments/assets/21523f7c-93e9-4309-9580-f441709a8354" />
+
+<img width="914" alt="image" src="https://github.com/user-attachments/assets/38e3d657-63dd-4c03-8e5a-1640b81c85d1" />
+
+<img width="906" alt="image" src="https://github.com/user-attachments/assets/239b5826-2554-487b-aad7-c3ac6958ae05" />
+
 
 
 ## API Flow
