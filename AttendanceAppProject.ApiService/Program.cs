@@ -1,5 +1,7 @@
 using AttendanceAppProject.ApiService.Data;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Builder;
+using AttendanceAppProject.Dto.Models;
+using AttendanceAppProject.ApiService.JsonConverters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,8 +22,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
 		ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
 
-// Enable Controllers
-builder.Services.AddControllers();
+// Enable Controllers, add JSON converters
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
+    options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
+});
 
 // Add CORS Policy 
 builder.Services.AddCors(options =>

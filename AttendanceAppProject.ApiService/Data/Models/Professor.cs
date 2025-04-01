@@ -2,7 +2,7 @@
 
 public partial class Professor
 {
-	public string UtdId { get; set; } = null!;
+    public string UtdId { get; set; } = null!; // PK
 
 	public string FirstName { get; set; } = null!;
 
