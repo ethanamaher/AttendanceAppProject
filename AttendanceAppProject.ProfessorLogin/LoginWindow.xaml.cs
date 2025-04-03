@@ -16,6 +16,8 @@ namespace AttendanceAppProject.ProfessorLogin
         {
             InitializeComponent();
             _serviceProvider = serviceProvider;
+            // Uncomment and implement the actual authentication service when ready
+            // _authService = serviceProvider.GetRequiredService<IProfessorAuthService>(); 
             ProfessorIdTextBox.Focus();
         }
 

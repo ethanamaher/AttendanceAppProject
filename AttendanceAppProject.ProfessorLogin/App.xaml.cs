@@ -48,6 +48,15 @@ namespace AttendanceAppProject.ProfessorLogin
 
         private void ConfigureServices(IServiceCollection services)
         {
+            // Register the API services when integrating to actual database
+
+            /*
+            if (Configuration != null)
+            {
+                services.AddApiServices(Configuration);
+            } 
+            */
+
             // Register windows only - we'll handle the API connection separately
             services.AddTransient<LoginWindow>();
             services.AddTransient<AttendanceWindow>();
