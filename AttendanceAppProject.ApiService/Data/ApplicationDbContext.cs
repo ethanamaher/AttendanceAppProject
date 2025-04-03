@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using AttendanceAppProject.ApiService.Models;
 
-namespace AttendanceAppProject.ApiService
+namespace AttendanceAppProject.ApiService.Data
 {
     public class ApplicationDbContext : DbContext
     {
@@ -38,6 +39,12 @@ namespace AttendanceAppProject.ApiService
                 entity.HasIndex(e => e.ProfessorId).IsUnique();
             });
 
+            // Seed initial professor data
+            SeedData(modelBuilder);
+        }
+
+        private void SeedData(ModelBuilder modelBuilder)
+        {
             // Seed initial professor data
             modelBuilder.Entity<Professor>().HasData(
                 new Professor

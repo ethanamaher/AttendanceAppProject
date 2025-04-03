@@ -1,55 +1,71 @@
-﻿using System;
+﻿// Canh Nguyen 
+
+using System;
 using System.Windows;
+using Microsoft.Extensions.DependencyInjection;
+using AttendanceAppProject.ProfessorLogin.Models;
+using AttendanceAppProject.ProfessorLogin.Services;
+
 namespace AttendanceAppProject.ProfessorLogin
 {
     public partial class LoginWindow : Window
     {
-        private readonly IProfessorAuthClient _authClient;
-        public LoginWindow(IProfessorAuthClient authClient)
+        private readonly IServiceProvider _serviceProvider;
+
+        public LoginWindow(IServiceProvider serviceProvider)
         {
             InitializeComponent();
-            _authClient = authClient;
+            _serviceProvider = serviceProvider;
             ProfessorIdTextBox.Focus();
         }
 
-        private async void LoginButton_Click(object sender, RoutedEventArgs e)
+        private void LoginButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 // Clear previous status
                 StatusTextBlock.Text = string.Empty;
-                // Validate input
-                if (string.IsNullOrWhiteSpace(ProfessorIdTextBox.Text))
+
+                // Get entered credentials
+                string professorId = ProfessorIdTextBox.Text.Trim();
+                string password = PasswordBox.Password;
+
+                if (string.IsNullOrWhiteSpace(professorId))
                 {
                     StatusTextBlock.Text = "Please enter your Professor ID";
                     ProfessorIdTextBox.Focus();
                     return;
                 }
-                if (string.IsNullOrWhiteSpace(PasswordBox.Password))
+
+                if (string.IsNullOrWhiteSpace(password))
                 {
                     StatusTextBlock.Text = "Please enter your password";
                     PasswordBox.Focus();
                     return;
                 }
-                // Disable login button while processing
-                IsEnabled = false;
-                StatusTextBlock.Text = "Logging in...";
-                // Authenticate with the API
-                var professor = await _authClient.LoginAsync(
-                    ProfessorIdTextBox.Text.Trim(),
-                    PasswordBox.Password);
+
+                // Use mock authentication for now
+                ProfessorModel professor = MockDataProvider.GetMockProfessor(professorId, password);
+
                 if (professor != null)
                 {
-                    // You can handle "Remember Me" logic here if needed
-                    // For now, just showing a comment as a placeholder
+                    // Store the professor data for use in other windows
+                    App.CurrentProfessor = professor;
+
+                    // Handle "Remember Me" checkbox if needed
                     bool rememberMe = RememberMeCheckBox.IsChecked ?? false;
                     // if (rememberMe) { /* Save credentials logic */ }
 
                     // Show a welcome message
                     MessageBox.Show($"Welcome, {professor.FullName}!\nDepartment: {professor.Department}",
                         "Login Successful", MessageBoxButton.OK, MessageBoxImage.Information);
-                    // Launch the main attendance application
-                    App.LaunchAttendanceApp();
+
+                    // Open the attendance window
+                    var attendanceWindow = _serviceProvider.GetRequiredService<AttendanceWindow>();
+                    attendanceWindow.Show();
+
+                    // Close the login window
+                    this.Close();
                 }
                 else
                 {
@@ -60,13 +76,8 @@ namespace AttendanceAppProject.ProfessorLogin
             }
             catch (Exception ex)
             {
-                StatusTextBlock.Text = "Error connecting to server";
+                StatusTextBlock.Text = "Error during login";
                 MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                // Re-enable the login button
-                IsEnabled = true;
             }
         }
 
