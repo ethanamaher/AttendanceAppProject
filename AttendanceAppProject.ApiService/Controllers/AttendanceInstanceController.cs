@@ -1,4 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿/* AttendanceInstance API Controller
+ * Handles HTTP GET and POST requests for attendance instances, allowing for retrieval and creation of attendance records.
+ * Written by Maaz Raza 
+ */
+
+using Microsoft.AspNetCore.Mvc;
 using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Data;

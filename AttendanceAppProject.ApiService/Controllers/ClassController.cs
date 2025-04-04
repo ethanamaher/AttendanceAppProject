@@ -1,4 +1,9 @@
-﻿using AttendanceAppProject.ApiService.Data;
+﻿/* Class API Controller
+ * Handles HTTP GET and POST requests for classes, allowing for retrieval and creation of class records, retrieving a class by its ID, and checking if a class exists in the database.
+ * Written by Ethan Maher
+ */
+
+using AttendanceAppProject.ApiService.Data;
 using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

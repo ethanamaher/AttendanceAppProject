@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿/* StudentClass API Controller
+ * Handles HTTP GET and POST requests for StudentClass, allowing for retrieval and creation of StudentClass record which map students to classes, and to verify if a student is enrolled in a particular class.
+ * Written by Maaz Raza 
+ */
+
+using Microsoft.AspNetCore.Mvc;
 using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Data;
 using AttendanceAppProject.Dto.Models;
-
-// API controller for StudentClass relation
 
 namespace AttendanceAppProject.ApiService.Controllers
 {

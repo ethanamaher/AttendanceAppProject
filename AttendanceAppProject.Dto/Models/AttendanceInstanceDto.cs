@@ -1,12 +1,14 @@
-﻿using System;
+﻿/* DTO (data transfer object) for AttendanceInstance
+ * DTOs are used to transfer data between the server and client side without the server side having to share the database models directly
+ * These only contain relevant data for the client side, and are used to encapsulate the data into a single object that can be easily interacted with
+ * Written by Maaz Raza
+ */
+
+using System;
 using System.Collections.Generic;
 
 namespace AttendanceAppProject.Dto.Models;
 
-/* DTO (data transfer object) for AttendanceInstance
- * DTOs are used to transfer data between the server and client side without the server side having to share the database models directly
- * These only contain relevant data for the client side, and are used to encapsulate the data into a single object that can be easily interacted with
- */ 
 
 public class AttendanceInstanceDto
 {

@@ -1,4 +1,8 @@
-﻿using System;
+﻿/* Quiz Response Dto, used to transfer Quiz data between the server and client side and encapsulate JSON responses from HTTP requests for client to interact with 
+ * Written by Maaz Raza
+ */
+
+using System;
 using System.Collections.Generic;
 
 namespace AttendanceAppProject.Dto.Models;

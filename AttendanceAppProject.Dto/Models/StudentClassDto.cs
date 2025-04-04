@@ -1,4 +1,8 @@
-﻿using System;
+﻿/* StudentClass Dto, used to transfer StudentClass data between the server and client side and encapsulate JSON responses from HTTP requests for client to interact with 
+ * Written by Maaz Raza
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
