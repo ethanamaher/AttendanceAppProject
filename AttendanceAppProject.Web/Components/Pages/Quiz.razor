@@ -36,7 +36,12 @@
         <!-- display for student info and selected class -->
         <div class="student-info">
             <div class="info-item">Student ID: <span>@studentId</span></div>
-            <div class="info-item">Class: <span>@className</span></div>
+            <div class="info-item">Class: 
+                <span>@classDto.ClassPrefix @classDto.ClassNumber - @classDto.ClassName</span>
+                <br />
+                <span>(@classDto.StartTime - @classDto.EndTime)</span>
+            
+            </div>
         </div>
 
         <!-- if quiz is completed show result information -->
@@ -104,7 +109,7 @@
     // Student information from query parameters
     private string studentId = "";
     private Guid classId = Guid.Empty;
-    private string className = "";
+    private ClassDto classDto = new ClassDto();
 
     private bool isValidStudent = false;
 
@@ -133,12 +138,8 @@
         System.Diagnostics.Debug.WriteLine($"Query Class ID: {classId.ToString()}");
 
         // pull class from database where classId mntches query
-        var classItem = await Http.GetFromJsonAsync<ClassDto>($"api/class/{classId.ToString()}");
-        if(classItem != null) {
-            className = classItem.ClassName;
-        }
-
-        System.Diagnostics.Debug.WriteLine($"Class Selected: {className}");
+        classDto = await Http.GetFromJsonAsync<ClassDto>($"api/class/{classId.ToString()}");
+        System.Diagnostics.Debug.WriteLine($"Class Selected: {classDto.ClassName}");
 
         quizInstance = await Http.GetFromJsonAsync<QuizInstanceDto>($"api/quizinstance/{classId.ToString()}");
         System.Diagnostics.Debug.WriteLine($"Quiz Selected: {quizInstance.QuizId}");
