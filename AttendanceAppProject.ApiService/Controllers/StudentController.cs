@@ -52,20 +52,20 @@ namespace AttendanceAppProject.ApiService.Controllers
 
         /* POST: api/student/exists
          * Check if a student exists in the database by validating the UtdId of a given StudentDto passed in by the client side
-         * - request body: StudentDto
-         * - response body: Student
+         * - request body: String utdId
+         * - response body: HttpResponse
          */
         [HttpPost("exists")]
-        public async Task<ActionResult<bool>> StudentExists([FromBody] StudentDto dto)
+        public async Task<ActionResult<bool>> StudentExists([FromBody] String UtdId)
         {
-            if (string.IsNullOrWhiteSpace(dto.UtdId))
+			System.Diagnostics.Debug.WriteLine($"Request for student {UtdId}");
+			if (string.IsNullOrWhiteSpace(UtdId))
             {
                 return BadRequest("UtdId is required.");
             }
 
-            var exists = await _context.Students.AnyAsync(s => s.UtdId == dto.UtdId);
+            var exists = await _context.Students.AnyAsync(s => s.UtdId == UtdId);
             return Ok(exists);
         }
-
     }
 }

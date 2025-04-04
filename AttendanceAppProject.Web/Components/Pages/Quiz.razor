@@ -33,11 +33,13 @@
             <div class="datetime-display">@currentTime</div>
         </div>
 
+        <!-- display for student info and selected class -->
         <div class="student-info">
             <div class="info-item">Student ID: <span>@studentId</span></div>
             <div class="info-item">Class: <span>@className</span></div>
         </div>
 
+        <!-- if quiz is completed show result information -->
         @if (quizCompleted)
         {
             <div class="quiz-completed">
@@ -46,6 +48,7 @@
                 <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
             </div>
         }
+        <!-- if the student is not valid, should be checked before on home page submission thus should not happen in normal use-->
         else if (!isValidStudent)
         {
             <div class="invalid-access">
@@ -54,6 +57,7 @@
                 <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
             </div>
         }
+        <!-- quiz display -->
         else
         {
             <div class="quiz-question">
@@ -72,8 +76,9 @@
                     </div>
                 }
 
+                <!-- button to handle quiz submission -->
                 <div class="button-container">
-                    <button @onclick="SubmitAnswer" class="submit-button"></button>
+                    <button @onclick="SubmitQuiz" class="submit-button"></button>
                     @if (questionAnswered)
                     {
                         <button @onclick="FinishQuiz" class="auto-finish-button" style="display: none;"></button>
@@ -97,10 +102,13 @@
 
     // Quiz state
     private QuizQuestion quizQuestion = new QuizQuestion();
+
     private string userAnswer = "";
+
     private bool showFeedback = false;
     private string feedback = "";
     private string feedbackClass = "";
+
     private bool questionAnswered = false;
     private bool quizCompleted = false;
     private int score = 0;
@@ -157,16 +165,23 @@
             };
     }
 
+    // method to automatically update time on page
     private void UpdateTime()
     {
         InvokeAsync(() =>
         {
+            // pulls current time and updates page with StateHasChanged
             currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
             StateHasChanged();
         });
     }
 
-    private void SubmitAnswer()
+    // method to handle quiz submissions
+    // checks answers from QuizInstance pulled from database
+
+    // TODO
+    // create attendanceinstance on submission and post to database
+    private void SubmitQuiz()
     {
         if (string.IsNullOrWhiteSpace(userAnswer))
         {
@@ -215,6 +230,7 @@
         }
     }
 
+    // handle navigation back to home page
     private void ReturnToHome()
     {
         NavigationManager.NavigateTo("/");
@@ -224,7 +240,7 @@
     {
         if (e.Key == "Enter")
         {
-            SubmitAnswer();
+            SubmitQuiz();
         }
     }
 

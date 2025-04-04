@@ -51,6 +51,26 @@ namespace AttendanceAppProject.ApiService.Controllers
             return classItem;
 		}
 
+
+		/* POST: api/Class/exists
+         * Check if a class exists in the database by validating the classId passed in by the client side
+         * - request body: classId
+         * - response body: HttpResponse
+         */
+		[HttpPost("exists")]
+		public async Task<ActionResult<bool>> ClassExists([FromBody] Guid ClassId)
+		{
+			System.Diagnostics.Debug.WriteLine($"Request for class {ClassId}");
+			if (string.IsNullOrWhiteSpace(ClassId.ToString()))
+			{
+				return BadRequest("Class ID is required.");
+			}
+
+			var exists = await _context.Classes.AnyAsync(s => s.ClassId == ClassId);
+			return Ok(exists);
+		}
+
+
 		/* POST: api/Class
          * Add a class to the database
          * - request body: ClassDto

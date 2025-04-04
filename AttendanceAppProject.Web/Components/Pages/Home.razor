@@ -30,9 +30,9 @@
             Incorrect Student Information. Please try again.
         </div>
     }
-    <EditForm Model="studentResponse" OnValidSubmit="Submit" FormName="Student_Response_Form">
+    <EditForm Model="studentResponse" OnValidSubmit="SubmitForm" FormName="Student_Response_Form">
 
-
+        <!-- field for student id -->
         <div class="student-id-field">
             <label class="field-label">Student ID</label>
             <InputText @bind-Value="studentResponse!.studentID" placeholder="Enter your student ID" />
@@ -41,13 +41,16 @@
 
 
 
-
+        <!-- dropdown field for class selection -->
         <div class="class-field">
             <label class="field-label">Class</label>
             <InputSelect @bind-Value="studentResponse!.classId">
+                <!-- default value -->
                 <option value="@Guid.Empty">Select a Class</option>
+
                 @foreach (ClassDto classDto in classesList)
                 {
+                    <!-- for each class, display its name and tie value with its Guid -->
                     <option value="@classDto.ClassId">@classDto.ClassName</option>
                 }
             </InputSelect>
@@ -55,21 +58,18 @@
 
 
 
-
+        <!-- form password field -->
         <div class="password-field">
             <label class="field-label">Password</label>
-            <InputText type="password" @bind-Value="studentResponse!.formPassword" placeholder="Enter your password" />
+            <InputText @bind-Value="studentResponse!.formPassword" placeholder="Enter your password" />
         </div>
 
 
 
-
+        <!-- button to handle form submission -->
         <div class="submit-button-container">
             <button type="submit">Submit</button>
         </div>
-
-
-
 
     </EditForm>
 </div>
@@ -96,56 +96,24 @@
         secondsTimer.Elapsed += (sender, e) => UpdateTime();
 
         studentResponse ??= new();
-        // Load classes and student database
+        // Load classes
         await LoadClassesAsync();
-        InitializeStudentDatabase();
 
         System.Diagnostics.Debug.WriteLine("Home component initialized");
     }
 
-    /*
-    * probably should not store student information on webpage
-    * 
-    * send response to backend and check there
-    */
-    private void InitializeStudentDatabase()
-    {
-        // In a real app, this would load from a database
-        // Here we're using a sample hardcoded record
-        studentDatabase.Add(new StudentRecord
-            {
-                StudentID = "chn210001",
-                Password = "american",
-                //ClassName = "Computer Science"
-            });
-
-        // You can add more student records here as needed
-        studentDatabase.Add(new StudentRecord
-            {
-                StudentID = "abc123456",
-                Password = "password",
-                //ClassName = "Mathematics"
-            });
-
-        studentDatabase.Add(new StudentRecord
-            {
-                StudentID = "eam200004",
-                Password = "password",
-                ClassId = new Guid("d94db2a0-f96d-11ef-ac73-c5cdb5259684")
-            });
-    }
-
+    // load classes from database
     private async Task LoadClassesAsync()
     {
         classesList = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
     }
 
+    // method to update time on page automatically
     private void UpdateTime()
     {
         InvokeAsync(() =>
         {
             currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
-            System.Diagnostics.Debug.WriteLine(currentTime);
             StateHasChanged();
         });
     }
@@ -156,62 +124,57 @@
         secondsTimer?.Dispose();
     }
 
-    private void Submit()
+    private async void FormError() {
+        // Incorrect credentials - show error message
+        showLoginError = true;
+        System.Diagnostics.Debug.WriteLine("Login failed - incorrect information. Showing error message.");
+
+        // Clear only the password field for retry
+        studentResponse.formPassword = "";
+    }
+
+    // handle form submission
+    private async void SubmitForm()
     {
         System.Diagnostics.Debug.WriteLine("Form Submission Detected");
 
+        // checking for any empty data in form
         if(studentResponse.studentID == null || studentResponse.classId == Guid.Empty || studentResponse.formPassword == null) {
             System.Diagnostics.Debug.WriteLine("Invalid information input");
         }
 
         // Debug the current state
-        System.Diagnostics.Debug.WriteLine($"StudentID: {studentResponse!.studentID}");
+        System.Diagnostics.Debug.WriteLine($"StudentID: {studentResponse.studentID}");
         System.Diagnostics.Debug.WriteLine($"ClassID: {studentResponse.classId}");
 
-        // Validate against student database
-        ValidateStudentCredentials();
-
-        if (studentResponse.student != null)
+        var studentExists = await Http.PostAsJsonAsync("api/student/exists", studentResponse.studentID);
+        System.Diagnostics.Debug.WriteLine($"Student Exists: {studentExists.IsSuccessStatusCode}");
+        System.Diagnostics.Debug.WriteLine($"Response: {studentExists}");
+        // if student does not exist
+        if (!studentExists.IsSuccessStatusCode)
         {
-            // Login successful, reset error flag
-            showLoginError = false;
+            FormError();
+            return;
+        }
 
-            System.Diagnostics.Debug.WriteLine($"Login successful for: {studentResponse}");
-            System.Diagnostics.Debug.WriteLine("Navigating to: /quiz");
+        var classExists = await Http.PostAsJsonAsync("api/class/exists", studentResponse.classId);
+        System.Diagnostics.Debug.WriteLine($"Class Exists: {classExists.IsSuccessStatusCode}");
+        System.Diagnostics.Debug.WriteLine($"Response: {classExists}");
+        // if student does not exist
+        if (!studentExists.IsSuccessStatusCode)
+        {
+            FormError();
+            return;
+        }
+
+        // Login successful, reset error flag
+        showLoginError = false;
+
+        System.Diagnostics.Debug.WriteLine($"Login successful for: {studentResponse}");
+        System.Diagnostics.Debug.WriteLine("Navigating to: /quiz");
 
             // Login successful, redirect to Quiz.razor with query parameters
-            NavigationManager.NavigateTo($"/quiz?studentId={Uri.EscapeDataString(studentResponse.student.StudentID)}&class={Uri.EscapeDataString(studentResponse.classId.ToString())}");
-        }
-        else
-        {
-            // Incorrect credentials - show error message
-            showLoginError = true;
-            System.Diagnostics.Debug.WriteLine("Login failed - incorrect information. Showing error message.");
-
-            // Clear only the password field for retry
-            studentResponse.formPassword = "";
-        }
-    }
-
-    private void ValidateStudentCredentials()
-    {
-        // Check if student exists in the database with matching credentials
-        var matchingStudent = studentDatabase.FirstOrDefault(s =>
-            s.StudentID == studentResponse.studentID &&
-            s.Password == studentResponse.formPassword);
-
-        if (matchingStudent != null)
-        {
-            // Valid student - create a Student object
-            studentResponse.student = new Student(matchingStudent.StudentID, studentResponse.classId.Value);
-            System.Diagnostics.Debug.WriteLine($"Student validated: {matchingStudent.StudentID}");
-        }
-        else
-        {
-            // No matching student found
-            studentResponse.student = null;
-            System.Diagnostics.Debug.WriteLine("Student validation failed");
-        }
+        NavigationManager.NavigateTo($"/quiz?studentId={Uri.EscapeDataString(studentResponse.student.StudentID)}&class={Uri.EscapeDataString(studentResponse.classId.ToString())}");
     }
 
     // Student record model for database comparison
@@ -238,9 +201,6 @@
         }
     }
 
-    // Make sure Student class is defined properly
-
-    // define outside of this file probably
     public class Student
     {
         public string StudentID { get; set; }
