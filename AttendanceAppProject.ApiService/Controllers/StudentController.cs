@@ -66,15 +66,15 @@ namespace AttendanceAppProject.ApiService.Controllers
 			System.Diagnostics.Debug.WriteLine($"Request for student {UtdId}");
 			if (string.IsNullOrWhiteSpace(UtdId))
             {
-                return BadRequest("UtdId is required.");
+                return BadRequest("UtdId is required."); // 400
             }
 
             var exists = await _context.Students.AnyAsync(s => s.UtdId == UtdId);
             if(!exists)
             {
-                return NotFound($"Student with ID {UtdId} not found");
+                return NotFound($"Student with ID {UtdId} not found"); // 404
             }
-            return Ok(exists);
+            return Ok(exists); // 200
         }
     }
 }

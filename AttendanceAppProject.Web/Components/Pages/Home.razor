@@ -124,6 +124,7 @@
         secondsTimer?.Dispose();
     }
 
+    // can integrate status codes for which part of form is invalid
     private async void FormError() {
         // Incorrect credentials - show error message
         showLoginError = true;
@@ -163,9 +164,10 @@
         var classExists = await Http.PostAsJsonAsync("api/class/exists", studentResponse.classId);
         System.Diagnostics.Debug.WriteLine($"Class Exists: {classExists.IsSuccessStatusCode}");
         System.Diagnostics.Debug.WriteLine($"Response: {classExists}");
-        // if student does not exist
-        
-        if (!studentExists.IsSuccessStatusCode)
+        // if class does not exist
+        // should never be 404
+        // if errors, will be bad request
+        if (!classExists.IsSuccessStatusCode)
         {
             FormError();
             return;
@@ -177,7 +179,7 @@
         System.Diagnostics.Debug.WriteLine("Navigating to: /quiz");
 
             // Login successful, redirect to Quiz.razor with query parameters
-        NavigationManager.NavigateTo($"/quiz?studentId={Uri.EscapeDataString(studentResponse.student.StudentID)}&class={Uri.EscapeDataString(studentResponse.classId.ToString())}");
+        NavigationManager.NavigateTo($"/quiz?studentId={Uri.EscapeDataString(studentResponse.studentID)}&class={Uri.EscapeDataString(studentResponse.classId.ToString())}");
     }
 
     // Student record model for database comparison
@@ -191,33 +193,10 @@
     /*  Class for getting student info responses from form */
     public class StudentResponse
     {
-        public Student? student { get; set; }
 
         public string? studentID { get; set; }
         public Guid? classId { get; set; }
 
         public string? formPassword { get; set; }
-
-        public override string ToString()
-        {
-            return student != null ? student.ToString() : "No student data";
-        }
-    }
-
-    public class Student
-    {
-        public string StudentID { get; set; }
-        public Guid ClassId { get; set; }
-
-        public Student(string studentID, Guid classId)
-        {
-            StudentID = studentID;
-            ClassId = classId;
-        }
-
-        public override string ToString()
-        {
-            return $"StudentID: {StudentID}, Class: {ClassId}";
-        }
     }
 }

@@ -68,15 +68,15 @@ namespace AttendanceAppProject.ApiService.Controllers
 			System.Diagnostics.Debug.WriteLine($"Request for class {ClassId}");
 			if (string.IsNullOrWhiteSpace(ClassId.ToString()))
 			{
-				return BadRequest("Class ID is required.");
+				return BadRequest("Class ID is required."); // 400
 			}
 
 			var exists = await _context.Classes.AnyAsync(s => s.ClassId == ClassId);
 			if (!exists)
 			{
-				return NotFound($"Class with ID {ClassId} not found");
+				return NotFound($"Class with ID {ClassId} not found"); // 404
 			}
-			return Ok(exists);
+			return Ok(exists); // 200
 		}
 
 
