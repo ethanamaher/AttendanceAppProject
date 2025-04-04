@@ -65,6 +65,10 @@ namespace AttendanceAppProject.ApiService.Controllers
             }
 
             var exists = await _context.Students.AnyAsync(s => s.UtdId == UtdId);
+            if(!exists)
+            {
+                return NotFound($"Student with ID {UtdId} not found");
+            }
             return Ok(exists);
         }
     }

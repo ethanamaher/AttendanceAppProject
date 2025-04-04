@@ -151,6 +151,9 @@
         System.Diagnostics.Debug.WriteLine($"Student Exists: {studentExists.IsSuccessStatusCode}");
         System.Diagnostics.Debug.WriteLine($"Response: {studentExists}");
         // if student does not exist
+        // can also further go into response statuscodes
+        // 404 - not found
+        // 400 - bad request
         if (!studentExists.IsSuccessStatusCode)
         {
             FormError();
@@ -161,12 +164,12 @@
         System.Diagnostics.Debug.WriteLine($"Class Exists: {classExists.IsSuccessStatusCode}");
         System.Diagnostics.Debug.WriteLine($"Response: {classExists}");
         // if student does not exist
+        
         if (!studentExists.IsSuccessStatusCode)
         {
             FormError();
             return;
         }
-
         // Login successful, reset error flag
         showLoginError = false;
 
