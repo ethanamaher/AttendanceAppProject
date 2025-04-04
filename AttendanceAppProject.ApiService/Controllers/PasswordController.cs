@@ -47,7 +47,7 @@ namespace AttendanceAppProject.ApiService.Controllers
             };
             _context.Passwords.Add(password);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetPasswords), new { id = password.ClassId }, password);
+            return CreatedAtAction(nameof(GetPasswords), new { id = password.PasswordId }, password);
         }
 
         /* POST: api/Password/validate 
