@@ -115,7 +115,7 @@ namespace AttendanceAppProject.ApiService.Controllers
                     ai.ClassId == classId &&
                     ai.DateTime.HasValue &&
                     DateOnly.FromDateTime(ai.DateTime.Value) == date &&
-                    ai.ExcusedAbsence != true)
+                    ai.ExcusedAbsence == false)
                 .Select(ai => ai.StudentId)
                 .ToListAsync();
 
