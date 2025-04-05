@@ -71,9 +71,6 @@
                 @foreach(QuizQuestionDto questionDto in quizQuestions)
                 {
                     <div class="quiz-question">
-
-
-
                         <InputRadioGroup @bind-Value="attendanceQuiz!.selectedChoice">
                             <div class="question-number">
                                 Question @(quizQuestions.IndexOf(questionDto) + 1) of @quizQuestions.Count
@@ -84,28 +81,25 @@
                                 <strong>@questionDto.QuestionText</strong>
                             </div>
 
-                            <InputRadio Value="@questionDto.AnswerA" />
-                            @questionDto.AnswerA <br />
+                            @foreach(QuizAnswerDto quizAnswerDto in quizAnswers[quizQuestions.IndexOf(questionDto)])
+                            {
+                                <InputRadio Value="@quizAnswerDto.AnswerId" />
+                                 <span class="ms-2">@quizAnswerDto.AnswerText</span><br />
+                            }
 
-                            <InputRadio Value="@questionDto.AnswerB" />
-                            @questionDto.AnswerB <br />
-
-                            <InputRadio Value="@questionDto.AnswerC" />
-                            @questionDto.AnswerC <br />
-
-                            <InputRadio Value="@questionDto.AnswerD" />
-                            @questionDto.AnswerD <br />
-
-                            <!-- button to handle form submission -->
-                            <div class="submit-button-container">
-                                <button type="submit">Submit</button>
-                            </div>
+                    
 
                         </InputRadioGroup>
 
 
-                    </div>
+                    </div><br />
+
                 }
+
+                <!-- button to handle form submission -->
+                  <div class="submit-button-container">
+                                <button type="submit">Submit</button>
+                                </div>
             </EditForm>
         }
     </div>
@@ -127,7 +121,7 @@
     // Quiz state
     private QuizInstanceDto quizInstance = new QuizInstanceDto();
     private List<QuizQuestionDto> quizQuestions = new List<QuizQuestionDto>();
-    private List<string> answerChoices = new List<string>();
+    private List<List<QuizAnswerDto>> quizAnswers = new List<List<QuizAnswerDto>>();
 
     private string userAnswer = "";
 
@@ -159,12 +153,9 @@
         System.Diagnostics.Debug.WriteLine($"Quiz Selected: {quizInstance.QuizId}");
 
 
-        quizQuestions
-
-
 
         // error out, quiz instance not found
-    if (quizInstance.QuizId == Guid.Empty)
+        if (quizInstance.QuizId == Guid.Empty)
         {
             return;
         }
@@ -186,13 +177,19 @@
     private async Task LoadQuizQuestions()
     {
         quizQuestions = await Http.GetFromJsonAsync<List<QuizQuestionDto>>($"api/quizquestion/{quizInstance.QuizId.ToString()}");
-        System.Diagnostics.Debug.WriteLine($"Quiz Question: {quizQuestions}");
+        System.Diagnostics.Debug.WriteLine($"Quiz Question: {quizQuestions.Count()}");
     }
-    
+
     // load List<QuizAnswers> and add each list to a map to map QuizQuestion -> quizAnswers
     private async Task LoadQuizAnswers()
     {
         System.Diagnostics.Debug.WriteLine($"Quiz Answers:");
+        foreach(QuizQuestionDto questionDto in quizQuestions)
+        {
+            List<QuizAnswerDto> answerDtos = await Http.GetFromJsonAsync<List<QuizAnswerDto>>($"api/quizanswer/{questionDto.QuestionId}");
+            quizAnswers.Add(answerDtos);
+        }
+        System.Diagnostics.Debug.WriteLine($"Quiz Answers Size: {quizAnswers.Count()}");
     }
 
     // method to automatically update time on page

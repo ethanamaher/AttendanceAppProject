@@ -25,10 +25,10 @@ namespace AttendanceAppProject.ApiService.Controllers
          * - response body: Passwords
          */
         [HttpGet("{QuestionId}")]
-        public async Task<ActionResult<IEnumerable<QuizQuestion>>> GetAnswersById(Guid QuestionId)
+        public async Task<ActionResult<IEnumerable<QuizAnswer>>> GetAnswersById(Guid QuestionId)
         {
             System.Diagnostics.Debug.WriteLine($"Looking up answers for {QuestionId}");
-            return await _context.QuizQuestions.Where(qanswer => qanswer.QuestionId == QuestionId).ToListAsync();
+            return await _context.QuizAnswers.Where(qanswer => qanswer.QuestionId == QuestionId).ToListAsync();
         }
     }
 }
