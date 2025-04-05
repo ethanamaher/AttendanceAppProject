@@ -30,8 +30,7 @@
             Incorrect Student Information. Please try again.
         </div>
     }
-    <EditForm Model="studentResponse" OnValidSubmit="SubmitForm" FormName="Student_Response_Form">
-
+    <EditForm Model="@studentResponse" OnValidSubmit="@SubmitForm" FormName="Student_Response_Form">
         <!-- field for student id -->
         <div class="student-id-field">
             <label class="field-label">Student ID</label>
@@ -51,7 +50,7 @@
                 @foreach (ClassDto classDto in classesList)
                 {
                     <!-- for each class, display its name and tie value with its Guid -->
-                    <option value="@classDto.ClassId">@classDto.ClassName</option>
+                    <option value="@classDto.ClassId">@classDto.ClassPrefix@classDto.ClassNumber @classDto.ClassName (@classDto.StartTime - @classDto.EndTime)</option>
                 }
             </InputSelect>
         </div>

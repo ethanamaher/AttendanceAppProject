@@ -40,7 +40,7 @@
                 <span>@classDto.ClassPrefix @classDto.ClassNumber - @classDto.ClassName</span>
                 <br />
                 <span>(@classDto.StartTime - @classDto.EndTime)</span>
-            
+
             </div>
         </div>
 
@@ -52,57 +52,68 @@
                 <div class="score">Your Score: @score / 1</div>
                 <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
             </div>
+
         }
         <!-- if the student is not valid, should be checked before on home page submission thus should not happen in normal use-->
-        else if (!isValidStudent)
+        @if (!isValidStudent)
         {
-        <div class="invalid-access">
-            <h2>Invalid Access</h2>
-            <p>You must log in through the home page to access this quiz.</p>
-            <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
-        </div>
+            <div class="invalid-access">
+                <h2>Invalid Access</h2>
+                <p>You must log in through the home page to access this quiz.</p>
+                <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
+            </div>
         }
         <!-- quiz display -->
-        else
+        @if(isValidStudent)
         {
-        <div class="quiz-question">
-            @foreach(var question in quizQuestions) {
-                <div class="quiz-question">
-                    <div class="question-number">
-                        Question @(quizQuestions.IndexOf(question) + 1) of @quizQuestions.Count
-                    </div>
 
-                    <div class="question-text">
-                        <strong>@question.QuestionText</strong>
-                    </div>
-
-                    <div class="answer-container">
-                        @question.AnswerA
-                    </div>
-                </div>
-            }
-
-            @if (showFeedback)
-            {
-                <div class="feedback @feedbackClass">
-                    @feedback
-                </div>
-            }
-
-            <!-- button to handle quiz submission -->
-            <div class="button-container">
-                <button @onclick="SubmitQuiz" class="submit-button"></button>
-                @if (questionAnswered)
+            <EditForm Model="attendanceQuiz" OnValidSubmit="SubmitQuiz" FormName="Student_Attendance_Quiz">
+                @foreach(QuizQuestionDto questionDto in quizQuestions)
                 {
-                    <button @onclick="FinishQuiz" class="auto-finish-button" style="display: none;"></button>
+                    <div class="quiz-question">
+
+
+
+                        <InputRadioGroup @bind-Value="attendanceQuiz!.selectedChoice">
+                            <div class="question-number">
+                                Question @(quizQuestions.IndexOf(questionDto) + 1) of @quizQuestions.Count
+                            </div>
+
+
+                            <div class="question-text">
+                                <strong>@questionDto.QuestionText</strong>
+                            </div>
+
+                            <InputRadio Value="@questionDto.AnswerA" />
+                            @questionDto.AnswerA <br />
+
+                            <InputRadio Value="@questionDto.AnswerB" />
+                            @questionDto.AnswerB <br />
+
+                            <InputRadio Value="@questionDto.AnswerC" />
+                            @questionDto.AnswerC <br />
+
+                            <InputRadio Value="@questionDto.AnswerD" />
+                            @questionDto.AnswerD <br />
+
+                            <!-- button to handle form submission -->
+                            <div class="submit-button-container">
+                                <button type="submit">Submit</button>
+                            </div>
+
+                        </InputRadioGroup>
+
+
+                    </div>
                 }
-            </div>
-        </div>
+            </EditForm>
         }
     </div>
 </div>
 
 @code {
+    private AttendanceQuiz? attendanceQuiz = new AttendanceQuiz();
+
     private string currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
     private Timer? secondsTimer;
 
@@ -111,11 +122,12 @@
     private Guid classId = Guid.Empty;
     private ClassDto classDto = new ClassDto();
 
-    private bool isValidStudent = false;
+    private bool isValidStudent = true;
 
     // Quiz state
     private QuizInstanceDto quizInstance = new QuizInstanceDto();
     private List<QuizQuestionDto> quizQuestions = new List<QuizQuestionDto>();
+    private List<string> answerChoices = new List<string>();
 
     private string userAnswer = "";
 
@@ -126,6 +138,8 @@
     private bool questionAnswered = false;
     private bool quizCompleted = false;
     private int score = 0;
+
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -145,9 +159,12 @@
         System.Diagnostics.Debug.WriteLine($"Quiz Selected: {quizInstance.QuizId}");
 
 
+        quizQuestions
+
+
 
         // error out, quiz instance not found
-        if (quizInstance.QuizId == Guid.Empty)
+    if (quizInstance.QuizId == Guid.Empty)
         {
             return;
         }
@@ -163,12 +180,19 @@
         // Only load quiz question if student is valid
         // Load quiz question
         await LoadQuizQuestions();
+        await LoadQuizAnswers();
     }
 
     private async Task LoadQuizQuestions()
     {
         quizQuestions = await Http.GetFromJsonAsync<List<QuizQuestionDto>>($"api/quizquestion/{quizInstance.QuizId.ToString()}");
         System.Diagnostics.Debug.WriteLine($"Quiz Question: {quizQuestions}");
+    }
+    
+    // load List<QuizAnswers> and add each list to a map to map QuizQuestion -> quizAnswers
+    private async Task LoadQuizAnswers()
+    {
+        System.Diagnostics.Debug.WriteLine($"Quiz Answers:");
     }
 
     // method to automatically update time on page
@@ -189,6 +213,8 @@
     // create attendanceinstance on submission and post to database
     private void SubmitQuiz()
     {
+        System.Diagnostics.Debug.WriteLine("====Detected Quiz Submission====");
+
         return;
     }
 
@@ -217,5 +243,11 @@
     public void Dispose()
     {
         secondsTimer?.Dispose();
+    }
+
+    private class AttendanceQuiz
+    {
+        public string? questionText { get; set; }
+        public string? selectedChoice { get; set; }
     }
 }
