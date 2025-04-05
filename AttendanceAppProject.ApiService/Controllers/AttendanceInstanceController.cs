@@ -90,6 +90,43 @@ namespace AttendanceAppProject.ApiService.Controllers
             return Ok(lates);
         }
 
+        /* GET: api/AttendanceInstance/class/{classId}/absent-on-date/{dateStr}
+         * Get the names of all students who were absent on a particular date for a given class, to be used by the professor
+         * - request body: none
+         * - response body: List of DTOs of students who were absent on the given date
+         */
+        [HttpGet("class/{classId}/absent-on-date/{dateStr}")]
+        public async Task<ActionResult<IEnumerable<StudentDto>>> GetAbsentStudentsByDate(Guid classId, string dateStr)
+        {
+            if (!DateOnly.TryParse(dateStr, out var date))
+            {
+                return BadRequest("Invalid date format. Use YYYY-MM-DD.");
+            }
+
+            // Get all students enrolled in this class
+            var enrolledStudents = await _context.StudentClasses
+                .Where(sc => sc.ClassId == classId)
+                .Select(sc => sc.Student)
+                .ToListAsync();
+
+            // Get student IDs with attendance on this date (ignoring excused absences but including late)
+            var presentStudentIds = await _context.AttendanceInstances
+                .Where(ai => // ai = attendance instance
+                    ai.ClassId == classId &&
+                    ai.DateTime.HasValue &&
+                    DateOnly.FromDateTime(ai.DateTime.Value) == date &&
+                    ai.ExcusedAbsence != true)
+                .Select(ai => ai.StudentId)
+                .ToListAsync();
+
+            // Filter out those students who were present on this date
+            var absentStudents = enrolledStudents
+                .Where(s => !presentStudentIds.Contains(s.UtdId))
+                .ToList();
+
+            return Ok(absentStudents);
+        }
+
         /* POST: api/AttendanceInstance
          * Add an attendance instance to the database
          * - request body: AttendanceInstanceDto
