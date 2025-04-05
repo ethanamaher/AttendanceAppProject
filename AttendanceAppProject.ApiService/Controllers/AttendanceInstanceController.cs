@@ -54,6 +54,42 @@ namespace AttendanceAppProject.ApiService.Controllers
             return Ok(attendanceList);
         }
 
+        /* GET: api/AttendanceInstance/excused-absences
+         * Get all attendance instances that are marked as excused absences
+         * - request body: none
+         * - response body: List of AttendanceInstances
+         */
+        [HttpGet("all-excused-absences")]
+        public async Task<ActionResult<IEnumerable<AttendanceInstance>>> GetExcusedAbsences()
+        {
+            var absences = await _context.AttendanceInstances
+                .Where(ai => ai.ExcusedAbsence == true)
+                .ToListAsync();
+            if (absences == null || absences.Count == 0)
+            {
+                return NotFound();
+            }
+            return Ok(absences);
+        }
+
+        /* GET: api/AttendanceInstance/lates
+         * Get all attendance instances that are marked as late
+         * - request body: none
+         * - response body: List of AttendanceInstances
+         */
+        [HttpGet("all-lates")]
+        public async Task<ActionResult<IEnumerable<AttendanceInstance>>> GetLates()
+        {
+            var lates = await _context.AttendanceInstances
+                .Where(ai => ai.IsLate == true)
+                .ToListAsync();
+            if (lates == null || lates.Count == 0)
+            {
+                return NotFound();
+            }
+            return Ok(lates);
+        }
+
         /* POST: api/AttendanceInstance
          * Add an attendance instance to the database
          * - request body: AttendanceInstanceDto
