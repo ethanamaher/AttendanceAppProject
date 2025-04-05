@@ -34,6 +34,26 @@ namespace AttendanceAppProject.ApiService.Controllers
             return await _context.AttendanceInstances.ToListAsync();
         }
 
+        /* GET: api/AttendanceInstance/class/{classId}
+         * Get all attendance instances for a particular class, used by professor
+         * - request body: none
+         * - response body: List of AttendanceInstances
+         * example usage: attendanceList = await Http.GetFromJsonAsync<List<AttendanceInstanceDto>>($"api/AttendanceInstance/class/{selectedClassId}"
+         */
+        [HttpGet("class/{classId}")]
+        public async Task<ActionResult<IEnumerable<AttendanceInstance>>> GetByClassId(Guid classId)
+        {
+            var attendanceList = await _context.AttendanceInstances
+                .Where(ai => ai.ClassId == classId)
+                .ToListAsync();
+            if (attendanceList == null || attendanceList.Count == 0)
+            {
+                return NotFound();
+            }
+
+            return Ok(attendanceList);
+        }
+
         /* POST: api/AttendanceInstance
          * Add an attendance instance to the database
          * - request body: AttendanceInstanceDto
