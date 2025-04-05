@@ -56,13 +56,30 @@ namespace AttendanceAppProject.ApiService.Controllers
             return classItem;
 		}
 
+        /* GET: api/Class/professor/{profUtdId}
+         * Get all classes for a particular professor
+         * - request body: none
+         * - response body: List of Classes
+         */
+        [HttpGet("professor/{profUtdId}")]
+        public async Task<ActionResult<IEnumerable<Class>>> GetClassesByProfessorId(string profUtdId)
+        {
+            var classes = await _context.Classes
+                .Where(c => c.ProfUtdId == profUtdId)
+                .ToListAsync();
+            if (classes == null || classes.Count == 0)
+            {
+                return NotFound();
+            }
+            return Ok(classes);
+        }
 
-		/* POST: api/Class/exists
+        /* POST: api/Class/exists
          * Check if a class exists in the database by validating the classId passed in by the client side
          * - request body: classId
          * - response body: HttpResponse
          */
-		[HttpPost("exists")]
+        [HttpPost("exists")]
 		public async Task<ActionResult<bool>> ClassExists([FromBody] Guid ClassId)
 		{
 			System.Diagnostics.Debug.WriteLine($"Request for class {ClassId}");
