@@ -75,36 +75,32 @@
             </div>
         }
         <!-- quiz display -->
-        @if(isValidStudent)
+        @if (isValidStudent)
         {
 
-            <EditForm Model="attendanceQuiz" OnValidSubmit="SubmitQuiz" FormName="Student_Attendance_Quiz">
-                @foreach(QuizQuestionDto questionDto in quizQuestions)
+            <EditForm Model="@quizQuestionModels">
+                @foreach(QuizQuestionModel quizQuestion in quizQuestionModels)
                 {
                     <div class="quiz-question">
-                        <InputRadioGroup @bind-Value="attendanceQuiz!.selectedChoice">
-                            <div class="question-number">
-                                Question @(quizQuestions.IndexOf(questionDto) + 1) of @quizQuestions.Count
-                            </div>
+                        <div class="question-number">
+                            Question @(quizQuestions.IndexOf(quizQuestion.QuestionDto) + 1) of @quizQuestions.Count
+                        </div>
 
 
-                            <div class="question-text">
-                                <strong>@questionDto.QuestionText</strong>
-                            </div>
+                        <div class="question-text">
+                            <strong>@quizQuestion.QuestionDto.QuestionText</strong>
+                        </div>
 
-                            @foreach(QuizAnswerDto quizAnswerDto in quizAnswers[quizQuestions.IndexOf(questionDto)])
+                        <InputRadioGroup @bind-Value="quizQuestion.SelectedAnswerId">
+                            @foreach (QuizAnswerDto answerDto in quizQuestion.Answers)
                             {
-                                <InputRadio Value="@quizAnswerDto.AnswerId" />
-                                <span class="ms-2">@quizAnswerDto.AnswerText</span><br />
+                                <label>
+                                    <InputRadio Value="@answerDto.AnswerId" />
+                                    <span class="ms-2">@answerDto.AnswerText</span><br />
+                                </label>
                             }
-
-
-
                         </InputRadioGroup>
-
-
                     </div><br />
-
                 }
 
                 <!-- button to handle form submission -->
@@ -117,8 +113,6 @@
 </div>
 
 @code {
-    private AttendanceQuiz? attendanceQuiz = new AttendanceQuiz();
-
     private string currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
     private Timer? secondsTimer;
 
@@ -134,6 +128,7 @@
     private QuizInstanceDto quizInstance = new QuizInstanceDto();
     private List<QuizQuestionDto> quizQuestions = new List<QuizQuestionDto>();
     private List<List<QuizAnswerDto>> quizAnswers = new List<List<QuizAnswerDto>>();
+    private List<QuizQuestionModel> quizQuestionModels = new();
 
     private string userAnswer = "";
 
@@ -176,20 +171,35 @@
             // Load quiz question
             await LoadQuizQuestions();
             await LoadQuizAnswers();
+
+            foreach(var questionDto in quizQuestions) {
+                var model = new QuizQuestionModel
+                    {
+                        QuestionDto = questionDto,
+                        Answers = quizAnswers[quizQuestions.IndexOf(questionDto)],
+                        SelectedAnswerId = null
+                    };
+                System.Diagnostics.Debug.WriteLine(model.Answers);
+                @foreach(var answer in model.Answers) {
+                    System.Diagnostics.Debug.WriteLine(answer.AnswerText);
+                }
+                quizQuestionModels.Add(model);
+            }
         }
         catch(Exception e) 
         {
             Console.WriteLine($"Error: {e.Message}");
             isValidStudent = false;
             isLoading = false;
+            return;
         }
-            // Set up timer for current time display
-            secondsTimer = new Timer(1000);
-            secondsTimer.Enabled = true;
-            secondsTimer.AutoReset = true;
-            secondsTimer.Elapsed += (sender, e) => UpdateTime();
+        // Set up timer for current time display
+        secondsTimer = new Timer(1000);
+        secondsTimer.Enabled = true;
+        secondsTimer.AutoReset = true;
+        secondsTimer.Elapsed += (sender, e) => UpdateTime();
 
-            isLoading = false;
+        isLoading = false;
     }
 
     private async Task LoadQuizQuestions()
@@ -267,9 +277,10 @@
         }
     }
 
-    private class AttendanceQuiz
+    public class QuizQuestionModel
     {
-        public string? questionText { get; set; }
-        public string? selectedChoice { get; set; }
+        public QuizQuestionDto QuestionDto { get; set; }
+        public List<QuizAnswerDto> Answers { get; set; }
+        public int? SelectedAnswerId { get; set; }
     }
 }
