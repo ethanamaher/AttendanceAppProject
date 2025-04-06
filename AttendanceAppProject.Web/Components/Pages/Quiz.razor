@@ -16,6 +16,11 @@
     height: 100%;
     width: 100%;
     }
+
+    .loading-spinner {
+    text-align: center;
+    font-size: 24px;
+    }
 </style>
 
 <div class="quiz-page">
@@ -43,6 +48,12 @@
 
             </div>
         </div>
+
+        @if(isLoading) {
+            <div class="loading-spinner">
+                Loading...
+            </div>
+        }
 
         <!-- if quiz is completed show result information -->
         @if (quizCompleted)
@@ -84,10 +95,10 @@
                             @foreach(QuizAnswerDto quizAnswerDto in quizAnswers[quizQuestions.IndexOf(questionDto)])
                             {
                                 <InputRadio Value="@quizAnswerDto.AnswerId" />
-                                 <span class="ms-2">@quizAnswerDto.AnswerText</span><br />
+                                <span class="ms-2">@quizAnswerDto.AnswerText</span><br />
                             }
 
-                    
+
 
                         </InputRadioGroup>
 
@@ -97,9 +108,9 @@
                 }
 
                 <!-- button to handle form submission -->
-                  <div class="submit-button-container">
-                                <button type="submit">Submit</button>
-                                </div>
+                <div class="submit-button-container">
+                    <button type="submit">Submit</button>
+                </div>
             </EditForm>
         }
     </div>
@@ -117,6 +128,7 @@
     private ClassDto classDto = new ClassDto();
 
     private bool isValidStudent = true;
+    private bool isLoading = true;
 
     // Quiz state
     private QuizInstanceDto quizInstance = new QuizInstanceDto();
@@ -137,59 +149,76 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Get query parameters from URL
-        var uri = new Uri(NavigationManager.Uri);
-        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
-
-        studentId = query["studentId"] ?? "";
-        classId = new Guid(query["class"] ?? "");
-        System.Diagnostics.Debug.WriteLine($"Query Class ID: {classId.ToString()}");
-
-        // pull class from database where classId mntches query
-        classDto = await Http.GetFromJsonAsync<ClassDto>($"api/class/{classId.ToString()}");
-        System.Diagnostics.Debug.WriteLine($"Class Selected: {classDto.ClassName}");
-
-        quizInstance = await Http.GetFromJsonAsync<QuizInstanceDto>($"api/quizinstance/{classId.ToString()}");
-        System.Diagnostics.Debug.WriteLine($"Quiz Selected: {quizInstance.QuizId}");
-
-
-
-        // error out, quiz instance not found
-        if (quizInstance.QuizId == Guid.Empty)
+        try
         {
-            return;
+            // Get query parameters from URL
+            var uri = new Uri(NavigationManager.Uri);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+            studentId = query["studentId"] ?? "";
+            classId = new Guid(query["class"] ?? "");
+            System.Diagnostics.Debug.WriteLine($"Query Class ID: {classId.ToString()}");
+
+            // pull class from database where classId mntches query
+            classDto = await Http.GetFromJsonAsync<ClassDto>($"api/class/{classId.ToString()}");
+            System.Diagnostics.Debug.WriteLine($"Class Selected: {classDto.ClassName}");
+
+            quizInstance = await Http.GetFromJsonAsync<QuizInstanceDto>($"api/quizinstance/{classId.ToString()}");
+            System.Diagnostics.Debug.WriteLine($"Quiz Selected: {quizInstance.QuizId}");
+
+            if(quizInstance.QuizId == Guid.Empty) {
+                isValidStudent = false;
+                isLoading = false;
+                return;
+            }
+
+            // Only load quiz question if student is valid
+            // Load quiz question
+            await LoadQuizQuestions();
+            await LoadQuizAnswers();
         }
+        catch(Exception e) 
+        {
+            Console.WriteLine($"Error: {e.Message}");
+            isValidStudent = false;
+            isLoading = false;
+        }
+            // Set up timer for current time display
+            secondsTimer = new Timer(1000);
+            secondsTimer.Enabled = true;
+            secondsTimer.AutoReset = true;
+            secondsTimer.Elapsed += (sender, e) => UpdateTime();
 
-
-
-        // Set up timer for current time display
-        secondsTimer = new Timer(1000);
-        secondsTimer.Enabled = true;
-        secondsTimer.AutoReset = true;
-        secondsTimer.Elapsed += (sender, e) => UpdateTime();
-
-        // Only load quiz question if student is valid
-        // Load quiz question
-        await LoadQuizQuestions();
-        await LoadQuizAnswers();
+            isLoading = false;
     }
 
     private async Task LoadQuizQuestions()
     {
-        quizQuestions = await Http.GetFromJsonAsync<List<QuizQuestionDto>>($"api/quizquestion/{quizInstance.QuizId.ToString()}");
-        System.Diagnostics.Debug.WriteLine($"Quiz Question: {quizQuestions.Count()}");
+        try
+        {
+            quizQuestions = await Http.GetFromJsonAsync<List<QuizQuestionDto>>($"api/quizquestion/{quizInstance.QuizId.ToString()}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading quiz questions: {ex.Message}");
+        }
     }
 
     // load List<QuizAnswers> and add each list to a map to map QuizQuestion -> quizAnswers
     private async Task LoadQuizAnswers()
     {
-        System.Diagnostics.Debug.WriteLine($"Quiz Answers:");
-        foreach(QuizQuestionDto questionDto in quizQuestions)
+        try
         {
-            List<QuizAnswerDto> answerDtos = await Http.GetFromJsonAsync<List<QuizAnswerDto>>($"api/quizanswer/{questionDto.QuestionId}");
-            quizAnswers.Add(answerDtos);
+            foreach (var questionDto in quizQuestions)
+            {
+                var answerDtos = await Http.GetFromJsonAsync<List<QuizAnswerDto>>($"api/quizanswer/{questionDto.QuestionId}");
+                quizAnswers.Add(answerDtos);
+            }
         }
-        System.Diagnostics.Debug.WriteLine($"Quiz Answers Size: {quizAnswers.Count()}");
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading quiz answers: {ex.Message}");
+        }
     }
 
     // method to automatically update time on page
@@ -201,6 +230,15 @@
             currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
             StateHasChanged();
         });
+    }
+
+    public void Dispose()
+    {
+        if (secondsTimer is not null)
+        {
+            secondsTimer.Stop();
+            secondsTimer.Dispose();
+        }
     }
 
     // method to handle quiz submissions
@@ -215,14 +253,6 @@
         return;
     }
 
-    private void FinishQuiz()
-    {
-        if (questionAnswered)
-        {
-            quizCompleted = true;
-        }
-    }
-
     // handle navigation back to home page
     private void ReturnToHome()
     {
@@ -235,11 +265,6 @@
         {
             SubmitQuiz();
         }
-    }
-
-    public void Dispose()
-    {
-        secondsTimer?.Dispose();
     }
 
     private class AttendanceQuiz
