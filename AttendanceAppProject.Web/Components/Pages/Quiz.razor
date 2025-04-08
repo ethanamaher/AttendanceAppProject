@@ -135,16 +135,8 @@
     private List<List<QuizAnswerDto>> quizAnswers = new List<List<QuizAnswerDto>>();
     private List<QuizQuestionModel> quizQuestionModels = new();
 
-    private string userAnswer = "";
-
-    private bool showFeedback = false;
-    private string feedback = "";
-    private string feedbackClass = "";
-
     private bool quizCompleted = false;
     private int correctAnswers = 0;
-
-
 
     protected override async Task OnInitializedAsync()
     {
