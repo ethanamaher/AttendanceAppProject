@@ -1,0 +1,34 @@
+{
+  "name": "attendanceappproject",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tailwind:init": "tailwindcss init"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ethanamaher/AttendanceAppProject.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ethanamaher/AttendanceAppProject/issues"
+  },
+  "homepage": "https://github.com/ethanamaher/AttendanceAppProject#readme",
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.21.0",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.0.14"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.0.9",
+    "npx": "^10.2.2",
+    "postcss-cli": "^11.0.0"
+  }
+}

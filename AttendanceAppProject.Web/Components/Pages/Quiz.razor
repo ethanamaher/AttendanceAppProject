@@ -1,0 +1,319 @@
+﻿@page "/quiz"
+@using System.Timers
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@using System.Text.Json
+@using AttendanceAppProject.Dto.Models
+
+<PageTitle>Student Quiz</PageTitle>
+
+<!-- Override any browser default styles -->
+<style>
+    body, html {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+    }
+
+    .loading-spinner {
+    text-align: center;
+    font-size: 24px;
+    }
+</style>
+
+<div class="quiz-page">
+    <!-- Background container -->
+    <div class="quiz-page-background"></div>
+
+    <!-- UTD Text Logo -->
+    <div class="logo-container">
+        <div class="utd-text-logo">UTD</div>
+    </div>
+
+    <!-- Content container with z-index to appear above background -->
+    <div class="quiz-container">
+        <div class="header">
+            <div class="datetime-display">@currentTime</div>
+        </div>
+
+        <!-- display for student info and selected class -->
+        <div class="student-info">
+            <div class="info-item">Student ID: <span>@studentId</span></div>
+            <div class="info-item">Class: 
+                <span>@classDto.ClassPrefix @classDto.ClassNumber - @classDto.ClassName</span>
+                <br />
+                <span>(@classDto.StartTime - @classDto.EndTime)</span>
+
+            </div>
+        </div>
+
+        @if(isLoading) {
+            <div class="loading-spinner">
+                Loading...
+            </div>
+        }
+
+        <!-- if the student is not valid, should be checked before on home page submission thus should not happen in normal use-->
+        @if (!isValidStudent)
+        {
+            <div class="invalid-access">
+                <h2>Invalid Access</h2>
+                <p>You must log in through the home page to access this quiz.</p>
+                <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
+            </div>
+        }
+        <!-- quiz display -->
+        @if (!quizCompleted)
+        {
+            <EditForm Model="@quizQuestionModels" OnSubmit="SubmitQuiz">
+                @foreach(QuizQuestionModel quizQuestion in quizQuestionModels)
+                {
+                    <div class="quiz-question">
+                        <div class="question-number">
+                            Question @(quizQuestions.IndexOf(quizQuestion.QuestionDto) + 1) of @quizQuestions.Count
+                        </div>
+
+
+                        <div class="question-text">
+                            <strong>@quizQuestion.QuestionDto.QuestionText</strong>
+                        </div>
+
+                        <InputRadioGroup @bind-Value="quizQuestion.SelectedAnswerId" Name="@quizQuestion.QuestionDto.QuestionId.ToString()">
+                            @foreach (QuizAnswerDto answerDto in quizQuestion.Answers)
+                            {
+                                <label>
+                                    <InputRadio Value="@answerDto.AnswerId" />
+                                    <span class="ms-2">@answerDto.AnswerText</span><br />
+                                </label>
+                            }
+                        </InputRadioGroup>
+                    </div><br />
+                }
+
+                <!-- button to handle form submission -->
+                <div class="submit-button-container">
+                    <button type="submit" disabled="@isSubmitting">
+                        @(isSubmitting ? "Submitting Quiz..." : "Submit")
+                    </button>
+                </div>
+            </EditForm>
+        }
+        else
+        {
+            <div class="quiz-completed">
+                <h2>Quiz Submitted!</h2>
+                <div class="score">Your Score: @correctAnswers / @quizQuestions.Count</div><br />
+                <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
+    private Timer? secondsTimer;
+
+    // Student information from query parameters
+    private string studentId = "";
+    private Guid classId = Guid.Empty;
+    private ClassDto classDto = new ClassDto();
+
+    private bool isValidStudent = true;
+
+    // used to show loading display when page is loading
+    private bool isLoading = true;
+
+    // used to lock submission button to prevent duplicate submissions
+    private bool isSubmitting = false;
+
+    // Quiz state
+    private QuizInstanceDto quizInstance = new QuizInstanceDto();
+    private List<QuizQuestionDto> quizQuestions = new List<QuizQuestionDto>();
+    private List<List<QuizAnswerDto>> quizAnswers = new List<List<QuizAnswerDto>>();
+    private List<QuizQuestionModel> quizQuestionModels = new();
+
+    private bool quizCompleted = false;
+    private int correctAnswers = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Get query parameters from URL
+            var uri = new Uri(NavigationManager.Uri);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+            studentId = query["studentId"] ?? "";
+            classId = new Guid(query["class"] ?? "");
+
+            // pull class from database where classId matches query
+            classDto = await Http.GetFromJsonAsync<ClassDto>($"api/class/{classId.ToString()}");
+
+            // pull QuizInstance from database where classId matches query
+            quizInstance = await Http.GetFromJsonAsync<QuizInstanceDto>($"api/quizinstance/{classId.ToString()}");
+
+            if(quizInstance?.QuizId == Guid.Empty) {
+                isValidStudent = false;
+                isLoading = false;
+                return;
+            }
+
+            // Only load quiz question if student is valid
+            // Load quiz question
+            await LoadQuizQuestions();
+            // Load quiz answers
+            await LoadQuizAnswers();
+
+            foreach(var questionDto in quizQuestions) {
+
+                // instantiate each QuizQuestion from the DTO into a model that maps Questions to answers and keeps track of the selected
+                // answer in the quiz
+                var model = new QuizQuestionModel
+                    {
+                        QuestionDto = questionDto,
+                        Answers = quizAnswers[quizQuestions.IndexOf(questionDto)],
+                        SelectedAnswerId = null
+                    };
+
+                quizQuestionModels.Add(model);
+            }
+        }
+        catch(Exception e) 
+        {
+            Console.WriteLine($"Error: {e.Message}");
+            isValidStudent = false;
+            isLoading = false;
+            return;
+        }
+        // Set up timer for current time display
+        secondsTimer = new Timer(1000);
+        secondsTimer.Enabled = true;
+        secondsTimer.AutoReset = true;
+        secondsTimer.Elapsed += (sender, e) => UpdateTime();
+
+        isLoading = false;
+    }
+
+    private async Task LoadQuizQuestions()
+    {
+        try
+        {
+            quizQuestions = await Http.GetFromJsonAsync<List<QuizQuestionDto>>($"api/quizquestion/{quizInstance.QuizId.ToString()}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading quiz questions: {ex.Message}");
+        }
+    }
+
+    // load List<QuizAnswers> and add each list to a map to map QuizQuestion -> quizAnswers
+    private async Task LoadQuizAnswers()
+    {
+        try
+        {
+            foreach (var questionDto in quizQuestions)
+            {
+                var answerDtos = await Http.GetFromJsonAsync<List<QuizAnswerDto>>($"api/quizanswer/{questionDto.QuestionId}");
+                quizAnswers.Add(answerDtos);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading quiz answers: {ex.Message}");
+        }
+    }
+
+    // method to handle quiz submissions
+
+    // TODO
+    // disable submission button when submitting quiz to prevent multiple
+    // get ip
+    // get datetime
+    private async void SubmitQuiz()
+    {
+        isSubmitting = true;
+        try
+        {
+            var ipResponse = await Http.GetStringAsync("https://api.ipify.org?format=json");
+            var obj = JsonSerializer.Deserialize<Dictionary<string, string>>(ipResponse);
+            string? ipAddress = obj?["ip"];
+
+            AttendanceInstanceDto attendanceInstance = new()
+                {
+                    StudentId = studentId,
+                    ClassId = classId,
+                    IpAddress = ipAddress,
+                    DateTime = DateTime.UtcNow
+                    // IsLate and ExcusedAbsence default to null as they are added from professor side
+                };
+
+
+            var attendancePost = await Http.PostAsJsonAsync("api/attendanceinstance", attendanceInstance);
+        } 
+        catch(Exception ex)
+        {
+            Console.WriteLine($"Error loading quiz answers: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+            quizCompleted = true;
+
+            CalculateScore();
+        }
+    }
+
+    private void CalculateScore() {
+        foreach (QuizQuestionModel questionModel in quizQuestionModels)
+        {
+            var selectedAnswer = questionModel.Answers.FirstOrDefault(a => a.AnswerId == questionModel.SelectedAnswerId);
+            if(selectedAnswer?.IsCorrect ?? false) {
+                correctAnswers++;
+            }
+        }
+    }
+
+    // handle navigation back to home page
+    private void ReturnToHome()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            SubmitQuiz();
+        }
+    }
+
+    // method to automatically update time on page
+    private void UpdateTime()
+    {
+        InvokeAsync(() =>
+        {
+            // pulls current time and updates page with StateHasChanged
+            currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        if (secondsTimer is not null)
+        {
+            secondsTimer.Stop();
+            secondsTimer.Dispose();
+        }
+    }
+
+    public class QuizQuestionModel
+    {
+        public QuizQuestionDto QuestionDto { get; set; }
+        public List<QuizAnswerDto> Answers { get; set; }
+        public int? SelectedAnswerId { get; set; }
+    }
+}

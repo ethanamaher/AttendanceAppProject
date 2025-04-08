@@ -1,96 +1,221 @@
-﻿@page "/"
+﻿<!--
+Home Page Component
+Handles student form submission for attendance app and navigates to quiz page on successful submission
+
+Written by Ethan Maher
+-->
+
+@page "/"
+@using System.Timers
+@implements IDisposable
+@using System.ComponentModel.DataAnnotations
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@using AttendanceAppProject.Dto.Models
 
 <PageTitle>Student Submission Form</PageTitle>
-<EditForm Model="studentResponse" OnSubmit="Submit" FormName="Student_Response_Form">
-	<div>
-		<label>
-			Student ID:
-			<InputText @bind-Value="studentResponse!.studentID"/>
-		</label>
-	</div>
-	<div>
-		<label>
-			Name:
-			<InputText @bind-Value="studentResponse!.name" />
-		</label>
-	</div>
-	<div>
-		<label>
-			Password:
-			<InputText @bind-Value="studentResponse!.formPassword"/>
-		</label>
-	</div>
-	<button type="submit">Submit</button>
-</EditForm>
+
+<!-- Background container for home page -->
+<div class="page"></div>
+
+<!-- UTD Text Logo -->
+<div class="logo-container">
+    <div class="utd-text-logo">UTD</div>
+</div>
+
+<!-- Page title -->
+<div class="page-title">Student Attendance</div>
+
+<!-- Date and time display -->
+<div class="datetime-display">
+    @currentTime
+</div>
+
+<div class="form-container">
+    @if (showLoginError)
+    {
+        <div class="error-message">
+            Incorrect Student Information. Please try again.
+        </div>
+    }
+    <EditForm Model="@studentResponse" OnValidSubmit="@SubmitForm">
+        <!-- field for student id -->
+        <div class="student-id-field">
+            <label class="field-label">Student ID</label>
+            <InputText @bind-Value="studentResponse!.studentId" placeholder="Enter your student ID" />
+            <ValidationMessage For="@(() => studentResponse.studentId)" />
+        </div>
+
+
+
+
+        <!-- dropdown field for class selection -->
+        <div class="class-field">
+            <label class="field-label">Class</label>
+            <InputSelect @bind-Value="studentResponse!.classId">
+                <!-- default value -->
+                <option value="@Guid.Empty">Select a Class</option>
+
+                @foreach (ClassDto classDto in classesList)
+                {
+                    <!-- for each class, display its name and tie value with its Guid -->
+                    <option value="@classDto.ClassId">@classDto.ClassPrefix@classDto.ClassNumber @classDto.ClassName (@classDto.StartTime - @classDto.EndTime)</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => studentResponse.classId)" />
+        </div>
+
+
+
+        <!-- form password field -->
+        <div class="password-field">
+            <label class="field-label">Password</label>
+            <InputText @bind-Value="studentResponse!.formPassword" placeholder="Enter your password" />
+            <ValidationMessage For="@(() => studentResponse.formPassword)" />
+        </div>
+
+
+
+        <!-- button to handle form submission -->
+        <div class="submit-button-container">
+            <button type="submit" disabled="@isSubmitting">Submit</button>
+        </div>
+
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+    </EditForm>
+</div>
 
 @code {
-	[SupplyParameterFromForm]
-	private StudentResponse? studentResponse { get; set; }
+    [SupplyParameterFromForm]
+    private StudentResponse? studentResponse { get; set; }
 
-	protected override void OnInitialized() {
-		studentResponse ??= new();
-	}
+    private string currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
+    private Timer? secondsTimer;
 
-	/*
-	* Change to OnValidSubmit and OnInvalidSubmit when doing input validation
-	* - all fields should be required
-	*/
-	private void Submit()
-	{
-		System.Diagnostics.Debug.WriteLine("Form Submission Detected");
+    private bool showLoginError = false;
+    private bool isSubmitting = false;
 
-		studentResponse.convertResponseToStudent();
+    // list to store classes for dropdown
+    public List<ClassDto> classesList = new List<ClassDto>();
 
-		if(studentResponse.student != null) {
-			System.Diagnostics.Debug.WriteLine(studentResponse.ToString());
-		} else {
-			System.Diagnostics.Debug.WriteLine("Error in creating student");
-		}
+    protected override async Task OnInitializedAsync()
+    {
+        // Set up timer using System.Timers.Timer
+        secondsTimer = new Timer(1000);
+        secondsTimer.Enabled = true;
+        secondsTimer.AutoReset = true;
+        secondsTimer.Elapsed += (sender, e) => UpdateTime();
 
-		ClearFields();
-	}
+        studentResponse ??= new();
+        // Load classes
+        await LoadClassesAsync();
 
-	private void ClearFields()
-	{
-		studentResponse.studentID = "";
-		studentResponse.name = "";
-		studentResponse.formPassword = "";
-	}
-	/*	Class for getting student info responses from form
-		* 
-		* takes information from form response and creates a Student object with that information
-		*/
-	public class StudentResponse
-	{
-		// student dict will be
-		// key = studentid
-		// value = student
-		public Student? student{ get; set; }
+        System.Diagnostics.Debug.WriteLine("Home component initialized");
+    }
 
-		public string? studentID { get; set; }
-		public string? name { get; set; }
-		public string? formPassword { get; set; }
+    // load classes from database
+    private async Task LoadClassesAsync()
+    {
+        try {
+            var response = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
+            if(response is not null) {
+                classesList = response;
+            } 
+        }   catch(Exception e) {
+            System.Diagnostics.Debug.WriteLine($"Error loading classes: {e.Message}");
+        }
 
-		// add student info variables to dict list
-		public void convertResponseToStudent()
-		{
-			// validate password first
-			if(formPassword != "password") {
-				return;
-			}
+    }
 
-			if(studentID.Length > 0 && name.Length > 0) {
-				student = new Student(studentID, name);
-			}
-		}
+    // method to update time on page automatically
+    private void UpdateTime()
+    {
+        InvokeAsync(() =>
+        {
+            currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
+            StateHasChanged();
+        });
+    }
 
-		private bool validateEntry() {
-			return studentID != null && name != null;
-		}
+    // Clean up timer when component is disposed
+    public void Dispose()
+    {
+        if (secondsTimer is not null)
+        {
+            secondsTimer.Stop();
+            secondsTimer.Dispose();
+        }
+    }
 
-		public override string ToString()
-		{
-			return student.ToString();
-		}
-	}
+    // can integrate status codes for which part of form is invalid
+    private void FormError() {
+        // Incorrect credentials - show error message
+        showLoginError = true;
+        // Clear only the password field for retry
+        studentResponse.formPassword = "";
+
+        System.Diagnostics.Debug.WriteLine("Login failed - incorrect information. Showing error message.");     
+    }
+
+    // handle form submission
+    private async Task SubmitForm()
+    {
+        isSubmitting = true;
+        try
+        {
+            // if student does not exist
+            // can also further go into response statuscodes
+            // 404 - not found
+            // 400 - bad request
+
+            var studentExists = await Http.PostAsJsonAsync("api/student/exists", studentResponse.studentId);
+            if (!studentExists.IsSuccessStatusCode)
+            {
+                System.Diagnostics.Debug.WriteLine("Student not found");
+                FormError();
+                return;
+            }
+
+            // if class does not exist
+            // should never be 404
+            // if errors, will be bad request
+            var classExists = await Http.PostAsJsonAsync("api/class/exists", studentResponse.classId);   
+            if (!classExists.IsSuccessStatusCode)
+            {
+                System.Diagnostics.Debug.WriteLine("Class not found");
+                FormError();
+                return;
+            }
+
+            var studentIdEncoded = Uri.EscapeDataString(studentResponse.studentId ?? "");
+            var classIdEncoded = Uri.EscapeDataString(studentResponse.classId.ToString() ?? "");
+
+            // Login successful, redirect to Quiz.razor with query parameters
+            NavigationManager.NavigateTo($"/quiz?studentId={studentIdEncoded}&class={classIdEncoded}");
+
+
+        } 
+        catch(Exception ex) {
+            System.Diagnostics.Debug.WriteLine($"Error during submission: {ex.Message}");
+            showLoginError = true;
+
+        }
+        finally {
+            isSubmitting = false;
+        }   
+    }
+
+    /*  Class for getting student info responses from form */
+    public class StudentResponse
+    {
+        [Required (ErrorMessage = "Student ID is Required")]
+        public string? studentId { get; set; }
+
+        [Required(ErrorMessage = "Class ID is Required")]
+        public Guid? classId { get; set; }
+
+        [Required(ErrorMessage = "Password is Required")]
+        public string? formPassword { get; set; }
+    }
 }
