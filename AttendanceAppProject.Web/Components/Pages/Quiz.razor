@@ -3,6 +3,7 @@
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject HttpClient Http
+@using System.Text.Json
 @using AttendanceAppProject.Dto.Models
 
 <PageTitle>Student Quiz</PageTitle>
@@ -55,16 +56,6 @@
             </div>
         }
 
-        <!-- if quiz is completed show result information -->
-        @if (quizCompleted)
-        {
-            <div class="quiz-completed">
-                <h2>Quiz Completed!</h2>
-                <div class="score">Your Score: @score / 1</div>
-                <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
-            </div>
-
-        }
         <!-- if the student is not valid, should be checked before on home page submission thus should not happen in normal use-->
         @if (!isValidStudent)
         {
@@ -75,9 +66,8 @@
             </div>
         }
         <!-- quiz display -->
-        @if (isValidStudent)
+        @if (!quizCompleted)
         {
-
             <EditForm Model="@quizQuestionModels" OnSubmit="SubmitQuiz">
                 @foreach(QuizQuestionModel quizQuestion in quizQuestionModels)
                 {
@@ -105,9 +95,19 @@
 
                 <!-- button to handle form submission -->
                 <div class="submit-button-container">
-                    <button type="submit">Submit</button>
+                    <button type="submit" disabled="@isSubmitting">
+                        @(isSubmitting ? "Submitting Quiz..." : "Submit")
+                    </button>
                 </div>
             </EditForm>
+        }
+        else
+        {
+            <div class="quiz-completed">
+                <h2>Quiz Submitted!</h2>
+                <div class="score">Your Score: @correctAnswers / @quizQuestions.Count</div><br />
+                <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
+            </div>
         }
     </div>
 </div>
@@ -122,7 +122,12 @@
     private ClassDto classDto = new ClassDto();
 
     private bool isValidStudent = true;
+
+    // used to show loading display when page is loading
     private bool isLoading = true;
+
+    // used to lock submission button to prevent duplicate submissions
+    private bool isSubmitting = false;
 
     // Quiz state
     private QuizInstanceDto quizInstance = new QuizInstanceDto();
@@ -136,9 +141,8 @@
     private string feedback = "";
     private string feedbackClass = "";
 
-    private bool questionAnswered = false;
     private bool quizCompleted = false;
-    private int score = 0;
+    private int correctAnswers = 0;
 
 
 
@@ -152,16 +156,14 @@
 
             studentId = query["studentId"] ?? "";
             classId = new Guid(query["class"] ?? "");
-            System.Diagnostics.Debug.WriteLine($"Query Class ID: {classId.ToString()}");
 
-            // pull class from database where classId mntches query
+            // pull class from database where classId matches query
             classDto = await Http.GetFromJsonAsync<ClassDto>($"api/class/{classId.ToString()}");
-            System.Diagnostics.Debug.WriteLine($"Class Selected: {classDto.ClassName}");
 
+            // pull QuizInstance from database where classId matches query
             quizInstance = await Http.GetFromJsonAsync<QuizInstanceDto>($"api/quizinstance/{classId.ToString()}");
-            System.Diagnostics.Debug.WriteLine($"Quiz Selected: {quizInstance.QuizId}");
 
-            if(quizInstance.QuizId == Guid.Empty) {
+            if(quizInstance?.QuizId == Guid.Empty) {
                 isValidStudent = false;
                 isLoading = false;
                 return;
@@ -170,19 +172,20 @@
             // Only load quiz question if student is valid
             // Load quiz question
             await LoadQuizQuestions();
+            // Load quiz answers
             await LoadQuizAnswers();
 
             foreach(var questionDto in quizQuestions) {
+
+                // instantiate each QuizQuestion from the DTO into a model that maps Questions to answers and keeps track of the selected
+                // answer in the quiz
                 var model = new QuizQuestionModel
                     {
                         QuestionDto = questionDto,
                         Answers = quizAnswers[quizQuestions.IndexOf(questionDto)],
                         SelectedAnswerId = null
                     };
-                System.Diagnostics.Debug.WriteLine(model.Answers);
-                @foreach(var answer in model.Answers) {
-                    System.Diagnostics.Debug.WriteLine(answer.AnswerText);
-                }
+
                 quizQuestionModels.Add(model);
             }
         }
@@ -231,6 +234,70 @@
         }
     }
 
+    // method to handle quiz submissions
+
+    // TODO
+    // disable submission button when submitting quiz to prevent multiple
+    // get ip
+    // get datetime
+    private async void SubmitQuiz()
+    {
+        isSubmitting = true;
+        try
+        {
+            var ipResponse = await Http.GetStringAsync("https://api.ipify.org?format=json");
+            var obj = JsonSerializer.Deserialize<Dictionary<string, string>>(ipResponse);
+            string? ipAddress = obj?["ip"];
+
+            AttendanceInstanceDto attendanceInstance = new()
+                {
+                    StudentId = studentId,
+                    ClassId = classId,
+                    IpAddress = ipAddress,
+                    DateTime = DateTime.UtcNow
+                    // IsLate and ExcusedAbsence default to null as they are added from professor side
+                };
+
+
+            var attendancePost = await Http.PostAsJsonAsync("api/attendanceinstance", attendanceInstance);
+        } 
+        catch(Exception ex)
+        {
+            Console.WriteLine($"Error loading quiz answers: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+            quizCompleted = true;
+
+            CalculateScore();
+        }
+    }
+
+    private void CalculateScore() {
+        foreach (QuizQuestionModel questionModel in quizQuestionModels)
+        {
+            var selectedAnswer = questionModel.Answers.FirstOrDefault(a => a.AnswerId == questionModel.SelectedAnswerId);
+            if(selectedAnswer?.IsCorrect ?? false) {
+                correctAnswers++;
+            }
+        }
+    }
+
+    // handle navigation back to home page
+    private void ReturnToHome()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            SubmitQuiz();
+        }
+    }
+
     // method to automatically update time on page
     private void UpdateTime()
     {
@@ -248,53 +315,6 @@
         {
             secondsTimer.Stop();
             secondsTimer.Dispose();
-        }
-    }
-
-    // method to handle quiz submissions
-    // checks answers from QuizInstance pulled from database
-
-    // TODO
-    // create attendanceinstance on submission and post to database
-    private async void SubmitQuiz()
-    {
-        System.Diagnostics.Debug.WriteLine("====Detected Quiz Submission====");
-
-        foreach(var model in quizQuestionModels) {
-            System.Diagnostics.Debug.WriteLine($"Question: {model.QuestionDto.QuestionText}");
-            System.Diagnostics.Debug.WriteLine($"Answer: {model.SelectedAnswerId}\n");
-        }
-
-        AttendanceInstanceDto attendanceInstance = new()
-        {
-            StudentId = studentId,
-            ClassId = classId,
-        };
-
-        try
-        {
-            var attendancePost = await Http.PostAsJsonAsync("api/attendanceinstance", attendanceInstance);
-            System.Diagnostics.Debug.WriteLine($"Attendance: {attendancePost}");
-        } 
-        catch(Exception ex)
-        {
-            Console.WriteLine($"Error loading quiz answers: {ex.Message}");
-        }
-
-        return;
-    }
-
-    // handle navigation back to home page
-    private void ReturnToHome()
-    {
-        NavigationManager.NavigateTo("/");
-    }
-
-    private void HandleKeyPress(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter")
-        {
-            SubmitQuiz();
         }
     }
 
