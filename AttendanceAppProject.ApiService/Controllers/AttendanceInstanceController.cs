@@ -159,6 +159,43 @@ namespace AttendanceAppProject.ApiService.Controllers
             return Ok(absentStudents);
         }
 
+        /* GET: api/AttendanceInstance/student/{studentId}?date=2025-02-01&classId=...
+         * Get all attendance instances for a specific student.
+         * Optionally filter by date (YYYY-MM-DD format).
+         * - request body: none
+         * - response body: List of AttendanceInstances
+         */
+        [HttpGet("student/{studentId}")]
+        public async Task<ActionResult<IEnumerable<AttendanceInstance>>> GetAttendanceByStudent(
+            string studentId,
+            [FromQuery] string? date,
+            [FromQuery] Guid? classId)
+        {
+            var query = _context.AttendanceInstances
+                .Where(ai => ai.StudentId == studentId);
+
+            if (classId.HasValue)
+            {
+                query = query.Where(ai => ai.ClassId == classId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(date) && DateOnly.TryParse(date, out var parsedDate))
+            {
+                query = query.Where(ai =>
+                    ai.DateTime.HasValue &&
+                    DateOnly.FromDateTime(ai.DateTime.Value) == parsedDate);
+            }
+
+            var records = await query.ToListAsync();
+
+            if (records.Count == 0)
+            {
+                return NotFound();
+            }
+
+            return Ok(records);
+        }
+
         /* POST: api/AttendanceInstance
          * Add an attendance instance to the database
          * - request body: AttendanceInstanceDto
