@@ -78,7 +78,7 @@
         @if (isValidStudent)
         {
 
-            <EditForm Model="@quizQuestionModels">
+            <EditForm Model="@quizQuestionModels" OnSubmit="SubmitQuiz">
                 @foreach(QuizQuestionModel quizQuestion in quizQuestionModels)
                 {
                     <div class="quiz-question">
@@ -91,7 +91,7 @@
                             <strong>@quizQuestion.QuestionDto.QuestionText</strong>
                         </div>
 
-                        <InputRadioGroup @bind-Value="quizQuestion.SelectedAnswerId">
+                        <InputRadioGroup @bind-Value="quizQuestion.SelectedAnswerId" Name="@quizQuestion.QuestionDto.QuestionId.ToString()">
                             @foreach (QuizAnswerDto answerDto in quizQuestion.Answers)
                             {
                                 <label>
@@ -256,9 +256,30 @@
 
     // TODO
     // create attendanceinstance on submission and post to database
-    private void SubmitQuiz()
+    private async void SubmitQuiz()
     {
         System.Diagnostics.Debug.WriteLine("====Detected Quiz Submission====");
+
+        foreach(var model in quizQuestionModels) {
+            System.Diagnostics.Debug.WriteLine($"Question: {model.QuestionDto.QuestionText}");
+            System.Diagnostics.Debug.WriteLine($"Answer: {model.SelectedAnswerId}\n");
+        }
+
+        AttendanceInstanceDto attendanceInstance = new()
+        {
+            StudentId = studentId,
+            ClassId = classId,
+        };
+
+        try
+        {
+            var attendancePost = await Http.PostAsJsonAsync("api/attendanceinstance", attendanceInstance);
+            System.Diagnostics.Debug.WriteLine($"Attendance: {attendancePost}");
+        } 
+        catch(Exception ex)
+        {
+            Console.WriteLine($"Error loading quiz answers: {ex.Message}");
+        }
 
         return;
     }
