@@ -54,39 +54,71 @@ namespace AttendanceAppProject.ApiService.Controllers
             return Ok(attendanceList);
         }
 
-        /* GET: api/AttendanceInstance/excused-absences
-         * Get all attendance instances that are marked as excused absences
+        /* GET: api/AttendanceInstance/excused-absences/?classId=...&date=...
+         * Get all attendance instances that are marked as excused absences. Optionally include class ID and date to filter out the results.
          * - request body: none
          * - response body: List of AttendanceInstances
          */
-        [HttpGet("all-excused-absences")]
-        public async Task<ActionResult<IEnumerable<AttendanceInstance>>> GetExcusedAbsences()
+        [HttpGet("excused-absences")]
+        public async Task<ActionResult<IEnumerable<AttendanceInstance>>> GetExcusedAbsences([FromQuery] Guid? classId,
+    [FromQuery] string? date)
         {
-            var absences = await _context.AttendanceInstances
-                .Where(ai => ai.ExcusedAbsence == true)
-                .ToListAsync();
-            if (absences == null || absences.Count == 0)
+            var query = _context.AttendanceInstances
+                .Where(ai => ai.ExcusedAbsence == true);
+
+            if (classId.HasValue)
+            {
+                query = query.Where(ai => ai.ClassId == classId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(date) && DateOnly.TryParse(date, out var parsedDate))
+            {
+                query = query.Where(ai =>
+                    ai.DateTime.HasValue &&
+                    DateOnly.FromDateTime(ai.DateTime.Value) == parsedDate);
+            }
+
+            var absences = await query.ToListAsync();
+
+            if (absences.Count == 0)
             {
                 return NotFound();
             }
             return Ok(absences);
         }
 
-        /* GET: api/AttendanceInstance/lates
-         * Get all attendance instances that are marked as late
+        /* GET: api/AttendanceInstance/lates?classId=...&date=...
+         * Get all attendance instances that are marked as late. Optionally include class ID and date to filter out the results.
          * - request body: none
          * - response body: List of AttendanceInstances
          */
-        [HttpGet("all-lates")]
-        public async Task<ActionResult<IEnumerable<AttendanceInstance>>> GetLates()
+        [HttpGet("lates")]
+        public async Task<ActionResult<IEnumerable<AttendanceInstance>>> GetLates(
+            [FromQuery] Guid? classId,
+            [FromQuery] string? date)
         {
-            var lates = await _context.AttendanceInstances
-                .Where(ai => ai.IsLate == true)
-                .ToListAsync();
-            if (lates == null || lates.Count == 0)
+            var query = _context.AttendanceInstances
+                .Where(ai => ai.IsLate == true);
+
+            if (classId.HasValue)
+            {
+                query = query.Where(ai => ai.ClassId == classId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(date) && DateOnly.TryParse(date, out var parsedDate))
+            {
+                query = query.Where(ai =>
+                    ai.DateTime.HasValue &&
+                    DateOnly.FromDateTime(ai.DateTime.Value) == parsedDate);
+            }
+
+            var lates = await query.ToListAsync();
+
+            if (lates.Count == 0)
             {
                 return NotFound();
             }
+
             return Ok(lates);
         }
 
