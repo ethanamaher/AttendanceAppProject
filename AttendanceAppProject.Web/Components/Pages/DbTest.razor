@@ -1,0 +1,102 @@
+﻿@* DB Test page used to test connection to the database by sending HTTP requests to the API, various tests such as displaying students, adding students to database, etc.*@
+@* Written by Maaz Raza*@
+
+
+@page "/dbtest"
+@inject HttpClient Http
+@rendermode InteractiveServer
+@using AttendanceAppProject.Dto.Models
+
+<h3>DbTest - Student List</h3>
+
+@if (students == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    @*Table containing list of students and their information retrieved from the database*@
+    <table class="table">
+        <thead>
+            <tr>
+                <th>UTD ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Username</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var student in students)
+            {
+                <tr>
+                    <td>@student.UtdId</td>
+                    <td>@student.FirstName</td>
+                    <td>@student.LastName</td>
+                    <td>@student.Username</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@* Form to test POST request by adding new student to the database based on input*@
+<div class="form-wrapper">
+    <div class="form-container">
+        <div class="form-group">
+            <label>UTD ID:</label>
+            <input @bind="newStudent.UtdId" />
+        </div>
+
+        <div class="form-group">
+            <label>First Name:</label>
+            <input @bind="newStudent.FirstName" />
+        </div>
+
+        <div class="form-group">
+            <label>Last Name:</label>
+            <input @bind="newStudent.LastName" />
+        </div>
+
+        <div class="form-group">
+            <label>Username:</label>
+            <input @bind="newStudent.Username" />
+        </div>
+
+        <button @onclick="AddStudent">Add Student</button>
+    </div>
+</div>
+
+
+@code {
+
+    private List<StudentDto> students = new(); // Holds the list of students retrieved from the database as StudentDtos
+    private StudentDto newStudent = new(); // Holds data from input fields in the above form
+
+    protected override async Task OnInitializedAsync()
+    {
+        students = await Http.GetFromJsonAsync<List<StudentDto>>("api/student");
+    }
+
+    private async Task AddStudent()
+    {
+        Console.WriteLine("AddStudent() method started!");
+
+        // Send POST request to API with the new student data
+        var response = await Http.PostAsJsonAsync("api/student", newStudent);
+
+        if (response.IsSuccessStatusCode)
+        {
+            // If successful, refresh the student list
+            students = await Http.GetFromJsonAsync<List<StudentDto>>("api/student");
+
+            // Clear input fields
+            newStudent = new StudentDto();
+
+            Console.WriteLine("Student added successfully");
+        }
+        else
+        {
+            Console.WriteLine($"Error: {response.StatusCode}");
+        }
+    }
+}

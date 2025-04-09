@@ -1,16 +1,20 @@
-using AttendanceAppProject.ApiService;
+using AttendanceAppProject.ApiService.Data.Models;
+using Microsoft.EntityFrameworkCore;
+using AttendanceAppProject.ApiService.Data;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using Swashbuckle.AspNetCore.SwaggerUI;
+using AttendanceAppProject.Dto.Models;
+using AttendanceAppProject.ApiService.JsonConverters;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
+// Load environment variables 
+builder.Configuration.AddEnvironmentVariables();
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+	?? throw new InvalidOperationException("DefaultConnection is missing in appsettings.json");
+
+// Add service defaults & Aspire client integrations.
+// builder.AddServiceDefaults();
 
 // Add Swagger (make sure you have the Swashbuckle.AspNetCore package)
 builder.Services.AddSwaggerGen(c =>
@@ -18,32 +22,36 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Attendance API", Version = "v1" });
 });
 
-// Add API services from our ApiService project
-builder.Services.AddApiServices(builder.Configuration);
+// Register EF Core with MySQL, add database context
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+	options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
+		ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
 
-// Add CORS to allow the desktop app to connect
+// Enable Controllers, add JSON converters
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
+    options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
+});
+
+// Add CORS Policy 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowDesktopApp", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
+	options.AddPolicy("AllowAll",
+		policy => policy.AllowAnyOrigin()
+						.AllowAnyMethod()
+						.AllowAnyHeader());
 });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Attendance API v1"));
-}
+// Enable CORS
+app.UseCors("AllowAll");
 
-app.UseHttpsRedirection();
-app.UseCors("AllowDesktopApp");
-app.UseAuthorization();
+// Configure the HTTP request pipeline.
+app.UseExceptionHandler();
+
+// app.MapDefaultEndpoints();
 app.MapControllers();
 
 app.Run();
