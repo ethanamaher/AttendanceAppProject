@@ -1,6 +1,6 @@
 ﻿/* Class API Controller
  * Handles HTTP GET and POST requests for classes, allowing for retrieval and creation of class records, retrieving a class by its ID, and checking if a class exists in the database.
- * Written by Ethan Maher
+ * Written by Ethan Maher, Maaz Raza
  */
 
 using AttendanceAppProject.ApiService.Data;
@@ -24,7 +24,7 @@ namespace AttendanceAppProject.ApiService.Controllers
             _context = context;
         }
 
-        /* GET: api/Class
+        /* GET: api/class
 		 * Get all classes
 		 * - request body: none
 		 * - response body: Classes
@@ -35,74 +35,53 @@ namespace AttendanceAppProject.ApiService.Controllers
             return await _context.Classes.ToListAsync();
         }
 
-		/* GET: api/Class/{id}
+        /* GET: api/class/{id}
 		 * Get class whose classId private key = id
 		 * - request body: Guid classId
 		 * - response body: Class
 		 */
-		[HttpGet("{id}")]
-		public async Task<ActionResult<Class>> GetClass(Guid id)
-		{
-            System.Diagnostics.Debug.WriteLine($"-----CLASS CONTROLLER-----");
-            System.Diagnostics.Debug.WriteLine($"{id}");
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Class>> GetClass(Guid id)
+        {
             var classItem = await _context.Classes.FirstOrDefaultAsync(c => c.ClassId == id);
-			System.Diagnostics.Debug.WriteLine($"{classItem.ToString()}");
 
-			if (classItem == null)
+            if (classItem == null)
             {
                 return NotFound();
             }
 
             return classItem;
-		}
-
-        /* GET: api/Class/professor/{profUtdId}
-         * Get all classes for a particular professor
-         * - request body: none
-         * - response body: List of Classes
-         */
-        [HttpGet("professor/{profUtdId}")]
-        public async Task<ActionResult<IEnumerable<Class>>> GetClassesByProfessorId(string profUtdId)
-        {
-            var classes = await _context.Classes
-                .Where(c => c.ProfUtdId == profUtdId)
-                .ToListAsync();
-            if (classes == null || classes.Count == 0)
-            {
-                return NotFound();
-            }
-            return Ok(classes);
         }
 
-        /* POST: api/Class/exists
+
+        /* POST: api/class/exists
          * Check if a class exists in the database by validating the classId passed in by the client side
          * - request body: classId
          * - response body: HttpResponse
          */
         [HttpPost("exists")]
-		public async Task<ActionResult<bool>> ClassExists([FromBody] Guid ClassId)
-		{
-			System.Diagnostics.Debug.WriteLine($"Request for class {ClassId}");
-			if (string.IsNullOrWhiteSpace(ClassId.ToString()))
-			{
-				return BadRequest("Class ID is required."); // 400
-			}
+        public async Task<ActionResult<bool>> ClassExists([FromBody] Guid ClassId)
+        {
+            if (string.IsNullOrWhiteSpace(ClassId.ToString()))
+            {
+                return BadRequest("Class ID is required."); // 400
+            }
 
-			var exists = await _context.Classes.AnyAsync(s => s.ClassId == ClassId);
-			if (!exists)
-			{
-				return NotFound($"Class with ID {ClassId} not found"); // 404
-			}
-			return Ok(exists); // 200
-		}
+            var exists = await _context.Classes.AnyAsync(s => s.ClassId == ClassId);
+            if (!exists)
+            {
+                return NotFound($"Class with ID {ClassId} not found"); // 404
+            }
+            return Ok(exists); // 200
+        }
 
 
-		/* POST: api/Class
+        /* POST: api/class
          * Add a class to the database
          * - request body: ClassDto
          * - response body: Class
          */
-		[HttpPost]
+        [HttpPost]
         public async Task<ActionResult<Class>> AddClass([FromBody] ClassDto dto)
         {
             var newClass = new Class

@@ -14,13 +14,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 	?? throw new InvalidOperationException("DefaultConnection is missing in appsettings.json");
 
 // Add service defaults & Aspire client integrations.
-// builder.AddServiceDefaults();
-
-// Add Swagger (make sure you have the Swashbuckle.AspNetCore package)
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Attendance API", Version = "v1" });
-});
+// builder.AddServiceDefaults()
 
 // Register EF Core with MySQL, add database context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

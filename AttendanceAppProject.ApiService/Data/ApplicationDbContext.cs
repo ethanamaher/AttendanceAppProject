@@ -1,6 +1,5 @@
 ﻿using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.EntityFrameworkCore;
-using AttendanceAppProject.ApiService.Models;
 
 namespace AttendanceAppProject.ApiService.Data;
 

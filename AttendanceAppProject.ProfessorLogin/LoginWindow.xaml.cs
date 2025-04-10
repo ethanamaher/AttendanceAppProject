@@ -5,6 +5,7 @@ using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using AttendanceAppProject.ProfessorLogin.Models;
 using AttendanceAppProject.ProfessorLogin.Services;
+using System.Net.Http;
 
 namespace AttendanceAppProject.ProfessorLogin
 {
@@ -19,6 +20,32 @@ namespace AttendanceAppProject.ProfessorLogin
             // Uncomment and implement the actual authentication service when ready
             // _authService = serviceProvider.GetRequiredService<IProfessorAuthService>(); 
             ProfessorIdTextBox.Focus();
+
+            this.Loaded += async (s, e) => await CheckApiConnectionAsync();
+
+        }
+
+        private async Task CheckApiConnectionAsync()
+        {
+            try
+            {
+                using var client = new HttpClient();
+                client.BaseAddress = new Uri("https://localhost:7530/"); // Your actual API base URL
+
+                var response = await client.GetAsync("api/student"); // A known working endpoint
+                if (response.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("✅ Successfully connected to API!", "Connection Test", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show($"❌ API responded with status code: {response.StatusCode}", "Connection Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"❌ Could not connect to API: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void LoginButton_Click(object sender, RoutedEventArgs e)
