@@ -4,6 +4,7 @@ using AttendanceAppProject.ApiService.Data;
 using Microsoft.AspNetCore.Builder;
 using AttendanceAppProject.Dto.Models;
 using AttendanceAppProject.ApiService.JsonConverters;
+using AttendanceAppProject.ApiService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +31,9 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
     options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
 });
+
+// Register Service Classes
+builder.Services.AddScoped<ClassService>();
 
 // Add CORS Policy 
 builder.Services.AddCors(options =>

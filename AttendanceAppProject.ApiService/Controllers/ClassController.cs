@@ -3,55 +3,50 @@
  * Written by Ethan Maher, Maaz Raza
  */
 
-using AttendanceAppProject.ApiService.Data;
-using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using AttendanceAppProject.ApiService.Services;
 using AttendanceAppProject.Dto.Models;
-
-// API controller for Class
+using AttendanceAppProject.ApiService.Data.Models;
 
 namespace AttendanceAppProject.ApiService.Controllers
 {
-    [Route("api/[controller]")] // Automatically becomes "api/class"
+    [Route("api/[controller]")]
     [ApiController]
     public class ClassController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ClassService _service;
 
-        public ClassController(ApplicationDbContext context)
+        // Dependency injection of the ClassService
+        public ClassController(ClassService service)
         {
-            _context = context;
+            _service = service;
         }
 
-        /* GET: api/class
-		 * Get all classes
-		 * - request body: none
-		 * - response body: Classes
-		 */
+        /* GET: api/Class
+         * Get all classes
+         * - request body: none
+         * - response body: Classes
+         */
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Class>>> GetClasses()
         {
-            return await _context.Classes.ToListAsync();
+            return Ok(await _service.GetAllClassesAsync());
         }
 
-		/* GET: api/class/{id}
-		 * Get class whose classId private key = id
-		 * - request body: Guid classId
-		 * - response body: Class
-		 */
-		[HttpGet("{id}")]
-		public async Task<ActionResult<Class>> GetClass(Guid id)
-		{
-            var classItem = await _context.Classes.FirstOrDefaultAsync(c => c.ClassId == id);
-
-			if (classItem == null)
-            {
+        /* GET: api/Class/{id}
+         * Get class whose classId primary key = id
+         * - request body: Guid classId
+         * - response body: Class
+         */
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Class>> GetClass(Guid id)
+        {
+            var result = await _service.GetClassByIdAsync(id);
+            if (result == null)
                 return NotFound();
-            }
 
-            return classItem;
-		}
+            return Ok(result);
+        }
 
         /* GET: api/Class/professor/{profUtdId}
          * Get all classes for a particular professor
@@ -61,14 +56,23 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpGet("professor/{profUtdId}")]
         public async Task<ActionResult<IEnumerable<Class>>> GetClassesByProfessorId(string profUtdId)
         {
-            var classes = await _context.Classes
-                .Where(c => c.ProfUtdId == profUtdId)
-                .ToListAsync();
-            if (classes == null || classes.Count == 0)
-            {
+            var result = await _service.GetClassesByProfessorIdAsync(profUtdId);
+            if (result == null || !result.Any())
                 return NotFound();
-            }
-            return Ok(classes);
+
+            return Ok(result);
+        }
+
+        /* POST: api/Class
+         * Add a class to the database
+         * - request body: ClassDto
+         * - response body: Class
+         */
+        [HttpPost]
+        public async Task<ActionResult<Class>> AddClass([FromBody] ClassDto dto)
+        {
+            var newClass = await _service.AddClassAsync(dto);
+            return CreatedAtAction(nameof(GetClass), new { id = newClass.ClassId }, newClass);
         }
 
         /* POST: api/Class/exists
@@ -77,47 +81,16 @@ namespace AttendanceAppProject.ApiService.Controllers
          * - response body: HttpResponse
          */
         [HttpPost("exists")]
-		public async Task<ActionResult<bool>> ClassExists([FromBody] Guid ClassId)
-		{
-			if (string.IsNullOrWhiteSpace(ClassId.ToString()))
-			{
-				return BadRequest("Class ID is required."); // 400
-			}
-
-			var exists = await _context.Classes.AnyAsync(s => s.ClassId == ClassId);
-			if (!exists)
-			{
-				return NotFound($"Class with ID {ClassId} not found"); // 404
-			}
-			return Ok(exists); // 200
-		}
-
-
-		/* POST: api/class
-         * Add a class to the database
-         * - request body: ClassDto
-         * - response body: Class
-         */
-		[HttpPost]
-        public async Task<ActionResult<Class>> AddClass([FromBody] ClassDto dto)
+        public async Task<ActionResult<bool>> ClassExists([FromBody] Guid classId)
         {
-            var newClass = new Class
-            {
-                ClassId = Guid.NewGuid(), // Auto-generate
-                ProfUtdId = dto.ProfUtdId,
-                ClassPrefix = dto.ClassPrefix,
-                ClassNumber = dto.ClassNumber,
-                ClassName = dto.ClassName,
-                StartDate = dto.StartDate,
-                EndDate = dto.EndDate,
-                StartTime = dto.StartTime,
-                EndTime = dto.EndTime
-            };
+            if (string.IsNullOrWhiteSpace(classId.ToString()))
+                return BadRequest("Class ID is required.");
 
-            _context.Classes.Add(newClass);
-            await _context.SaveChangesAsync();
+            var exists = await _service.ClassExistsAsync(classId);
+            if (!exists)
+                return NotFound($"Class with ID {classId} not found");
 
-            return CreatedAtAction(nameof(GetClasses), new { id = newClass.ClassId }, newClass);
+            return Ok(true);
         }
     }
 }
