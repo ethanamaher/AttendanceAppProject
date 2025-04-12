@@ -15,6 +15,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AttendanceAppProject.Deskto
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AttendanceAppProject.ProfessorLogin", "AttendanceAppProject.ProfessorLogin\AttendanceAppProject.ProfessorLogin.csproj", "{C5F4C1BD-970F-4A96-B979-B8BAF39FB20D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DC6DF526-D2E2-4E53-A9CB-FC030796B573}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

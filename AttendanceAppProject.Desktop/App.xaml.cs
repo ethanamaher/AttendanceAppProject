@@ -5,11 +5,15 @@ using System;
 using System.IO;
 using System.Windows;
 using AttendanceAppProject.ApiService;
+using System.Net.Http;
+using AttendanceAppProject.ApiService.Models;
 
 namespace AttendanceAppProject.Desktop
 {
     public partial class App : Application
     {
+
+
         public IServiceProvider ServiceProvider { get; private set; }
         public IConfiguration Configuration { get; private set; }
 
@@ -48,5 +52,25 @@ namespace AttendanceAppProject.Desktop
             // Register main window
             services.AddTransient<MainWindow>();
         }
+    }
+
+    internal class AttendanceApiClient : IAttendanceApiClient
+    {
+        private readonly HttpClient _httpClient;
+        public AttendanceApiClient(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+        }
+
+        public Task<List<AttendanceRecord>> GetAttendanceRecordsAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> SubmitAttendanceAsync(AttendanceRecord record)
+        {
+            throw new NotImplementedException();
+        }
+        // Implement the methods for IAttendanceApiClient here
     }
 }

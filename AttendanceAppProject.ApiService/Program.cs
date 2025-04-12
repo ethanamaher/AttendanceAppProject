@@ -1,4 +1,7 @@
 using AttendanceAppProject.ApiService;
+using AttendanceAppProject.ApiService.Data;
+using Microsoft.EntityFrameworkCore;
+using Pomelo.EntityFrameworkCore.MySql;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -7,6 +10,13 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
 var builder = WebApplication.CreateBuilder(args);
+
+//DB Context connection
+// Add services to the container.
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -24,15 +34,33 @@ builder.Services.AddApiServices(builder.Configuration);
 // Add CORS to allow the desktop app to connect
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowDesktopApp", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
+    options.AddPolicy("AllowBlazorOrigin",
+        policy => policy.WithOrigins("https://localhost:7530", "http://localhost:7530")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod());
 });
 
+
+
+builder.Services.AddScoped(sp => 
+    new HttpClient
+    { 
+        BaseAddress = new Uri("https://localhost:7530") // Replace with your API's port
+    });
+
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("AllowDesktopApp", policy =>
+//    {
+//        policy.AllowAnyOrigin()
+//              .AllowAnyMethod()
+//              .AllowAnyHeader();
+//    });
+//});
+
 var app = builder.Build();
+// After app.Build()
+app.UseCors("AllowBlazorOrigin");
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
