@@ -65,50 +65,80 @@
                 <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
             </div>
         }
-        <!-- quiz display -->
-        @if (!quizCompleted)
+
+        @if (quizCompleted)
         {
-            <EditForm Model="@quizQuestionModels" OnSubmit="SubmitQuiz">
-                @foreach(QuizQuestionModel quizQuestion in quizQuestionModels)
-                {
-                    <div class="quiz-question">
-                        <div class="question-number">
-                            Question @(quizQuestions.IndexOf(quizQuestion.QuestionDto) + 1) of @quizQuestions.Count
+                <div class="quiz-completed">
+                    <h2>Attendance Recorded</h2>
+                    @if(quizExists)
+                    {
+                        <div class="score">Your Score: @correctAnswers / @quizQuestions.Count</div>
+
+                        <br />
+                    }
+
+                    <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
+
+                </div>
+
+
+        } else
+        {
+            <!-- quiz display -->
+            @if (quizExists)
+            {
+                <EditForm Model="@quizQuestionModels" OnSubmit="SubmitQuiz">
+                    @foreach (QuizQuestionModel quizQuestion in quizQuestionModels)
+                    {
+                        <div class="quiz-question">
+                            <div class="question-number">
+                                Question @(quizQuestions.IndexOf(quizQuestion.QuestionDto) + 1) of @quizQuestions.Count
+                            </div>
+
+
+                            <div class="question-text">
+                                <strong>@quizQuestion.QuestionDto.QuestionText</strong>
+                            </div>
+
+                            <InputRadioGroup @bind-Value="quizQuestion.SelectedAnswerId" Name="@quizQuestion.QuestionDto.QuestionId.ToString()">
+                                @foreach (QuizAnswerDto answerDto in quizQuestion.Answers)
+                                {
+                                    <label>
+                                        <InputRadio Value="@answerDto.AnswerId" />
+                                        <span class="ms-2">@answerDto.AnswerText</span><br />
+                                    </label>
+                                }
+                            </InputRadioGroup>
                         </div>
 
+                        <br />
+                    }
 
-                        <div class="question-text">
-                            <strong>@quizQuestion.QuestionDto.QuestionText</strong>
-                        </div>
+                    <!-- button to handle form submission -->
+                    <div class="submit-button-container">
+                        <button type="submit" disabled="@isSubmitting">
+                            @(isSubmitting ? "Submitting Quiz..." : "Submit")
+                        </button>
+                    </div>
+                </EditForm>
+            }
+            else
+            {
 
-                        <InputRadioGroup @bind-Value="quizQuestion.SelectedAnswerId" Name="@quizQuestion.QuestionDto.QuestionId.ToString()">
-                            @foreach (QuizAnswerDto answerDto in quizQuestion.Answers)
-                            {
-                                <label>
-                                    <InputRadio Value="@answerDto.AnswerId" />
-                                    <span class="ms-2">@answerDto.AnswerText</span><br />
-                                </label>
-                            }
-                        </InputRadioGroup>
-                    </div><br />
-                }
+                <!-- button to handle form submission if there is no quiz
 
-                <!-- button to handle form submission -->
+                    should make that it automatically submits instead of requiring extra button press
+
+                -->
                 <div class="submit-button-container">
-                    <button type="submit" disabled="@isSubmitting">
-                        @(isSubmitting ? "Submitting Quiz..." : "Submit")
+                    <button type="submit" disabled="@isSubmitting" onclick="@SubmitQuiz">
+                        @(isSubmitting ? "Recording Attendance..." : "Record Attendance")
                     </button>
                 </div>
-            </EditForm>
+            }
         }
-        else
-        {
-            <div class="quiz-completed">
-                <h2>Quiz Submitted!</h2>
-                <div class="score">Your Score: @correctAnswers / @quizQuestions.Count</div><br />
-                <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
-            </div>
-        }
+
+        
     </div>
 </div>
 
@@ -129,11 +159,15 @@
     // used to lock submission button to prevent duplicate submissions
     private bool isSubmitting = false;
 
+    // used to determine if quiz exists for class selected
+    bool quizExists = false;
+
     // Quiz state
     private QuizInstanceDto quizInstance = new QuizInstanceDto();
     private List<QuizQuestionDto> quizQuestions = new List<QuizQuestionDto>();
     private List<List<QuizAnswerDto>> quizAnswers = new List<List<QuizAnswerDto>>();
     private List<QuizQuestionModel> quizQuestionModels = new();
+
 
     private bool quizCompleted = false;
     private int correctAnswers = 0;
@@ -152,16 +186,33 @@
             // pull class from database where classId matches query
             classDto = await Http.GetFromJsonAsync<ClassDto>($"api/class/{classId.ToString()}");
 
-            // pull QuizInstance from database where classId matches query
-            quizInstance = await Http.GetFromJsonAsync<QuizInstanceDto>($"api/quizinstance/{classId.ToString()}");
 
-            if(quizInstance?.QuizId == Guid.Empty) {
-                isValidStudent = false;
+
+            // pull QuizInstance from database where classId matches query
+            HttpResponseMessage response = await Http.GetAsync($"api/quizinstance/{classId}");
+            if(response.IsSuccessStatusCode)
+            {
+                quizInstance = await response.Content.ReadFromJsonAsync<QuizInstanceDto>();
+                quizExists = true;
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // Handle 404 — quiz instance not found
+                Console.WriteLine("Quiz instance not found for this class.");
+            } else
+            {
+                // Handle Other Errors
+                Console.WriteLine("Quiz instance not found for this class.");
+            }
+
+
+            if(!quizExists)
+            {
                 isLoading = false;
                 return;
             }
 
-            // Only load quiz question if student is valid
+            // Only load quiz question if student is valid and quiz exists
             // Load quiz question
             await LoadQuizQuestions();
             // Load quiz answers
@@ -202,6 +253,7 @@
         try
         {
             quizQuestions = await Http.GetFromJsonAsync<List<QuizQuestionDto>>($"api/quizquestion/{quizInstance.QuizId.ToString()}");
+
         }
         catch (Exception ex)
         {
@@ -247,7 +299,7 @@
                     ClassId = classId,
                     IpAddress = ipAddress,
                     DateTime = DateTime.UtcNow
-                    // IsLate and ExcusedAbsence default to null as they are added from professor side
+                // IsLate and ExcusedAbsence default to null
                 };
 
 
@@ -262,7 +314,12 @@
             isSubmitting = false;
             quizCompleted = true;
 
-            CalculateScore();
+            if(quizExists) 
+            {
+                CalculateScore();
+            }
+            StateHasChanged();
+
         }
     }
 
