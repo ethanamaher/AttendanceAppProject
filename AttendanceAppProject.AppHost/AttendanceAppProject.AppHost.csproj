@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <Sdk Name="Aspire.AppHost.Sdk" Version="9.0.0" />
 
@@ -9,6 +9,7 @@
     <Nullable>enable</Nullable>
     <IsAspireHost>true</IsAspireHost>
     <UserSecretsId>c9593408-ceea-4189-9ea7-7ce04d246920</UserSecretsId>
+    <Configurations>Debug;Release;integrated</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

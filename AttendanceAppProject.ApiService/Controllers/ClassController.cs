@@ -1,6 +1,6 @@
 ﻿/* Class API Controller
  * Handles HTTP GET and POST requests for classes, allowing for retrieval and creation of class records, retrieving a class by its ID, and checking if a class exists in the database.
- * Written by Ethan Maher
+ * Written by Ethan Maher, Maaz Raza
  */
 
 using AttendanceAppProject.ApiService.Data;
@@ -24,7 +24,7 @@ namespace AttendanceAppProject.ApiService.Controllers
             _context = context;
         }
 
-        /* GET: api/Class
+        /* GET: api/class
 		 * Get all classes
 		 * - request body: none
 		 * - response body: Classes
@@ -35,7 +35,7 @@ namespace AttendanceAppProject.ApiService.Controllers
             return await _context.Classes.ToListAsync();
         }
 
-		/* GET: api/Class/{id}
+		/* GET: api/class/{id}
 		 * Get class whose classId private key = id
 		 * - request body: Guid classId
 		 * - response body: Class
@@ -43,10 +43,7 @@ namespace AttendanceAppProject.ApiService.Controllers
 		[HttpGet("{id}")]
 		public async Task<ActionResult<Class>> GetClass(Guid id)
 		{
-            System.Diagnostics.Debug.WriteLine($"-----CLASS CONTROLLER-----");
-            System.Diagnostics.Debug.WriteLine($"{id}");
             var classItem = await _context.Classes.FirstOrDefaultAsync(c => c.ClassId == id);
-			System.Diagnostics.Debug.WriteLine($"{classItem.ToString()}");
 
 			if (classItem == null)
             {
@@ -82,7 +79,6 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpPost("exists")]
 		public async Task<ActionResult<bool>> ClassExists([FromBody] Guid ClassId)
 		{
-			System.Diagnostics.Debug.WriteLine($"Request for class {ClassId}");
 			if (string.IsNullOrWhiteSpace(ClassId.ToString()))
 			{
 				return BadRequest("Class ID is required."); // 400
@@ -97,7 +93,7 @@ namespace AttendanceAppProject.ApiService.Controllers
 		}
 
 
-		/* POST: api/Class
+		/* POST: api/class
          * Add a class to the database
          * - request body: ClassDto
          * - response body: Class

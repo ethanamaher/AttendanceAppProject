@@ -210,10 +210,19 @@ namespace AttendanceAppProject.ApiService.Controllers
                 StudentId = dto.StudentId,
                 ClassId = dto.ClassId,
                 IpAddress = dto.IpAddress,
-                IsLate = dto.IsLate,
-                ExcusedAbsence = dto.ExcusedAbsence,
-                DateTime = dto.DateTime
+
+				// late students should be added from professor side
+				IsLate = dto.IsLate, //null
+
+				// excused absences should be input into database later from professor side
+				ExcusedAbsence = dto.ExcusedAbsence, // null
+
+
+                DateTime = dto.DateTime // UTC Now
             };
+
+
+
 
             _context.AttendanceInstances.Add(attendance);
             await _context.SaveChangesAsync();

@@ -100,8 +100,9 @@
 
 /* Form container */
 .form-container {
-    max-width: 480px;
-    margin: 0 auto;
+    max-width: 720px;
+    width: auto;
+    margin: auto auto;
     padding: 35px;
     background-color: white;
     border-radius: 16px;
