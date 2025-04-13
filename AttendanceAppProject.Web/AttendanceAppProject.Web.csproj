@@ -14,7 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AttendanceAppProject.Dto\AttendanceAppProject.Dto.csproj" />
     <ProjectReference Include="..\AttendanceAppProject.ServiceDefaults\AttendanceAppProject.ServiceDefaults.csproj" />
   </ItemGroup>
 

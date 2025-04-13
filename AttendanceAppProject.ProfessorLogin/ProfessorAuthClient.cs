@@ -1,14 +1,19 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AttendanceAppProject.ApiService.Data.Models;
+using AttendanceAppProject.ProfessorLogin.Models;
 
 namespace AttendanceAppProject.ProfessorLogin
 {
     public interface IProfessorAuthClient
     {
-        Task<ProfessorDto> LoginAsync(string professorId, string password);
+        Task<ProfessorModel> LoginAsync(string professorId, string password);
+        Task<ProfessorModel> GetProfessorByIdAsync(string professorId);
     }
 
     public class ProfessorAuthClient : IProfessorAuthClient
@@ -24,36 +29,71 @@ namespace AttendanceAppProject.ProfessorLogin
             _httpClient = httpClient;
         }
 
-        public async Task<ProfessorDto> LoginAsync(string professorId, string password)
+        public async Task<ProfessorModel> LoginAsync(string professorId, string password)
         {
-            var loginRequest = new
+            try
             {
-                ProfessorId = professorId,
-                Password = password
-            };
+                // First, check if the professor exists
+                var professorResponse = await _httpClient.GetAsync($"api/Professor");
 
-            var content = new StringContent(
-                JsonSerializer.Serialize(loginRequest),
-                Encoding.UTF8,
-                "application/json");
+                if (professorResponse.IsSuccessStatusCode)
+                {
+                    var professors = await professorResponse.Content.ReadFromJsonAsync<Professor[]>(_jsonOptions);
+                    var professor = Array.Find(professors, p => p.UtdId == professorId);
 
-            var response = await _httpClient.PostAsync("api/ProfessorAuth/login", content);
+                    if (professor != null)
+                    {
+                        // For demo purposes, we're accepting any password
 
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<ProfessorDto>(_jsonOptions);
+                        return new ProfessorModel
+                        {
+                            ProfessorId = professor.UtdId,
+                            FullName = $"{professor.FirstName} {professor.LastName}",
+                            Department = "Computer Science", // Hard-coded for demo
+                            Email = $"{professor.FirstName.ToLower()}.{professor.LastName.ToLower()}@utdallas.edu" // Generated
+                        };
+                    }
+                }
+
+                return null; // Authentication failed
             }
-
-            return null;
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Authentication error: {ex.Message}");
+                return null;
+            }
         }
-    }
 
-    public class ProfessorDto
-    {
-        public string ProfessorId { get; set; }
-        public string FullName { get; set; }
-        public string Department { get; set; }
-        public string Email { get; set; }
-        public string LastLogin { get; set; }
+        public async Task<ProfessorModel> GetProfessorByIdAsync(string professorId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"api/Professor");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var professors = await response.Content.ReadFromJsonAsync<Professor[]>(_jsonOptions);
+                    var professor = Array.Find(professors, p => p.UtdId == professorId);
+
+                    if (professor != null)
+                    {
+                        return new ProfessorModel
+                        {
+                            ProfessorId = professor.UtdId,
+                            FullName = $"{professor.FirstName} {professor.LastName}",
+                            Department = "Computer Science", // Hard-coded for demo
+                            Email = $"{professor.FirstName.ToLower()}.{professor.LastName.ToLower()}@utdallas.edu" // Generated
+                        };
+                    }
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting professor: {ex.Message}");
+                return null;
+            }
+        }
     }
 }

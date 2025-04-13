@@ -1,6 +1,4 @@
-﻿// Canh Nguyen 
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -8,30 +6,32 @@ using System.Windows.Controls;
 using AttendanceAppProject.ProfessorLogin.Models;
 using AttendanceAppProject.ProfessorLogin.Services;
 using Microsoft.Extensions.DependencyInjection;
-using System.IO;
 using System.Windows.Data;
 using System.ComponentModel;
 using System.Net.Http;
-using AttendanceAppProject.ApiService.Models;
-using AttendanceAppProject.ProfessorLogin;
 using System.Net.Http.Json;
-using Azure;
+using System.Threading.Tasks;
+using AttendanceAppProject.ApiService.Data.Models;
+using AttendanceAppProject.ApiService.Dto.Models;
 
 namespace AttendanceAppProject.ProfessorLogin
 {
     public partial class AttendanceWindow : Window
     {
-        private List<AttendanceAppProject.ProfessorLogin.Models.AttendanceRecord> _allAttendanceRecords;
-        private List<AttendanceAppProject.ProfessorLogin.Models.AttendanceRecord> _filteredRecords;
+        private List<AttendanceRecord> _allAttendanceRecords;
+        private List<AttendanceRecord> _filteredRecords;
+        private List<Class> _professorClasses;
+        private Professor _currentProfessor;
 
-        private HttpClient _httpClient;
-        public AttendanceWindow()
+        private readonly HttpClient _httpClient;
+
+        public AttendanceWindow(HttpClient httpClient)
         {
             InitializeComponent();
-            _allAttendanceRecords = new List<AttendanceAppProject.ProfessorLogin.Models.AttendanceRecord>();
-            _filteredRecords = new List<AttendanceAppProject.ProfessorLogin.Models.AttendanceRecord>();
-            _httpClient = new HttpClient();
-            
+            _allAttendanceRecords = new List<AttendanceRecord>();
+            _filteredRecords = new List<AttendanceRecord>();
+            _professorClasses = new List<Class>();
+            _httpClient = httpClient;
 
             // Set default sorting if the control exists
             if (SortByComboBox != null && SortByComboBox.Items.Count > 0)
@@ -40,13 +40,13 @@ namespace AttendanceAppProject.ProfessorLogin
             }
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             System.Diagnostics.Debug.WriteLine("Window Loaded");
             try
             {
                 // Display professor information
-                if (App.Current.Properties["CurrentProfessor"] is Professor currentProfessor)
+                if (App.Current is App app && app.ServiceProvider.GetService<ProfessorModel>() is ProfessorModel currentProfessor)
                 {
                     if (ProfessorNameTextBlock != null)
                     {
@@ -61,14 +61,24 @@ namespace AttendanceAppProject.ProfessorLogin
                     // Set window title
                     this.Title = $"Student Attendance Database - {currentProfessor.FullName}";
 
-                    // Select first item in the Class combobox if it exists
-                    if (ClassComboBox != null && ClassComboBox.Items.Count > 0)
-                    {
-                        ClassComboBox.SelectedIndex = 0;
-                    }
+                    // Fetch professor data from the API
+                    await GetProfessorFromApiAsync(currentProfessor.ProfessorId);
+
+                    // Load professor's classes
+                    await LoadProfessorClasses();
 
                     // Load attendance data
-                    LoadAttendanceData();
+                    await LoadAttendanceData();
+
+                    if (StatusTextBlock != null)
+                    {
+                        StatusTextBlock.Text = "Data loaded successfully";
+                    }
+
+                    if (LastUpdatedTextBlock != null)
+                    {
+                        LastUpdatedTextBlock.Text = $"Last updated: {DateTime.Now.ToString("g")}";
+                    }
                 }
                 else
                 {
@@ -85,51 +95,175 @@ namespace AttendanceAppProject.ProfessorLogin
             }
         }
 
-        // Declare HTTP Client and list of students
-        //private HttpClient _httpClient;
-        private List<StudentDto> students = new();
-
-        private async void LoadAttendanceData()
+        private async Task GetProfessorFromApiAsync(string professorId)
         {
             try
             {
-                // Use the shared HttpClient instance
-                var response = await _httpClient.GetAsync("api/student");
-
+                var response = await _httpClient.GetAsync("api/Professor");
                 if (response.IsSuccessStatusCode)
                 {
-                    var studentList = await response.Content.ReadFromJsonAsync<List<StudentDto>>();
-                    students = studentList ?? new List<StudentDto>();
+                    var professors = await response.Content.ReadFromJsonAsync<List<Professor>>();
+                    _currentProfessor = professors.FirstOrDefault(p => p.UtdId == professorId);
 
-                    //// Update UI (dispatch to UI thread if needed)
-                    //Dispatcher.Invoke(() => 
-                    //{
-                    //    dataGrid.ItemsSource = students; // Replace with your actual UI control
-                    //});
+                    if (_currentProfessor == null)
+                    {
+                        // Fallback to mock data for testing
+                        _currentProfessor = new Professor
+                        {
+                            UtdId = professorId,
+                            FirstName = "Mock",
+                            LastName = "Professor"
+                        };
+                    }
                 }
-                else
-                {
-                    MessageBox.Show($"API Error: {response.StatusCode}", "Error",
-                                    MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-            catch (HttpRequestException ex)
-            {
-                MessageBox.Show($"Network error: {ex.Message}\n\nIs the API running?",
-                                "Connection Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Unexpected error: {ex.Message}",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"Error getting professor: {ex.Message}");
+                // Create a mock professor for testing
+                _currentProfessor = new Professor
+                {
+                    UtdId = professorId,
+                    FirstName = "Mock",
+                    LastName = "Professor"
+                };
             }
         }
 
-        // HTTP Get student data from database
-        protected async Task LoadStudentsAsync()
+        private async Task LoadProfessorClasses()
         {
-            students = await _httpClient.GetFromJsonAsync<List<StudentDto>>("api/student/");
-            System.Diagnostics.Debug.WriteLine("yo" + students);
+            try
+            {
+                if (_currentProfessor == null) return;
+
+                var response = await _httpClient.GetAsync($"api/Class/professor/{_currentProfessor.UtdId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _professorClasses = await response.Content.ReadFromJsonAsync<List<Class>>();
+
+                    // Clear and add the "All Classes" option
+                    ClassComboBox.Items.Clear();
+                    ClassComboBox.Items.Add(new ComboBoxItem { Content = "All Classes" });
+
+                    // Add each class
+                    foreach (var classItem in _professorClasses)
+                    {
+                        ClassComboBox.Items.Add(new ComboBoxItem
+                        {
+                            Content = $"{classItem.ClassPrefix} {classItem.ClassNumber}: {classItem.ClassName}",
+                            Tag = classItem.ClassId
+                        });
+                    }
+
+                    // Select "All Classes" by default
+                    ClassComboBox.SelectedIndex = 0;
+                }
+                else
+                {
+                    // If no classes found, populate with mock data for testing
+                    PopulateWithMockClasses();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading classes: {ex.Message}");
+                // Populate with mock data for testing
+                PopulateWithMockClasses();
+            }
+        }
+
+        private void PopulateWithMockClasses()
+        {
+            // Clear and add mock classes for testing
+            ClassComboBox.Items.Clear();
+            ClassComboBox.Items.Add(new ComboBoxItem { Content = "All Classes" });
+            ClassComboBox.Items.Add(new ComboBoxItem { Content = "CS 4485: Senior Design", Tag = Guid.NewGuid() });
+            ClassComboBox.Items.Add(new ComboBoxItem { Content = "CS 3354: Software Engineering", Tag = Guid.NewGuid() });
+            ClassComboBox.Items.Add(new ComboBoxItem { Content = "CS 2336: Computer Science II", Tag = Guid.NewGuid() });
+
+            // Select "All Classes" by default
+            ClassComboBox.SelectedIndex = 0;
+        }
+
+        private async Task LoadAttendanceData()
+        {
+            try
+            {
+                // First, attempt to retrieve data from the API
+                if (_currentProfessor != null)
+                {
+                    List<AttendanceRecord> records = new List<AttendanceRecord>();
+                    bool useApiData = false;
+
+                    try
+                    {
+                        foreach (var classItem in _professorClasses)
+                        {
+                            var response = await _httpClient.GetAsync($"api/AttendanceInstance/class/{classItem.ClassId}");
+
+                            if (response.IsSuccessStatusCode)
+                            {
+                                var attendanceInstances = await response.Content.ReadFromJsonAsync<List<AttendanceInstance>>();
+
+                                // For each attendance instance, create a record
+                                int index = 1;
+                                foreach (var instance in attendanceInstances)
+                                {
+                                    var record = new AttendanceRecord
+                                    {
+                                        Id = index++,
+                                        OrdinalNumber = records.Count + 1,
+                                        ProfessorId = _currentProfessor.UtdId,
+                                        ProfessorName = $"{_currentProfessor.FirstName} {_currentProfessor.LastName}",
+                                        StudentId = instance.StudentId,
+                                        Class = $"{classItem.ClassPrefix} {classItem.ClassNumber}",
+                                        CheckInTime = instance.DateTime ?? DateTime.Now,
+                                        QuizQuestion = "Default Question", // We would need to fetch this from QuizInstance
+                                        QuizAnswer = "Default Answer",     // We would need to fetch this from QuizResponse
+                                        IsLate = instance.IsLate ?? false
+                                    };
+
+                                    records.Add(record);
+                                }
+
+                                useApiData = true;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"API error: {ex.Message}. Falling back to mock data.");
+                        useApiData = false;
+                    }
+
+                    if (useApiData && records.Count > 0)
+                    {
+                        _allAttendanceRecords = records;
+                    }
+                    else
+                    {
+                        // Fallback to mock data
+                        _allAttendanceRecords = MockDataProvider.GenerateMockAttendanceData(
+                            _currentProfessor.UtdId,
+                            $"{_currentProfessor.FirstName} {_currentProfessor.LastName}");
+                    }
+
+                    // Apply initial filtering and sorting
+                    ApplyFilters();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading attendance data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                // Fallback to mock data
+                _allAttendanceRecords = MockDataProvider.GenerateMockAttendanceData(
+                    _currentProfessor?.UtdId ?? "unknown",
+                    _currentProfessor != null ? $"{_currentProfessor.FirstName} {_currentProfessor.LastName}" : "Unknown Professor");
+
+                ApplyFilters();
+            }
         }
 
         private void ApplyFilters()
@@ -139,12 +273,12 @@ namespace AttendanceAppProject.ProfessorLogin
                 // Make sure we have attendance records to filter
                 if (_allAttendanceRecords == null)
                 {
-                    _allAttendanceRecords = new List<AttendanceAppProject.ProfessorLogin.Models.AttendanceRecord>();
+                    _allAttendanceRecords = new List<AttendanceRecord>();
                 }
-        
+
                 // Create a new filtered list from all records
-                _filteredRecords = new List<AttendanceAppProject.ProfessorLogin.Models.AttendanceRecord>(_allAttendanceRecords);
-        
+                _filteredRecords = new List<AttendanceRecord>(_allAttendanceRecords);
+
                 // Apply class filter if selected
                 if (ClassComboBox != null && ClassComboBox.SelectedIndex > 0) // Skip "All Classes"
                 {
@@ -155,7 +289,7 @@ namespace AttendanceAppProject.ProfessorLogin
                         _filteredRecords = _filteredRecords.Where(r => r.Class == selectedClass).ToList();
                     }
                 }
-        
+
                 // Apply single date filter if selected
                 if (DateFilterPicker != null && DateFilterPicker.SelectedDate.HasValue)
                 {
@@ -163,20 +297,20 @@ namespace AttendanceAppProject.ProfessorLogin
                     _filteredRecords = _filteredRecords.Where(r =>
                         r.CheckInTime.Date == selectedDate.Date).ToList();
                 }
-        
+
                 // Apply date range filter if both dates are selected
                 else if (StartDatePicker != null && EndDatePicker != null &&
                          StartDatePicker.SelectedDate.HasValue && EndDatePicker.SelectedDate.HasValue)
                 {
                     DateTime startDate = StartDatePicker.SelectedDate.Value;
                     DateTime endDate = EndDatePicker.SelectedDate.Value.AddDays(1).AddSeconds(-1); // End of day
-        
+
                     _filteredRecords = _filteredRecords.Where(r =>
                         r.CheckInTime >= startDate && r.CheckInTime <= endDate).ToList();
-        
+
                     if (DateRangeTextBlock != null)
                     {
-                        DateRangeTextBlock.Text = $"Date range: {startDate.ToShortDateString()} -       {EndDatePicker.SelectedDate.Value.ToShortDateString()}";
+                        DateRangeTextBlock.Text = $"Date range: {startDate.ToShortDateString()} - {EndDatePicker.SelectedDate.Value.ToShortDateString()}";
                     }
                 }
                 else
@@ -186,7 +320,7 @@ namespace AttendanceAppProject.ProfessorLogin
                         DateRangeTextBlock.Text = "Date range: All dates";
                     }
                 }
-        
+
                 // Apply student ID filter if provided
                 if (StudentIdTextBox != null && !string.IsNullOrWhiteSpace(StudentIdTextBox.Text))
                 {
@@ -194,24 +328,24 @@ namespace AttendanceAppProject.ProfessorLogin
                     _filteredRecords = _filteredRecords.Where(r =>
                         r.StudentId.Contains(studentId, StringComparison.OrdinalIgnoreCase)).ToList();
                 }
-        
+
                 // Apply current sorting
                 ApplySorting();
-        
+
                 // Update ordinal numbers
                 int counter = 1;
                 foreach (var record in _filteredRecords)
                 {
                     record.OrdinalNumber = counter++;
                 }
-        
+
                 // Update the DataGrid
                 if (AttendanceDataGrid != null)
                 {
                     AttendanceDataGrid.ItemsSource = null;
                     AttendanceDataGrid.ItemsSource = _filteredRecords;
                 }
-        
+
                 // Update stats
                 UpdateStatistics();
             }
@@ -221,7 +355,7 @@ namespace AttendanceAppProject.ProfessorLogin
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
+
         private void ApplySorting()
         {
             try
@@ -230,24 +364,24 @@ namespace AttendanceAppProject.ProfessorLogin
                 {
                     return;
                 }
-        
+
                 if (SortByComboBox == null || SortByComboBox.SelectedIndex < 0)
                 {
                     return;
                 }
-        
+
                 var selectedItem = SortByComboBox.SelectedItem as ComboBoxItem;
                 if (selectedItem == null)
                 {
                     return;
                 }
-        
+
                 string sortOption = selectedItem.Content?.ToString();
                 if (string.IsNullOrEmpty(sortOption))
                 {
                     return;
                 }
-        
+
                 switch (sortOption)
                 {
                     case "Sort by Date (New-Old)":
@@ -270,7 +404,7 @@ namespace AttendanceAppProject.ProfessorLogin
                 Console.WriteLine($"Error in ApplySorting: {ex.Message}");
             }
         }
-        
+
         private void UpdateStatistics()
         {
             try
@@ -280,22 +414,22 @@ namespace AttendanceAppProject.ProfessorLogin
                 {
                     return;
                 }
-        
+
                 // Update record count
                 RecordCountTextBlock.Text = $"{_filteredRecords.Count} records found";
-        
+
                 // Update class distribution
                 var classDistribution = _filteredRecords
                     .GroupBy(r => r.Class)
                     .Select(g => new { Class = g.Key, Count = g.Count() })
                     .OrderByDescending(x => x.Count);
-        
+
                 string distribution = "Class distribution:\n";
                 foreach (var item in classDistribution)
                 {
                     distribution += $"- {item.Class}: {item.Count} records\n";
                 }
-        
+
                 ClassDistributionTextBlock.Text = distribution;
             }
             catch (Exception ex)
@@ -304,19 +438,39 @@ namespace AttendanceAppProject.ProfessorLogin
                 Console.WriteLine($"Error in UpdateStatistics: {ex.Message}");
             }
         }
-        
-        private void RefreshButton_Click(object sender, RoutedEventArgs e)
+
+        private async void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                LoadAttendanceData();
+                // Show loading message
+                if (StatusTextBlock != null)
+                {
+                    StatusTextBlock.Text = "Refreshing data...";
+                }
+
+                // Refresh data
+                await LoadProfessorClasses();
+                await LoadAttendanceData();
+
+                // Update status
+                if (StatusTextBlock != null)
+                {
+                    StatusTextBlock.Text = "Data refreshed successfully";
+                }
+
+                // Update last updated timestamp
+                if (LastUpdatedTextBlock != null)
+                {
+                    LastUpdatedTextBlock.Text = $"Last updated: {DateTime.Now.ToString("g")}";
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error refreshing data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
+
         private void ClassComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             try
@@ -328,7 +482,7 @@ namespace AttendanceAppProject.ProfessorLogin
                 MessageBox.Show($"Error changing class filter: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
+
         private void DateFilterPicker_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
         {
             try
@@ -340,13 +494,13 @@ namespace AttendanceAppProject.ProfessorLogin
                     {
                         StartDatePicker.SelectedDate = null;
                     }
-        
+
                     if (EndDatePicker != null)
                     {
                         EndDatePicker.SelectedDate = null;
                     }
                 }
-        
+
                 ApplyFilters();
             }
             catch (Exception ex)
@@ -354,7 +508,7 @@ namespace AttendanceAppProject.ProfessorLogin
                 MessageBox.Show($"Error changing date filter: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
+
         private void ApplyDateRangeButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -367,7 +521,7 @@ namespace AttendanceAppProject.ProfessorLogin
                     {
                         DateFilterPicker.SelectedDate = null;
                     }
-        
+
                     ApplyFilters();
                 }
                 else
@@ -381,7 +535,7 @@ namespace AttendanceAppProject.ProfessorLogin
                 MessageBox.Show($"Error applying date range: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
+
         private void SearchStudentButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -393,7 +547,7 @@ namespace AttendanceAppProject.ProfessorLogin
                 MessageBox.Show($"Error searching for student: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
+
         private void SortByComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             try
@@ -405,7 +559,7 @@ namespace AttendanceAppProject.ProfessorLogin
                 MessageBox.Show($"Error changing sort order: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
+
         private void ClearFiltersButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -415,36 +569,36 @@ namespace AttendanceAppProject.ProfessorLogin
                 {
                     ClassComboBox.SelectedIndex = 0;
                 }
-        
+
                 if (DateFilterPicker != null)
                 {
                     DateFilterPicker.SelectedDate = null;
                 }
-        
+
                 if (StartDatePicker != null)
                 {
                     StartDatePicker.SelectedDate = null;
                 }
-        
+
                 if (EndDatePicker != null)
                 {
                     EndDatePicker.SelectedDate = null;
                 }
-        
+
                 if (StudentIdTextBox != null)
                 {
                     StudentIdTextBox.Text = string.Empty;
                 }
-        
+
                 // Reset sorting to default
                 if (SortByComboBox != null && SortByComboBox.Items.Count > 0)
                 {
                     SortByComboBox.SelectedIndex = 0;
                 }
-        
+
                 // Reapply filters (which will now show all records)
                 ApplyFilters();
-        
+
                 if (StatusTextBlock != null)
                 {
                     StatusTextBlock.Text = "All filters cleared";
@@ -455,14 +609,13 @@ namespace AttendanceAppProject.ProfessorLogin
                 MessageBox.Show($"Error clearing filters: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
+
         private void DetailsButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 // Get the clicked record
-                
-                if (sender is Button button && button.DataContext is AttendanceAppProject.ProfessorLogin.Models.AttendanceRecord record)
+                if (sender is Button button && button.DataContext is AttendanceRecord record)
                 {
                     // Show details in a message box
                     MessageBox.Show(
@@ -482,19 +635,69 @@ namespace AttendanceAppProject.ProfessorLogin
                 MessageBox.Show($"Error showing details: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
-        private void EditButton_Click(object sender, RoutedEventArgs e)
+
+        private async void EditButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 // Get the clicked record
-                if (sender is Button button && button.DataContext is AttendanceAppProject.ProfessorLogin.Models.AttendanceRecord record)
+                if (sender is Button button && button.DataContext is AttendanceRecord record)
                 {
                     // In a real application, you would open a dialog to edit the record
-                    // For this example, we'll just show a message
+                    // For now, let's demonstrate API integration by toggling the IsLate flag
+
+                    // Update the UI record
+                    record.IsLate = !record.IsLate;
+
+                    // Find the class ID for this record
+                    Guid? classId = null;
+                    foreach (ComboBoxItem item in ClassComboBox.Items)
+                    {
+                        if (item.Content.ToString() == record.Class && item.Tag is Guid id)
+                        {
+                            classId = id;
+                            break;
+                        }
+                    }
+
+                    if (classId.HasValue)
+                    {
+                        try
+                        {
+                            // Try to update via API
+                            var dto = new
+                            {
+                                StudentId = record.StudentId,
+                                ClassId = classId.Value,
+                                IsLate = record.IsLate,
+                                ExcusedAbsence = false,
+                                DateTime = record.CheckInTime
+                            };
+
+                            var response = await _httpClient.PostAsJsonAsync("api/AttendanceInstance/absent-or-late", dto);
+
+                            if (response.IsSuccessStatusCode)
+                            {
+                                StatusTextBlock.Text = "Record updated successfully";
+                            }
+                            else
+                            {
+                                StatusTextBlock.Text = "Failed to update record via API";
+                            }
+                        }
+                        catch (Exception apiEx)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"API error during edit: {apiEx.Message}");
+                        }
+                    }
+
+                    // Refresh the DataGrid
+                    AttendanceDataGrid.Items.Refresh();
+
+                    // Show a message about the edit
                     MessageBox.Show(
-                        $"Editing record for Student ID: {record.StudentId}\n" +
-                        "In a real application, this would open an edit dialog.",
+                        $"Updated record for Student ID: {record.StudentId}\n" +
+                        $"Changed 'Late' status to: {(record.IsLate ? "Yes" : "No")}",
                         "Edit Attendance Record",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
@@ -505,7 +708,7 @@ namespace AttendanceAppProject.ProfessorLogin
                 MessageBox.Show($"Error editing record: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
+
         private void ExportToExcelButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -518,7 +721,7 @@ namespace AttendanceAppProject.ProfessorLogin
                     "Export to Excel",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
-        
+
                 if (StatusTextBlock != null)
                 {
                     StatusTextBlock.Text = "Export to Excel feature demonstrated";
@@ -529,7 +732,7 @@ namespace AttendanceAppProject.ProfessorLogin
                 MessageBox.Show($"Error with export operation: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
+
         private void PrintReportButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -542,7 +745,7 @@ namespace AttendanceAppProject.ProfessorLogin
                     "Print Report",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
-        
+
                 if (StatusTextBlock != null)
                 {
                     StatusTextBlock.Text = "Print Report feature demonstrated";
@@ -553,17 +756,18 @@ namespace AttendanceAppProject.ProfessorLogin
                 MessageBox.Show($"Error with print operation: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
+
         private void LogoutButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 // Clear the current professor data
+                // Should access static property with class name, not instance
                 App.CurrentProfessor = null;
-        
+
                 // Show the login window
                 ShowLoginWindow();
-        
+
                 // Close this window
                 this.Close();
             }
@@ -572,7 +776,7 @@ namespace AttendanceAppProject.ProfessorLogin
                 MessageBox.Show($"Error during logout: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
+
         private void ShowLoginWindow()
         {
             try

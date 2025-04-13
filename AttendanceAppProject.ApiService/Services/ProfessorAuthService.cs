@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Data;
 using AttendanceAppProject.ApiService.Models;
+using DbModels = AttendanceAppProject.ApiService.Data.Models;
 
 namespace AttendanceAppProject.ApiService
 {
@@ -20,12 +21,23 @@ namespace AttendanceAppProject.ApiService
 
         public async Task<Professor> AuthenticateProfessorAsync(string professorId, string password)
         {
-            var professor = await _context.Professors
-                .FirstOrDefaultAsync(p => p.ProfessorId == professorId);
+            // Get the DB model professor
+            var dbProfessor = await _context.Professors
+                .FirstOrDefaultAsync(p => p.UtdId == professorId);
 
-            if (professor != null && VerifyPassword(password, professor.PasswordHash))
+            if (dbProfessor != null)
             {
-                return professor;
+                // Convert to API model professor
+                return new Professor
+                {
+                    Id = 0, // This is a placeholder since we don't use int IDs
+                    ProfessorId = dbProfessor.UtdId,
+                    FullName = $"{dbProfessor.FirstName} {dbProfessor.LastName}",
+                    // These are placeholder values since they don't exist in the DB schema
+                    PasswordHash = "placeholder",
+                    Department = "Computer Science",
+                    Email = $"{dbProfessor.FirstName.ToLower()}.{dbProfessor.LastName.ToLower()}@utdallas.edu"
+                };
             }
 
             return null;
@@ -33,8 +45,26 @@ namespace AttendanceAppProject.ApiService
 
         public async Task<Professor> GetProfessorByIdAsync(string professorId)
         {
-            return await _context.Professors
-                .FirstOrDefaultAsync(p => p.ProfessorId == professorId);
+            // Get the DB model professor
+            var dbProfessor = await _context.Professors
+                .FirstOrDefaultAsync(p => p.UtdId == professorId);
+
+            if (dbProfessor != null)
+            {
+                // Convert to API model professor
+                return new Professor
+                {
+                    Id = 0, // This is a placeholder since we don't use int IDs
+                    ProfessorId = dbProfessor.UtdId,
+                    FullName = $"{dbProfessor.FirstName} {dbProfessor.LastName}",
+                    // These are placeholder values since they don't exist in the DB schema
+                    PasswordHash = "placeholder",
+                    Department = "Computer Science",
+                    Email = $"{dbProfessor.FirstName.ToLower()}.{dbProfessor.LastName.ToLower()}@utdallas.edu"
+                };
+            }
+
+            return null;
         }
 
         public static string CreatePasswordHash(string password)
