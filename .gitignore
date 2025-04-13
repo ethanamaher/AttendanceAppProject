@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Ignore appsettings.json to prevent pushing database connection string
+appsettings.json
+/AttendanceAppProject.Web/wwwroot/app.min.css
+/AttendanceAppProject.Web/tailwind.css
+/AttendanceAppProject.Web/tailwind.output.css

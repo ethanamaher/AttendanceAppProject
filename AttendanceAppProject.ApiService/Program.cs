@@ -1,77 +1,54 @@
-using AttendanceAppProject.ApiService;
-using AttendanceAppProject.ApiService.Data;
+using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.EntityFrameworkCore;
-using Pomelo.EntityFrameworkCore.MySql;
+using AttendanceAppProject.ApiService.Data;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using Swashbuckle.AspNetCore.SwaggerUI;
+using AttendanceAppProject.Dto.Models;
+using AttendanceAppProject.ApiService.JsonConverters;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//DB Context connection
+// Load environment variables 
+builder.Configuration.AddEnvironmentVariables();
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+	?? throw new InvalidOperationException("DefaultConnection is missing in appsettings.json");
+
+// Add service defaults & Aspire client integrations.
+// builder.AddServiceDefaults();
+
 // Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddProblemDetails();
 
+// Register EF Core with MySQL, add database context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+	options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
+		ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
 
-// Add services to the container
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-
-// Add Swagger (make sure you have the Swashbuckle.AspNetCore package)
-builder.Services.AddSwaggerGen(c =>
+// Enable Controllers, add JSON converters
+builder.Services.AddControllers().AddJsonOptions(options =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Attendance API", Version = "v1" });
+    options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
+    options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
 });
 
-// Add API services from our ApiService project
-builder.Services.AddApiServices(builder.Configuration);
-
-// Add CORS to allow the desktop app to connect
+// Add CORS Policy 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowBlazorOrigin",
-        policy => policy.WithOrigins("https://localhost:7530", "http://localhost:7530")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod());
+	options.AddPolicy("AllowAll",
+		policy => policy.AllowAnyOrigin()
+						.AllowAnyMethod()
+						.AllowAnyHeader());
 });
 
-
-
-builder.Services.AddScoped(sp => 
-    new HttpClient
-    { 
-        BaseAddress = new Uri("https://localhost:7530") // Replace with your API's port
-    });
-
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy("AllowDesktopApp", policy =>
-//    {
-//        policy.AllowAnyOrigin()
-//              .AllowAnyMethod()
-//              .AllowAnyHeader();
-//    });
-//});
-
 var app = builder.Build();
-// After app.Build()
-app.UseCors("AllowBlazorOrigin");
 
-// Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Attendance API v1"));
-}
+// Enable CORS
+app.UseCors("AllowAll");
 
-app.UseHttpsRedirection();
-app.UseCors("AllowDesktopApp");
-app.UseAuthorization();
+// Configure the HTTP request pipeline.
+app.UseExceptionHandler();
+
+// app.MapDefaultEndpoints();
 app.MapControllers();
 
 app.Run();

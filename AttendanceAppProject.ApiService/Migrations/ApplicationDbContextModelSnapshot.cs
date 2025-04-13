@@ -17,120 +17,525 @@ namespace AttendanceAppProject.ApiService.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.14")
+                .UseCollation("utf8mb4_0900_ai_ci")
+                .HasAnnotation("ProductVersion", "8.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            MySqlModelBuilderExtensions.HasCharSet(modelBuilder, "utf8mb4");
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("AttendanceAppProject.ApiService.Models.AttendanceRecord", b =>
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.AttendanceInstance", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("AttendanceId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Attendance_id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("ClassId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Class_id");
 
-                    b.Property<DateTime>("CheckInTime")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateTime?>("DateTime")
+                        .HasColumnType("timestamp")
+                        .HasColumnName("Date_time");
 
-                    b.Property<string>("Class")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
+                    b.Property<bool?>("ExcusedAbsence")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("Excused_absence");
 
-                    b.Property<string>("ProfessorId")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("Ip_address");
 
-                    b.Property<string>("ProfessorName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("QuizAnswer")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
-
-                    b.Property<string>("QuizQuestion")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
+                    b.Property<bool?>("IsLate")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("Is_late");
 
                     b.Property<string>("StudentId")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
+                        .HasMaxLength(10)
+                        .HasColumnType("char(10)")
+                        .HasColumnName("Student_id")
+                        .IsFixedLength();
 
-                    b.HasKey("Id");
+                    b.HasKey("AttendanceId")
+                        .HasName("PRIMARY");
 
-                    b.ToTable("AttendanceRecords");
+                    b.HasIndex(new[] { "ClassId" }, "fk_attendanceInstance_classId");
+
+                    b.HasIndex(new[] { "StudentId" }, "fk_attendanceInstance_studentId");
+
+                    b.ToTable("attendance_instance", (string)null);
                 });
 
-            modelBuilder.Entity("AttendanceAppProject.ApiService.Models.Professor", b =>
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.Class", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("ClassId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Class_id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("ClassName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("Class_name");
 
-                    b.Property<string>("Department")
+                    b.Property<string>("ClassNumber")
+                        .HasMaxLength(8)
+                        .HasColumnType("char(8)")
+                        .HasColumnName("Class_number")
+                        .IsFixedLength();
+
+                    b.Property<string>("ClassPrefix")
+                        .HasMaxLength(4)
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("Class_prefix");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("End_date");
+
+                    b.Property<TimeOnly?>("EndTime")
+                        .HasColumnType("time")
+                        .HasColumnName("End_time");
+
+                    b.Property<string>("ProfUtdId")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(10)
+                        .HasColumnType("char(10)")
+                        .HasColumnName("Prof_utd_id")
+                        .IsFixedLength();
 
-                    b.Property<string>("Email")
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("Start_date");
+
+                    b.Property<TimeOnly?>("StartTime")
+                        .HasColumnType("time")
+                        .HasColumnName("Start_time");
+
+                    b.HasKey("ClassId")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ProfUtdId" }, "fk_class_profId");
+
+                    b.ToTable("class", (string)null);
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.ClassSchedule", b =>
+                {
+                    b.Property<Guid>("ClassScheduleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Class_schedule_id");
+
+                    b.Property<Guid>("ClassId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Class_id");
+
+                    b.Property<string>("DayOfWeek")
+                        .HasColumnType("enum('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')")
+                        .HasColumnName("Day_of_Week");
+
+                    b.HasKey("ClassScheduleId")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ClassId" }, "fk_classSchedule_classId");
+
+                    b.ToTable("class_schedule", (string)null);
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.Password", b =>
+                {
+                    b.Property<Guid>("PasswordId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Password_id");
+
+                    b.Property<Guid>("ClassId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Class_id");
+
+                    b.Property<DateOnly?>("DateAssigned")
+                        .HasColumnType("date")
+                        .HasColumnName("Date_assigned");
+
+                    b.Property<string>("PasswordText")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("Password_text");
 
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.HasKey("PasswordId")
+                        .HasName("PRIMARY");
 
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.HasIndex(new[] { "ClassId" }, "fk_passwords_classId");
 
-                    b.Property<string>("ProfessorId")
+                    b.ToTable("passwords", (string)null);
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.Professor", b =>
+                {
+                    b.Property<string>("UtdId")
+                        .HasMaxLength(10)
+                        .HasColumnType("char(10)")
+                        .HasColumnName("Utd_id")
+                        .IsFixedLength();
+
+                    b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("First_name");
 
-                    b.HasKey("Id");
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("Last_name");
 
-                    b.HasIndex("ProfessorId")
+                    b.HasKey("UtdId")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("professor", (string)null);
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.QuizInstance", b =>
+                {
+                    b.Property<Guid>("QuizId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Quiz_id");
+
+                    b.Property<Guid>("ClassId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Class_id");
+
+                    b.Property<DateTime?>("EndTime")
+                        .HasColumnType("timestamp")
+                        .HasColumnName("End_time");
+
+                    b.Property<DateTime?>("StartTime")
+                        .HasColumnType("timestamp")
+                        .HasColumnName("Start_time");
+
+                    b.HasKey("QuizId")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ClassId" }, "fk_quizInstance_classId");
+
+                    b.ToTable("quiz_instance", (string)null);
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.QuizQuestion", b =>
+                {
+                    b.Property<Guid>("QuestionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Question_id");
+
+                    b.Property<string>("AnswerA")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("Answer_a");
+
+                    b.Property<string>("AnswerB")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("Answer_b");
+
+                    b.Property<string>("AnswerC")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("Answer_c");
+
+                    b.Property<string>("AnswerD")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("Answer_d");
+
+                    b.Property<string>("CorrectAnswer")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .HasColumnType("char(1)")
+                        .HasColumnName("Correct_answer")
+                        .IsFixedLength();
+
+                    b.Property<string>("QuestionText")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("Question_text");
+
+                    b.Property<Guid>("QuizId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Quiz_id");
+
+                    b.HasKey("QuestionId")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "QuizId" }, "fk_quizQuestions_quizId");
+
+                    b.ToTable("quiz_questions", (string)null);
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.QuizResponse", b =>
+                {
+                    b.Property<Guid>("ResponseId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Response_id");
+
+                    b.Property<Guid>("QuizInstanceId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Quiz_instance_id");
+
+                    b.Property<Guid>("QuizQuestionId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Quiz_question_id");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("char(10)")
+                        .HasColumnName("Student_id")
+                        .IsFixedLength();
+
+                    b.HasKey("ResponseId")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "QuizInstanceId" }, "fk_quizResponses_quizInstanceid");
+
+                    b.HasIndex(new[] { "QuizQuestionId" }, "fk_quizResponses_quizQuestionId");
+
+                    b.HasIndex(new[] { "StudentId" }, "fk_quizResponses_studentId");
+
+                    b.ToTable("quiz_responses", (string)null);
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.Student", b =>
+                {
+                    b.Property<string>("UtdId")
+                        .HasMaxLength(10)
+                        .HasColumnType("char(10)")
+                        .HasColumnName("Utd_id")
+                        .IsFixedLength();
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("First_name");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("Last_name");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(9)
+                        .HasColumnType("char(9)")
+                        .IsFixedLength();
+
+                    b.HasKey("UtdId")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "Username" }, "Username")
                         .IsUnique();
 
-                    b.ToTable("Professors");
+                    b.ToTable("student", (string)null);
+                });
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Department = "Computer Science",
-                            Email = "john.smith@utdallas.edu",
-                            FullName = "John Smith",
-                            PasswordHash = "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
-                            ProfessorId = "js123"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Department = "Mathematics",
-                            Email = "jane.doe@utdallas.edu",
-                            FullName = "Jane Doe",
-                            PasswordHash = "c6ba91b90d922e159893f46c387e5dc1b3dc5c101a5a4522f03b987177a24a91",
-                            ProfessorId = "jd123"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Department = "Physics",
-                            Email = "robert.johnson@utdallas.edu",
-                            FullName = "Robert Johnson",
-                            PasswordHash = "5efc2b017da4f7736d192a74dde5891369e0685d4d38f2a455b6fcdab282df9c",
-                            ProfessorId = "rj123"
-                        });
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.StudentClass", b =>
+                {
+                    b.Property<Guid>("StudentClassId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Student_class_id");
+
+                    b.Property<Guid>("ClassId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Class_id");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("char(10)")
+                        .HasColumnName("Student_id")
+                        .IsFixedLength();
+
+                    b.HasKey("StudentClassId")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex("ClassId");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("student_class", (string)null);
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.AttendanceInstance", b =>
+                {
+                    b.HasOne("AttendanceAppProject.ApiService.Data.Models.Class", "Class")
+                        .WithMany("AttendanceInstances")
+                        .HasForeignKey("ClassId")
+                        .IsRequired()
+                        .HasConstraintName("fk_attendanceInstance_classId");
+
+                    b.HasOne("AttendanceAppProject.ApiService.Data.Models.Student", "Student")
+                        .WithMany("AttendanceInstances")
+                        .HasForeignKey("StudentId")
+                        .IsRequired()
+                        .HasConstraintName("fk_attendanceInstance_studentId");
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.Class", b =>
+                {
+                    b.HasOne("AttendanceAppProject.ApiService.Data.Models.Professor", "ProfUtd")
+                        .WithMany("Classes")
+                        .HasForeignKey("ProfUtdId")
+                        .IsRequired()
+                        .HasConstraintName("fk_class_profId");
+
+                    b.Navigation("ProfUtd");
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.ClassSchedule", b =>
+                {
+                    b.HasOne("AttendanceAppProject.ApiService.Data.Models.Class", "Class")
+                        .WithMany("ClassSchedules")
+                        .HasForeignKey("ClassId")
+                        .IsRequired()
+                        .HasConstraintName("fk_classSchedule_classId");
+
+                    b.Navigation("Class");
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.Password", b =>
+                {
+                    b.HasOne("AttendanceAppProject.ApiService.Data.Models.Class", "Class")
+                        .WithMany("Passwords")
+                        .HasForeignKey("ClassId")
+                        .IsRequired()
+                        .HasConstraintName("fk_passwords_classId");
+
+                    b.Navigation("Class");
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.QuizInstance", b =>
+                {
+                    b.HasOne("AttendanceAppProject.ApiService.Data.Models.Class", "Class")
+                        .WithMany("QuizInstances")
+                        .HasForeignKey("ClassId")
+                        .IsRequired()
+                        .HasConstraintName("fk_quizInstance_classId");
+
+                    b.Navigation("Class");
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.QuizQuestion", b =>
+                {
+                    b.HasOne("AttendanceAppProject.ApiService.Data.Models.QuizInstance", "Quiz")
+                        .WithMany("QuizQuestions")
+                        .HasForeignKey("QuizId")
+                        .IsRequired()
+                        .HasConstraintName("fk_quizQuestions_quizId");
+
+                    b.Navigation("Quiz");
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.QuizResponse", b =>
+                {
+                    b.HasOne("AttendanceAppProject.ApiService.Data.Models.QuizInstance", "QuizInstance")
+                        .WithMany("QuizResponses")
+                        .HasForeignKey("QuizInstanceId")
+                        .IsRequired()
+                        .HasConstraintName("fk_quizResponses_quizInstanceid");
+
+                    b.HasOne("AttendanceAppProject.ApiService.Data.Models.QuizQuestion", "QuizQuestion")
+                        .WithMany("QuizResponses")
+                        .HasForeignKey("QuizQuestionId")
+                        .IsRequired()
+                        .HasConstraintName("fk_quizResponses_quizQuestionId");
+
+                    b.HasOne("AttendanceAppProject.ApiService.Data.Models.Student", "Student")
+                        .WithMany("QuizResponses")
+                        .HasForeignKey("StudentId")
+                        .IsRequired()
+                        .HasConstraintName("fk_quizResponses_studentId");
+
+                    b.Navigation("QuizInstance");
+
+                    b.Navigation("QuizQuestion");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.StudentClass", b =>
+                {
+                    b.HasOne("AttendanceAppProject.ApiService.Data.Models.Class", "Class")
+                        .WithMany("StudentClasses")
+                        .HasForeignKey("ClassId")
+                        .IsRequired()
+                        .HasConstraintName("fk_studentclass_class");
+
+                    b.HasOne("AttendanceAppProject.ApiService.Data.Models.Student", "Student")
+                        .WithMany("StudentClasses")
+                        .HasForeignKey("StudentId")
+                        .IsRequired()
+                        .HasConstraintName("fk_studentclass_student");
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.Class", b =>
+                {
+                    b.Navigation("AttendanceInstances");
+
+                    b.Navigation("ClassSchedules");
+
+                    b.Navigation("Passwords");
+
+                    b.Navigation("QuizInstances");
+
+                    b.Navigation("StudentClasses");
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.Professor", b =>
+                {
+                    b.Navigation("Classes");
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.QuizInstance", b =>
+                {
+                    b.Navigation("QuizQuestions");
+
+                    b.Navigation("QuizResponses");
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.QuizQuestion", b =>
+                {
+                    b.Navigation("QuizResponses");
+                });
+
+            modelBuilder.Entity("AttendanceAppProject.ApiService.Data.Models.Student", b =>
+                {
+                    b.Navigation("AttendanceInstances");
+
+                    b.Navigation("QuizResponses");
+
+                    b.Navigation("StudentClasses");
                 });
 #pragma warning restore 612, 618
         }

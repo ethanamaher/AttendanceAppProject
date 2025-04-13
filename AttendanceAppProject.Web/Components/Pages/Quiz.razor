@@ -2,17 +2,19 @@
 @using System.Timers
 @implements IDisposable
 @inject NavigationManager NavigationManager
+@inject HttpClient Http
+@using AttendanceAppProject.Dto.Models
 
 <PageTitle>Student Quiz</PageTitle>
 
 <!-- Override any browser default styles -->
 <style>
     body, html {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        height: 100%;
-        width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
     }
 </style>
 
@@ -31,11 +33,18 @@
             <div class="datetime-display">@currentTime</div>
         </div>
 
+        <!-- display for student info and selected class -->
         <div class="student-info">
             <div class="info-item">Student ID: <span>@studentId</span></div>
-            <div class="info-item">Class: <span>@className</span></div>
+            <div class="info-item">Class: 
+                <span>@classDto.ClassPrefix @classDto.ClassNumber - @classDto.ClassName</span>
+                <br />
+                <span>(@classDto.StartTime - @classDto.EndTime)</span>
+            
+            </div>
         </div>
 
+        <!-- if quiz is completed show result information -->
         @if (quizCompleted)
         {
             <div class="quiz-completed">
@@ -44,40 +53,51 @@
                 <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
             </div>
         }
+        <!-- if the student is not valid, should be checked before on home page submission thus should not happen in normal use-->
         else if (!isValidStudent)
         {
-            <div class="invalid-access">
-                <h2>Invalid Access</h2>
-                <p>You must log in through the home page to access this quiz.</p>
-                <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
-            </div>
+        <div class="invalid-access">
+            <h2>Invalid Access</h2>
+            <p>You must log in through the home page to access this quiz.</p>
+            <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
+        </div>
         }
+        <!-- quiz display -->
         else
         {
-            <div class="quiz-question">
-                <div class="question-number">Question 1 of 1</div>
-                <div class="question">@quizQuestion.QuestionText</div>
-
-                <div class="answer-container">
-                    <label for="answer">Your Answer:</label>
-                    <input type="text" id="answer" @bind="userAnswer" @bind:event="oninput" @onkeypress="HandleKeyPress" />
-                </div>
-
-                @if (showFeedback)
-                {
-                    <div class="feedback @feedbackClass">
-                        @feedback
+        <div class="quiz-question">
+            @foreach(var question in quizQuestions) {
+                <div class="quiz-question">
+                    <div class="question-number">
+                        Question @(quizQuestions.IndexOf(question) + 1) of @quizQuestions.Count
                     </div>
-                }
 
-                <div class="button-container">
-                    <button @onclick="SubmitAnswer" class="submit-button"></button>
-                    @if (questionAnswered)
-                    {
-                        <button @onclick="FinishQuiz" class="auto-finish-button" style="display: none;"></button>
-                    }
+                    <div class="question-text">
+                        <strong>@question.QuestionText</strong>
+                    </div>
+
+                    <div class="answer-container">
+                        @question.AnswerA
+                    </div>
                 </div>
+            }
+
+            @if (showFeedback)
+            {
+                <div class="feedback @feedbackClass">
+                    @feedback
+                </div>
+            }
+
+            <!-- button to handle quiz submission -->
+            <div class="button-container">
+                <button @onclick="SubmitQuiz" class="submit-button"></button>
+                @if (questionAnswered)
+                {
+                    <button @onclick="FinishQuiz" class="auto-finish-button" style="display: none;"></button>
+                }
             </div>
+        </div>
         }
     </div>
 </div>
@@ -88,15 +108,21 @@
 
     // Student information from query parameters
     private string studentId = "";
-    private string className = "";
+    private Guid classId = Guid.Empty;
+    private ClassDto classDto = new ClassDto();
+
     private bool isValidStudent = false;
 
     // Quiz state
-    private QuizQuestion quizQuestion = new QuizQuestion();
+    private QuizInstanceDto quizInstance = new QuizInstanceDto();
+    private List<QuizQuestionDto> quizQuestions = new List<QuizQuestionDto>();
+
     private string userAnswer = "";
+
     private bool showFeedback = false;
     private string feedback = "";
     private string feedbackClass = "";
+
     private bool questionAnswered = false;
     private bool quizCompleted = false;
     private int score = 0;
@@ -108,10 +134,25 @@
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
 
         studentId = query["studentId"] ?? "";
-        className = query["className"] ?? "";
+        classId = new Guid(query["class"] ?? "");
+        System.Diagnostics.Debug.WriteLine($"Query Class ID: {classId.ToString()}");
 
-        // Validate that student info exists
-        isValidStudent = !string.IsNullOrEmpty(studentId) && !string.IsNullOrEmpty(className);
+        // pull class from database where classId mntches query
+        classDto = await Http.GetFromJsonAsync<ClassDto>($"api/class/{classId.ToString()}");
+        System.Diagnostics.Debug.WriteLine($"Class Selected: {classDto.ClassName}");
+
+        quizInstance = await Http.GetFromJsonAsync<QuizInstanceDto>($"api/quizinstance/{classId.ToString()}");
+        System.Diagnostics.Debug.WriteLine($"Quiz Selected: {quizInstance.QuizId}");
+
+
+
+        // error out, quiz instance not found
+        if (quizInstance.QuizId == Guid.Empty)
+        {
+            return;
+        }
+
+
 
         // Set up timer for current time display
         secondsTimer = new Timer(1000);
@@ -120,77 +161,35 @@
         secondsTimer.Elapsed += (sender, e) => UpdateTime();
 
         // Only load quiz question if student is valid
-        if (isValidStudent)
-        {
-            // Load quiz question
-            await LoadQuizQuestion();
-        }
+        // Load quiz question
+        await LoadQuizQuestions();
     }
 
-    private async Task LoadQuizQuestion()
+    private async Task LoadQuizQuestions()
     {
-        // In a real app, this would fetch a question from a database
-        // Simulating database fetch with a delay
-        await Task.Delay(300);
-
-        // Single quiz question
-        quizQuestion = new QuizQuestion
-            {
-                Id = 1,
-                QuestionText = "What does HTML stand for?",
-                CorrectAnswer = "hypertext markup language",
-                Points = 1
-            };
+        quizQuestions = await Http.GetFromJsonAsync<List<QuizQuestionDto>>($"api/quizquestion/{quizInstance.QuizId.ToString()}");
+        System.Diagnostics.Debug.WriteLine($"Quiz Question: {quizQuestions}");
     }
 
+    // method to automatically update time on page
     private void UpdateTime()
     {
-        currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
         InvokeAsync(() =>
         {
+            // pulls current time and updates page with StateHasChanged
+            currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
             StateHasChanged();
         });
     }
 
-    private void SubmitAnswer()
+    // method to handle quiz submissions
+    // checks answers from QuizInstance pulled from database
+
+    // TODO
+    // create attendanceinstance on submission and post to database
+    private void SubmitQuiz()
     {
-        if (string.IsNullOrWhiteSpace(userAnswer))
-        {
-            feedback = "Please enter an answer before submitting.";
-            feedbackClass = "warning";
-            showFeedback = true;
-            return;
-        }
-
-        // Check if answer is correct (case-insensitive)
-        bool isCorrect = userAnswer.Trim().ToLower() == quizQuestion.CorrectAnswer.ToLower();
-
-        if (isCorrect)
-        {
-            feedback = "Correct!";
-            feedbackClass = "correct";
-            score = quizQuestion.Points;
-        }
-        else
-        {
-            feedback = $"Incorrect. The correct answer is: {quizQuestion.CorrectAnswer}";
-            feedbackClass = "incorrect";
-            score = 0;
-        }
-
-        showFeedback = true;
-        questionAnswered = true;
-
-        // Automatically finish quiz after a short delay
-        _ = Task.Run(async () =>
-        {
-            await Task.Delay(2000); // 2 second delay
-            await InvokeAsync(() =>
-            {
-                FinishQuiz();
-                StateHasChanged();
-            });
-        });
+        return;
     }
 
     private void FinishQuiz()
@@ -201,6 +200,7 @@
         }
     }
 
+    // handle navigation back to home page
     private void ReturnToHome()
     {
         NavigationManager.NavigateTo("/");
@@ -210,21 +210,12 @@
     {
         if (e.Key == "Enter")
         {
-            SubmitAnswer();
+            SubmitQuiz();
         }
     }
 
     public void Dispose()
     {
         secondsTimer?.Dispose();
-    }
-
-    // Quiz question model
-    public class QuizQuestion
-    {
-        public int Id { get; set; }
-        public string QuestionText { get; set; } = "";
-        public string CorrectAnswer { get; set; } = "";
-        public int Points { get; set; } = 1;
     }
 }

@@ -1,0 +1,98 @@
+﻿@page "/ProfLogin"
+
+<PageTitle>Proffesor Login Form</PageTitle>
+
+<link rel="stylesheet" href="output.css" />
+<body class="bg-utdForest h-screen w-full overflow-hidden">
+	<!--Decorative SVG Wave-->
+	<div class="absolute inset-x-0 inset-y-1/3 bottom-0 z-0 w-full">
+		<svg class="" id="wave" viewBox="0 0 1440 600" version="1.1" xmlns="http://www.w3.org/2000/svg">
+			<defs><linearGradient id="sw-gradient-0" x1="0" x2="0" y1="1" y2="0"><stop stop-color="rgba(21, 71, 52, 1)" offset="0%"></stop><stop stop-color="rgba(95, 224, 183, 1)" offset="100%"></stop></linearGradient></defs>
+			<path style="transform:translate(0, 0px); opacity:1" fill="url(#sw-gradient-0)" d="M0,294L18.5,277.7C36.9,261,74,229,111,212.3C147.7,196,185,196,222,212.3C258.5,229,295,261,332,245C369.2,229,406,163,443,147C480,131,517,163,554,179.7C590.8,196,628,196,665,212.3C701.5,229,738,261,775,228.7C812.3,196,849,98,886,57.2C923.1,16,960,33,997,106.2C1033.8,180,1071,310,1108,343C1144.6,376,1182,310,1218,269.5C1255.4,229,1292,212,1329,204.2C1366.2,196,1403,196,1440,228.7C1476.9,261,1514,327,1551,351.2C1587.7,376,1625,359,1662,351.2C1698.5,343,1735,343,1772,294C1809.2,245,1846,147,1883,163.3C1920,180,1957,310,1994,302.2C2030.8,294,2068,147,2105,114.3C2141.5,82,2178,163,2215,187.8C2252.3,212,2289,180,2326,163.3C2363.1,147,2400,147,2437,122.5C2473.8,98,2511,49,2548,98C2584.6,147,2622,294,2640,367.5L2658.5,441L2658.5,490L2640,490C2621.5,490,2585,490,2548,490C2510.8,490,2474,490,2437,490C2400,490,2363,490,2326,490C2289.2,490,2252,490,2215,490C2178.5,490,2142,490,2105,490C2067.7,490,2031,490,1994,490C1956.9,490,1920,490,1883,490C1846.2,490,1809,490,1772,490C1735.4,490,1698,490,1662,490C1624.6,490,1588,490,1551,490C1513.8,490,1477,490,1440,490C1403.1,490,1366,490,1329,490C1292.3,490,1255,490,1218,490C1181.5,490,1145,490,1108,490C1070.8,490,1034,490,997,490C960,490,923,490,886,490C849.2,490,812,490,775,490C738.5,490,702,490,665,490C627.7,490,591,490,554,490C516.9,490,480,490,443,490C406.2,490,369,490,332,490C295.4,490,258,490,222,490C184.6,490,148,490,111,490C73.8,490,37,490,18,490L0,490Z"></path>
+			<defs><linearGradient id="sw-gradient-1" x1="0" x2="0" y1="1" y2="0"><stop stop-color="rgba(232, 117, 0, 1)" offset="0%"></stop><stop stop-color="rgba(253.079, 188.938, 123.682, 1)" offset="100%"></stop></linearGradient></defs>
+			<path style="transform:translate(0, 50px); opacity:0.9" fill="url(#sw-gradient-1)" d="M0,98L18.5,81.7C36.9,65,74,33,111,32.7C147.7,33,185,65,222,138.8C258.5,212,295,327,332,318.5C369.2,310,406,180,443,155.2C480,131,517,212,554,212.3C590.8,212,628,131,665,98C701.5,65,738,82,775,147C812.3,212,849,327,886,375.7C923.1,425,960,408,997,408.3C1033.8,408,1071,425,1108,375.7C1144.6,327,1182,212,1218,212.3C1255.4,212,1292,327,1329,334.8C1366.2,343,1403,245,1440,220.5C1476.9,196,1514,245,1551,236.8C1587.7,229,1625,163,1662,114.3C1698.5,65,1735,33,1772,40.8C1809.2,49,1846,98,1883,163.3C1920,229,1957,310,1994,302.2C2030.8,294,2068,196,2105,138.8C2141.5,82,2178,65,2215,122.5C2252.3,180,2289,310,2326,318.5C2363.1,327,2400,212,2437,171.5C2473.8,131,2511,163,2548,220.5C2584.6,278,2622,359,2640,400.2L2658.5,441L2658.5,490L2640,490C2621.5,490,2585,490,2548,490C2510.8,490,2474,490,2437,490C2400,490,2363,490,2326,490C2289.2,490,2252,490,2215,490C2178.5,490,2142,490,2105,490C2067.7,490,2031,490,1994,490C1956.9,490,1920,490,1883,490C1846.2,490,1809,490,1772,490C1735.4,490,1698,490,1662,490C1624.6,490,1588,490,1551,490C1513.8,490,1477,490,1440,490C1403.1,490,1366,490,1329,490C1292.3,490,1255,490,1218,490C1181.5,490,1145,490,1108,490C1070.8,490,1034,490,997,490C960,490,923,490,886,490C849.2,490,812,490,775,490C738.5,490,702,490,665,490C627.7,490,591,490,554,490C516.9,490,480,490,443,490C406.2,490,369,490,332,490C295.4,490,258,490,222,490C184.6,490,148,490,111,490C73.8,490,37,490,18,490L0,490Z"></path>
+		</svg>
+	</div>
+
+	<!--Login box-->
+
+	<div class="relative z-10 grid grid-cols-4">
+		<div class="col-start-4 grid grid-rows-6 rounded-2xl bg-white">
+			<!--First two rows for svg of Icon and Professor Login Text-->
+			<!--Graduation Cap Icon-->
+			<div class="justify-items-center">
+				<svg xmlns="http://www.w3.org/2000/svg" width="100px" height="100px" viewBox="0 0 24 24" fill="none">
+					<path d="M10.0495 2.52979L4.02953 6.45979C2.09953 7.71979 2.09953 10.5398 4.02953 11.7998L10.0495 15.7298C11.1295 16.4398 12.9095 16.4398 13.9895 15.7298L19.9795 11.7998C21.8995 10.5398 21.8995 7.72979 19.9795 6.46979L13.9895 2.53979C12.9095 1.81979 11.1295 1.81979 10.0495 2.52979Z" stroke="#154734" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+					<path opacity="0.4" d="M5.62914 13.0801L5.61914 17.7701C5.61914 19.0401 6.59914 20.4001 7.79914 20.8001L10.9891 21.8601C11.5391 22.0401 12.4491 22.0401 13.0091 21.8601L16.1991 20.8001C17.3991 20.4001 18.3791 19.0401 18.3791 17.7701V13.1301" stroke="#154734" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+					<path opacity="0.4" d="M21.4004 15V9" stroke="#154734" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+				</svg>
+			</div>
+			<!--Professor Hub Title-->
+			<div class="mx-6 flex items-center justify-center bg-orange-100 text-center text-3xl font-bold">
+				<h1 class="font-neuton text-green-700">Professor</h1>
+				<h1 class="text-orange-400">HUB</h1>
+			</div>
+
+			<!--Login Box-->
+			<EditForm Model="profResponse" OnValidSubmit="Submit" FormName="Prof_Login_Form" class="row-span-4 grid grid-rows-4">
+
+				<!--Username Input-->
+				<div class="m-2 grid grid-cols-5 items-center rounded-md bg-orange-400 p-4">
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 justify-center">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+					</svg>
+					<InputText class="placeholder-orange-600 col-span-4 h-8 rounded-md bg-orange-300 text-center font-bold text-white" @bind-Value="profResponse.ProfUsername" placeholder="Password" />
+				</div>
+
+
+				<!--Password Input-->
+				<div class="m-2 grid grid-cols-5 items-center rounded-md bg-orange-400 p-4">
+					<svg class="size-8 justify-center" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+					</svg>
+					<InputText class="placeholder-orange-600 col-span-4 h-8 rounded-md bg-orange-300 text-center font-bold text-white" @bind-Value="profResponse.ProfPassword" placeholder="Password" />
+				</div>
+
+
+				<!--Login Button-->
+				<div class="bg-utdForest row-span-2 mx-16 my-8 flex h-24 items-center justify-center rounded-xl">
+					<button type="submit" class="text-center text-3xl font-bold text-white">Login</button>
+				</div>
+			</EditForm>
+
+
+		</div>
+	</div>
+
+</body>
+
+
+@code {
+	[SupplyParameterFromForm]
+	private ProfessorResponse? profResponse { get; set; } = new ProfessorResponse();
+
+
+	private void Submit()
+	{
+		System.Diagnostics.Debug.WriteLine("Form Submission Detected");
+
+		if (profResponse.ProfUsername == null || profResponse.ProfPassword == null)
+		{
+			System.Diagnostics.Debug.WriteLine("Invalid information input");
+		}
+
+		// Debug the current state
+		System.Diagnostics.Debug.WriteLine($"StudentID: {profResponse.ProfUsername}");
+		System.Diagnostics.Debug.WriteLine($"ClassID: {profResponse.ProfPassword}");
+
+	}
+
+
+	/*  Class for getting prof login response from form */
+	public class ProfessorResponse
+	{
+		public string? ProfUsername { get; set; }
+
+		public string? ProfPassword { get; set; }
+	}
+}
