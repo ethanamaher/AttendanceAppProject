@@ -188,8 +188,6 @@
             // pull class from database where classId matches query
             classDto = await Http.GetFromJsonAsync<ClassDto>($"api/class/{classId.ToString()}");
 
-
-
             // pull QuizInstance from database where classId matches query
             HttpResponseMessage response = await Http.GetAsync($"api/quizinstance/{classId}");
             if(response.IsSuccessStatusCode)
@@ -208,6 +206,7 @@
             }
 
 
+            // if no quiz for given class, quiz instance will not be found and we can just submit attendance instance
             if(!quizExists)
             {
                 isLoading = false;
@@ -215,7 +214,7 @@
                 return;
             }
 
-            // Only load quiz question if student is valid and quiz exists
+            // Only load quiz question if quiz exists
             // Load quiz question
             await LoadQuizQuestions();
             // Load quiz answers
@@ -281,26 +280,21 @@
     }
 
     // method to handle quiz submissions
-
-    // TODO
-    // disable submission button when submitting quiz to prevent multiple
-    // get ip
-    // get datetime
+    // creates an attendance instance and posts to database
+    // and updates submission page to reflect quiz score if applciatble
     private async void SubmitQuiz()
     {
         isSubmitting = true;
         try
-        {
-            // public ip
-            var ipResponse = await Http.GetStringAsync("https://api.ipify.org?format=json");
-            var obj = JsonSerializer.Deserialize<Dictionary<string, string>>(ipResponse);
-            string? ipAddress = obj?["ip"];
+        {   
+            // private ip
+            var ipResponse = getIP();
 
             AttendanceInstanceDto attendanceInstance = new()
                 {
                     StudentId = studentId,
                     ClassId = classId,
-                    IpAddress = ipAddress,
+                    IpAddress = ipResponse,
                     DateTime = DateTime.UtcNow
                 // IsLate and ExcusedAbsence default to null
                 };
@@ -313,16 +307,16 @@
             Console.WriteLine($"Error loading quiz answers: {ex.Message}");
         }
         finally
-        {
-            isSubmitting = false;
-            quizCompleted = true;
-
+        { 
             if(quizExists) 
             {
                 CalculateScore();
             }
-            StateHasChanged();
 
+            quizCompleted = true;
+            isSubmitting = false;
+
+            StateHasChanged();
         }
     }
 
