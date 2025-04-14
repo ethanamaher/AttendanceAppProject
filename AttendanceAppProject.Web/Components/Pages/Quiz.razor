@@ -124,23 +124,7 @@
                     </div>
                 </EditForm>
             }
-            else
-            {
-
-                <!-- button to handle form submission if there is no quiz
-
-                should make that it automatically submits instead of requiring extra button press
-
-                -->
-                <div class="submit-button-container">
-                    <button type="submit" disabled="@isSubmitting" onclick="@SubmitQuiz">
-                        @(isSubmitting ? "Recording Attendance..." : "Record Attendance")
-                    </button>
-                </div>
-            }
         }
-
-
     </div>
 </div>
 
