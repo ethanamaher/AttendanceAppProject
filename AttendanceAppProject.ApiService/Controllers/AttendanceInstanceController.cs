@@ -8,6 +8,7 @@ using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Data;
 using AttendanceAppProject.Dto.Models;
+using AttendanceAppProject.ApiService.Services;
 
 namespace AttendanceAppProject.ApiService.Controllers
 {
@@ -15,11 +16,15 @@ namespace AttendanceAppProject.ApiService.Controllers
     [ApiController]
     public class AttendanceInstanceController : ControllerBase
     {
+        private readonly AttendanceInstanceService _service;
+
         private readonly ApplicationDbContext _context;
 
+
         // Dependency injection - allows ASP.NET Core to pass an instance of ApplicationDbContext into the controller's constructor whenever the API is called so it can interact with the db
-        public AttendanceInstanceController(ApplicationDbContext context)
+        public AttendanceInstanceController(AttendanceInstanceService service, ApplicationDbContext context)
         {
+            _service = service;
             _context = context;
         }
 
@@ -31,7 +36,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AttendanceInstance>>> GetAttendanceInstances()
         {
-            return await _context.AttendanceInstances.ToListAsync();
+            return Ok(await _service.GetAllAttendanceAsync());
         }
 
         /* GET: api/AttendanceInstance/class/{classId}
@@ -43,10 +48,9 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpGet("class/{classId}")]
         public async Task<ActionResult<IEnumerable<AttendanceInstance>>> GetByClassId(Guid classId)
         {
-            var attendanceList = await _context.AttendanceInstances
-                .Where(ai => ai.ClassId == classId)
-                .ToListAsync();
-            if (attendanceList == null || attendanceList.Count == 0)
+            var attendanceList = await _service.GetAttendanceByClassIdAsync(classId);
+               
+            if (attendanceList == null)
             {
                 return NotFound();
             }
@@ -56,6 +60,7 @@ namespace AttendanceAppProject.ApiService.Controllers
 
         /* GET: api/AttendanceInstance/excused-absences/?classId=...&date=...
          * Get all attendance instances that are marked as excused absences. Optionally include class ID and date to filter out the results.
+         * Date in format YYYY-MM-DD
          * - request body: none
          * - response body: List of AttendanceInstances
          */
@@ -63,24 +68,10 @@ namespace AttendanceAppProject.ApiService.Controllers
         public async Task<ActionResult<IEnumerable<AttendanceInstance>>> GetExcusedAbsences([FromQuery] Guid? classId,
     [FromQuery] string? date)
         {
-            var query = _context.AttendanceInstances
-                .Where(ai => ai.ExcusedAbsence == true);
+            
+            var absences = await _service.GetExcusedAbsences(classId, date);
 
-            if (classId.HasValue)
-            {
-                query = query.Where(ai => ai.ClassId == classId.Value);
-            }
-
-            if (!string.IsNullOrWhiteSpace(date) && DateOnly.TryParse(date, out var parsedDate))
-            {
-                query = query.Where(ai =>
-                    ai.DateTime.HasValue &&
-                    DateOnly.FromDateTime(ai.DateTime.Value) == parsedDate);
-            }
-
-            var absences = await query.ToListAsync();
-
-            if (absences.Count == 0)
+            if (absences == null)
             {
                 return NotFound();
             }
@@ -89,6 +80,7 @@ namespace AttendanceAppProject.ApiService.Controllers
 
         /* GET: api/AttendanceInstance/lates?classId=...&date=...
          * Get all attendance instances that are marked as late. Optionally include class ID and date to filter out the results.
+         * Date in format YYYY-MM-DD
          * - request body: none
          * - response body: List of AttendanceInstances
          */
@@ -97,24 +89,9 @@ namespace AttendanceAppProject.ApiService.Controllers
             [FromQuery] Guid? classId,
             [FromQuery] string? date)
         {
-            var query = _context.AttendanceInstances
-                .Where(ai => ai.IsLate == true);
+            var lates = await _service.GetLates(classId, date);
 
-            if (classId.HasValue)
-            {
-                query = query.Where(ai => ai.ClassId == classId.Value);
-            }
-
-            if (!string.IsNullOrWhiteSpace(date) && DateOnly.TryParse(date, out var parsedDate))
-            {
-                query = query.Where(ai =>
-                    ai.DateTime.HasValue &&
-                    DateOnly.FromDateTime(ai.DateTime.Value) == parsedDate);
-            }
-
-            var lates = await query.ToListAsync();
-
-            if (lates.Count == 0)
+            if (lates == null)
             {
                 return NotFound();
             }
@@ -135,26 +112,7 @@ namespace AttendanceAppProject.ApiService.Controllers
                 return BadRequest("Invalid date format. Use YYYY-MM-DD.");
             }
 
-            // Get all students enrolled in this class
-            var enrolledStudents = await _context.StudentClasses
-                .Where(sc => sc.ClassId == classId)
-                .Select(sc => sc.Student)
-                .ToListAsync();
-
-            // Get student IDs with attendance on this date (ignoring excused absences but including late)
-            var presentStudentIds = await _context.AttendanceInstances
-                .Where(ai => // ai = attendance instance
-                    ai.ClassId == classId &&
-                    ai.DateTime.HasValue &&
-                    DateOnly.FromDateTime(ai.DateTime.Value) == date &&
-                    ai.ExcusedAbsence == false)
-                .Select(ai => ai.StudentId)
-                .ToListAsync();
-
-            // Filter out those students who were present on this date
-            var absentStudents = enrolledStudents
-                .Where(s => !presentStudentIds.Contains(s.UtdId))
-                .ToList();
+            var absentStudents = await _service.GetAbsentStudentsByDate(classId, dateStr);
 
             return Ok(absentStudents);
         }
@@ -171,27 +129,7 @@ namespace AttendanceAppProject.ApiService.Controllers
             [FromQuery] string? date,
             [FromQuery] Guid? classId)
         {
-            var query = _context.AttendanceInstances
-                .Where(ai => ai.StudentId == studentId);
-
-            if (classId.HasValue)
-            {
-                query = query.Where(ai => ai.ClassId == classId.Value);
-            }
-
-            if (!string.IsNullOrWhiteSpace(date) && DateOnly.TryParse(date, out var parsedDate))
-            {
-                query = query.Where(ai =>
-                    ai.DateTime.HasValue &&
-                    DateOnly.FromDateTime(ai.DateTime.Value) == parsedDate);
-            }
-
-            var records = await query.ToListAsync();
-
-            if (records.Count == 0)
-            {
-                return NotFound();
-            }
+            var records = _service.GetAttendanceByStudent(studentId, date, classId);
 
             return Ok(records);
         }
@@ -211,18 +149,15 @@ namespace AttendanceAppProject.ApiService.Controllers
                 ClassId = dto.ClassId,
                 IpAddress = dto.IpAddress,
 
-				// late students should be added from professor side
-				IsLate = dto.IsLate, //null
+                // late students should be added from professor side
+                IsLate = dto.IsLate, //null
 
-				// excused absences should be input into database later from professor side
-				ExcusedAbsence = dto.ExcusedAbsence, // null
+                // excused absences should be input into database later from professor side
+                ExcusedAbsence = dto.ExcusedAbsence, // null
 
 
                 DateTime = dto.DateTime // UTC Now
             };
-
-
-
 
             _context.AttendanceInstances.Add(attendance);
             await _context.SaveChangesAsync();
@@ -247,7 +182,7 @@ namespace AttendanceAppProject.ApiService.Controllers
                 IsLate = dto.IsLate ?? false, // either we set the IsLate to the value specified by the DTO, or we set it to false (in the case of this student being an absence and not late)
                 ExcusedAbsence = dto.ExcusedAbsence ?? false, // either we set the ExcusedAbsence to the value specified by the DTO, or we set it to false (in the case of this student being late and not absent)
                 DateTime = dto.DateTime ?? DateTime.Now,
-                IpAddress = "127.0.0.1" // since it is manually entered by professor we will use a placeholder IP
+                IpAddress = dto.IpAddress // professor app must pass in the IP address in the DTO
             };
 
             _context.AttendanceInstances.Add(newAttendance);
