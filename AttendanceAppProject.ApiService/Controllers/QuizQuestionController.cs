@@ -29,7 +29,7 @@ namespace AttendanceAppProject.ApiService.Controllers
 		public async Task<ActionResult<IEnumerable<QuizQuestion>>> GetQuestionsById(Guid QuizId)
 		{
 			System.Diagnostics.Debug.WriteLine($"Looking up quiz {QuizId}");
-			return Ok(_service.GetQuestionsByIdAsync(QuizId));
+			return Ok(await _service.GetQuestionsByIdAsync(QuizId));
 		}
 	}
 }

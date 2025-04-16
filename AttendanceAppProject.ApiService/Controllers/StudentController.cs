@@ -30,7 +30,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Student>>> GetStudents()
         {
-            return Ok(_service.GetStudentsAsync());
+            return Ok(await _service.GetStudentsAsync());
         }
 
         /* POST: api/Student
@@ -60,7 +60,7 @@ namespace AttendanceAppProject.ApiService.Controllers
                 return BadRequest("UtdId is required."); // 400
             }
 
-            var exists = _service.StudentExistsAsync(UtdId);
+            var exists = await _service.StudentExistsAsync(UtdId);
             if(exists == null)
             {
                 return NotFound($"Student with ID {UtdId} not found"); // 404

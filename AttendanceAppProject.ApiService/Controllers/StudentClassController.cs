@@ -31,7 +31,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<StudentClass>>> GetStudentClasses()
         {
-            return Ok(_service.GetStudentClassesAsync());
+            return Ok(await _service.GetStudentClassesAsync());
         }
 
         /* POST: api/StudentClass
@@ -63,7 +63,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpPost("check-enrollment")]
         public async Task<ActionResult<bool>> CheckEnrollment([FromBody] EnrollmentCheckDto dto)
         {
-            var exists = _service.CheckEnrollmentAsync(dto);
+            var exists = await _service.CheckEnrollmentAsync(dto);
 
             return Ok(exists); // true if enrolled, false otherwise
         }

@@ -28,7 +28,7 @@ namespace AttendanceAppProject.ApiService.Controllers
 		[HttpGet]
 		public async Task<ActionResult<IEnumerable<Class>>> GetQuizzes()
 		{
-			return Ok(_service.GetQuizzesAsync());
+			return Ok(await _service.GetQuizzesAsync());
 		}
 
 		/* GET: api/QuizInstance/{id}

@@ -28,7 +28,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         public async Task<ActionResult<IEnumerable<QuizAnswer>>> GetAnswersById(Guid QuestionId)
         {
             System.Diagnostics.Debug.WriteLine($"Looking up answers for {QuestionId}");
-            return Ok(_service.GetAnswersByIdAsync(QuestionId));
+            return Ok(await _service.GetAnswersByIdAsync(QuestionId));
         }
     }
 }
