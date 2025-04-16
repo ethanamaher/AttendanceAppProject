@@ -8,7 +8,7 @@ using AttendanceAppProject.Dto.Models;
 
 namespace AttendanceAppProject.ApiService.Controllers
 {
-    [Route("api/[controller]")] // Automatically becomes "api/QuizAnswers"
+    [Route("api/[controller]")] // Automatically becomes "api/QuizAnswer"
     [ApiController]
     public class QuizAnswerController : ControllerBase
     {
