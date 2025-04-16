@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Data;
 using AttendanceAppProject.Dto.Models;
 
-// API Controller for Password
+// API Controller for Quiz Answers
 
 namespace AttendanceAppProject.ApiService.Controllers
 {
-    [Route("api/[controller]")] // Automatically becomes "api/password"
+    [Route("api/[controller]")] // Automatically becomes "api/QuizAnswers"
     [ApiController]
     public class QuizAnswerController : ControllerBase
     {
@@ -19,10 +19,10 @@ namespace AttendanceAppProject.ApiService.Controllers
             _context = context;
         }
 
-        /* GET: api/quizquestions
-         * Get all passwords
-         * - request body: none
-         * - response body: Passwords
+        /* GET: api/QuizAnswers
+         * Get quiz answers by the question Id
+         * - request body: QuestionId
+         * - response body: QuizAnswers
          */
         [HttpGet("{QuestionId}")]
         public async Task<ActionResult<IEnumerable<QuizAnswer>>> GetAnswersById(Guid QuestionId)

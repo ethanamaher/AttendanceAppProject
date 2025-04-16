@@ -57,7 +57,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpPost("validate")]
         public async Task<ActionResult<bool>> ValidatePassword([FromBody] PasswordDto dto)
         {
-            var exists = _service.ValidatePasswordAsync(dto);
+            var exists = await _service.ValidatePasswordAsync(dto);
 
             return Ok(exists); // true if valid, false if not
         }

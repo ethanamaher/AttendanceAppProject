@@ -129,7 +129,7 @@ namespace AttendanceAppProject.ApiService.Controllers
             [FromQuery] string? date,
             [FromQuery] Guid? classId)
         {
-            var records = _service.GetAttendanceByStudentAsync(studentId, date, classId);
+            var records = await _service.GetAttendanceByStudentAsync(studentId, date, classId);
 
             return Ok(records);
         }
