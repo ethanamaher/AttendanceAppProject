@@ -69,7 +69,7 @@ namespace AttendanceAppProject.ApiService.Controllers
     [FromQuery] string? date)
         {
             
-            var absences = await _service.GetExcusedAbsences(classId, date);
+            var absences = await _service.GetExcusedAbsencesAsync(classId, date);
 
             if (absences == null)
             {
@@ -89,7 +89,7 @@ namespace AttendanceAppProject.ApiService.Controllers
             [FromQuery] Guid? classId,
             [FromQuery] string? date)
         {
-            var lates = await _service.GetLates(classId, date);
+            var lates = await _service.GetLatesAsync(classId, date);
 
             if (lates == null)
             {
@@ -112,7 +112,7 @@ namespace AttendanceAppProject.ApiService.Controllers
                 return BadRequest("Invalid date format. Use YYYY-MM-DD.");
             }
 
-            var absentStudents = await _service.GetAbsentStudentsByDate(classId, dateStr);
+            var absentStudents = await _service.GetAbsencesByDateAsync(classId, dateStr);
 
             return Ok(absentStudents);
         }
@@ -129,7 +129,7 @@ namespace AttendanceAppProject.ApiService.Controllers
             [FromQuery] string? date,
             [FromQuery] Guid? classId)
         {
-            var records = _service.GetAttendanceByStudent(studentId, date, classId);
+            var records = _service.GetAttendanceByStudentAsync(studentId, date, classId);
 
             return Ok(records);
         }
@@ -142,27 +142,10 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpPost]
         public async Task<ActionResult<AttendanceInstance>> AddAttendanceInstance([FromBody] AttendanceInstanceDto dto)
         {
-            var attendance = new AttendanceInstance
-            {
-                AttendanceId = Guid.NewGuid(), // Auto-generate
-                StudentId = dto.StudentId,
-                ClassId = dto.ClassId,
-                IpAddress = dto.IpAddress,
+            var attendance = await _service.AddAttendanceInstanceAsync(dto);
 
-                // late students should be added from professor side
-                IsLate = dto.IsLate, //null
-
-                // excused absences should be input into database later from professor side
-                ExcusedAbsence = dto.ExcusedAbsence, // null
-
-
-                DateTime = dto.DateTime // UTC Now
-            };
-
-            _context.AttendanceInstances.Add(attendance);
-            await _context.SaveChangesAsync();
-
-            // this is the conventional way, to return HTTP 201 created code and a Location header pointing to where the new resource can be found, and the new resource itself in the response body 
+            // this is the conventional way we will use for post requests, to return HTTP 201 created code
+            // and a Location header pointing to where the new resource can be found, and the new resource itself in the response body 
             return CreatedAtAction(nameof(GetAttendanceInstances), new { id = attendance.AttendanceId }, attendance);
         }
 
@@ -174,19 +157,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpPost("absent-or-late")]
         public async Task<ActionResult<AttendanceInstance>> AddAbsentOrLate([FromBody] AttendanceInstanceDto dto)
         {
-            var newAttendance = new AttendanceInstance
-            {
-                AttendanceId = Guid.NewGuid(),
-                StudentId = dto.StudentId,
-                ClassId = dto.ClassId,
-                IsLate = dto.IsLate ?? false, // either we set the IsLate to the value specified by the DTO, or we set it to false (in the case of this student being an absence and not late)
-                ExcusedAbsence = dto.ExcusedAbsence ?? false, // either we set the ExcusedAbsence to the value specified by the DTO, or we set it to false (in the case of this student being late and not absent)
-                DateTime = dto.DateTime ?? DateTime.Now,
-                IpAddress = dto.IpAddress // professor app must pass in the IP address in the DTO
-            };
-
-            _context.AttendanceInstances.Add(newAttendance);
-            await _context.SaveChangesAsync();
+            var newAttendance = await _service.AddAbsentOrLateAsync(dto);
 
             return CreatedAtAction(nameof(GetAttendanceInstances), new { id = newAttendance.AttendanceId }, newAttendance);
         }

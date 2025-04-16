@@ -1,5 +1,5 @@
 ﻿/* API Service for Class - written to handle class-related operations and delegate logic separate to API controller for better organization
- *
+ * Written by Ethan Maher, Maaz Raza
  */
 
 using AttendanceAppProject.ApiService.Data;
