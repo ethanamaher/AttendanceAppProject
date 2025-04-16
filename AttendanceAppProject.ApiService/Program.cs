@@ -36,6 +36,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddScoped<ClassService>();
 builder.Services.AddScoped<AttendanceInstanceService>();
 builder.Services.AddScoped<PasswordService>();
+builder.Services.AddScoped<Professor>();
 
 
 // Add CORS Policy 
