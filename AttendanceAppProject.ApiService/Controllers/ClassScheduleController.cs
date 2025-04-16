@@ -3,13 +3,13 @@
  * Written by Ethan Maher, Maaz Raza
  */
 
-using AttendanceAppProject.ApiService.Data;
+using AttendanceAppProject.ApiService.Services;
 using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.Dto.Models;
 
-// API controller for Class
+// API controller for ClassSchedule
 
 namespace AttendanceAppProject.ApiService.Controllers
 {
@@ -17,11 +17,11 @@ namespace AttendanceAppProject.ApiService.Controllers
     [ApiController]
     public class ClassScheduleController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ClassScheduleService _service;
 
-        public ClassScheduleController(ApplicationDbContext context)
+        public ClassScheduleController(ClassScheduleService service)
         {
-            _context = context;
+            _service = service;
         }
 
         /* GET: api/classschedule
@@ -32,10 +32,10 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ClassSchedule>>> GetAllClassSchedules()
         {
-            return await _context.ClassSchedules.ToListAsync();
+            return Ok(await _service.GetClassSchedulesAsync());
         }
 
-        /* GET: api/class/{id}
+        /* GET: api/classschedule/{id}
 		 * Get List of classscheduleitems whose classId private key = id
 		 * - request body: Guid classId
 		 * - response body: IEnumerable<ClassSchedule>
@@ -43,14 +43,11 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<IEnumerable<ClassSchedule>>> GetClassSchedule(Guid id)
         {
-            var scheduleItem = await _context.ClassSchedules.Where(c => c.ClassId == id).ToListAsync();
-
+            var scheduleItem = await _service.GetClassSchedulesByIdAsync(id);
             if (scheduleItem == null)
-            {
                 return NotFound();
-            }
 
-            return scheduleItem;
+            return Ok(scheduleItem);
         }
     }
 }
