@@ -61,7 +61,7 @@ namespace AttendanceAppProject.ApiService.Controllers
             }
 
             var exists = await _service.StudentExistsAsync(UtdId);
-            if(exists == null)
+            if(!exists)
             {
                 return NotFound($"Student with ID {UtdId} not found"); // 404
             }
