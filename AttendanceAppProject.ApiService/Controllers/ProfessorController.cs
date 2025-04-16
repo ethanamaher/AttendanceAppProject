@@ -6,7 +6,7 @@
 using Microsoft.AspNetCore.Mvc;
 using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.EntityFrameworkCore;
-using AttendanceAppProject.ApiService.Data;
+using AttendanceAppProject.ApiService.Services;
 using AttendanceAppProject.Dto.Models;
 
 // API controller for Professor
@@ -17,11 +17,11 @@ namespace AttendanceAppProject.ApiService.Controllers
     [ApiController]
     public class ProfessorController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ProfessorService _service;
 
-        public ProfessorController(ApplicationDbContext context)
+        public ProfessorController(ProfessorService service)
         {
-            _context = context;
+            _service = service;
         }
 
         /* GET: api/professor
@@ -32,7 +32,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Professor>>> GetProfessors()
         {
-            return await _context.Professors.ToListAsync();
+            return Ok(await _service.GetProfessorsAsync());
         }
 
         /* POST: api/Professor
@@ -41,17 +41,9 @@ namespace AttendanceAppProject.ApiService.Controllers
          * - response body: Professor
          */
         [HttpPost]
-        public async Task<ActionResult<Student>> AddProfessor([FromBody] ProfessorDto dto)
+        public async Task<ActionResult<Professor>> AddProfessor([FromBody] ProfessorDto dto)
         {
-            var professor = new Professor
-            {
-                UtdId = dto.UtdId,
-                FirstName = dto.FirstName,
-                LastName = dto.LastName
-            };
-
-            _context.Professors.Add(professor);
-            await _context.SaveChangesAsync();
+            var professor = await _service.AddProfessorAsync(dto);
 
             return CreatedAtAction(nameof(GetProfessors), new { id = professor.UtdId }, professor);
         }
