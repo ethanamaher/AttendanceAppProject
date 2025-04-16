@@ -33,10 +33,16 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 });
 
 // Register Service Classes
-builder.Services.AddScoped<ClassService>();
 builder.Services.AddScoped<AttendanceInstanceService>();
+builder.Services.AddScoped<ClassScheduleService>();
+builder.Services.AddScoped<ClassService>();
 builder.Services.AddScoped<PasswordService>();
-builder.Services.AddScoped<Professor>();
+builder.Services.AddScoped<ProfessorService>();
+builder.Services.AddScoped<QuizAnswerService>();
+builder.Services.AddScoped<QuizInstanceService>();
+builder.Services.AddScoped<QuizQuestionService>();
+builder.Services.AddScoped<StudentClassService>();
+builder.Services.AddScoped<StudentService>();
 
 
 // Add CORS Policy 
