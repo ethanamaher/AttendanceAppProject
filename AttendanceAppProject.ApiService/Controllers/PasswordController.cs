@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Data;
+using AttendanceAppProject.ApiService.Services;
 using AttendanceAppProject.Dto.Models;
 
 // API Controller for Password
@@ -17,11 +18,11 @@ namespace AttendanceAppProject.ApiService.Controllers
     [ApiController]
     public class PasswordController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly PasswordService _service;
 
-        public PasswordController(ApplicationDbContext context)
+        public PasswordController(PasswordService service)
         {
-            _context = context;
+            _service = service;
         }
 
         /* GET: api/password
@@ -32,7 +33,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Password>>> GetPasswords()
         {
-            return await _context.Passwords.ToListAsync();
+            return Ok(await _service.GetPasswordsAsync());
         }
 
         /* POST: api/Password
@@ -43,15 +44,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpPost]
         public async Task<ActionResult<Password>> AddPassword([FromBody] PasswordDto dto)
         {
-            var password = new Password
-            {
-                PasswordId = Guid.NewGuid(), // Auto-generate
-                ClassId = dto.ClassId,
-                PasswordText = dto.PasswordText,
-                DateAssigned = dto.DateAssigned ?? DateOnly.FromDateTime(DateTime.Now)
-            };
-            _context.Passwords.Add(password);
-            await _context.SaveChangesAsync();
+            var password = await _service.AddPasswordAsync(dto);
             return CreatedAtAction(nameof(GetPasswords), new { id = password.PasswordId }, password);
         }
 
@@ -64,11 +57,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpPost("validate")]
         public async Task<ActionResult<bool>> ValidatePassword([FromBody] PasswordDto dto)
         {
-            var exists = await _context.Passwords.AnyAsync(p =>
-                p.ClassId == dto.ClassId &&
-                p.PasswordText.ToLower() == dto.PasswordText.ToLower() &&
-                p.DateAssigned == dto.DateAssigned
-            );
+            var exists = _service.ValidatePasswordAsync(dto);
 
             return Ok(exists); // true if valid, false if not
         }
