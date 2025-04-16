@@ -1,4 +1,5 @@
 ﻿using AttendanceAppProject.ApiService.Data;
+using AttendanceAppProject.ApiService.Services;
 using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,11 +13,11 @@ namespace AttendanceAppProject.ApiService.Controllers
 	[ApiController]
 	public class QuizInstanceController : ControllerBase
 	{
-		private readonly ApplicationDbContext _context;
+		private readonly QuizInstanceService _service;
 
-		public QuizInstanceController(ApplicationDbContext context)
+		public QuizInstanceController(QuizInstanceService service)
 		{
-			_context = context;
+			_service = service;
 		}
 
 		/* GET: api/QuizInstance
@@ -27,7 +28,7 @@ namespace AttendanceAppProject.ApiService.Controllers
 		[HttpGet]
 		public async Task<ActionResult<IEnumerable<Class>>> GetQuizzes()
 		{
-			return await _context.Classes.ToListAsync();
+			return Ok(_service.GetQuizzesAsync());
 		}
 
 		/* GET: api/QuizInstance/{id}
@@ -38,7 +39,7 @@ namespace AttendanceAppProject.ApiService.Controllers
 		[HttpGet("{ClassId}")]
 		public async Task<ActionResult<QuizInstance>> GetQuizById(Guid ClassId)
 		{
-			var quizInstance = await _context.QuizInstances.FirstOrDefaultAsync(qi => qi.ClassId == ClassId);
+			var quizInstance = await _service.GetQuizByIdAsync(ClassId);
 			
 			// check http response for quizinstance, if no quiz either just submit automatically or allow to submit
 			if (quizInstance == null)
@@ -59,16 +60,7 @@ namespace AttendanceAppProject.ApiService.Controllers
 		[HttpPost]
 		public async Task<ActionResult<QuizInstance>> AddQuizInstance([FromBody] QuizInstanceDto dto)
 		{
-			var newQuiz = new QuizInstance
-			{
-				QuizId = Guid.NewGuid(), // Auto-generate
-				ClassId = dto.ClassId,
-				StartTime = dto.StartTime,
-				EndTime = dto.EndTime
-			};
-
-			_context.QuizInstances.Add(newQuiz);
-			await _context.SaveChangesAsync();
+			var newQuiz = await _service.AddQuizInstanceAsync(dto);
 
 			return CreatedAtAction(nameof(GetQuizzes), new { id = newQuiz.QuizId }, newQuiz);
 		}
