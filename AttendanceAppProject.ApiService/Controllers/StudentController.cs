@@ -3,7 +3,7 @@
  * Written by Maaz Raza, Ethan Maher
  */
 
-using AttendanceAppProject.ApiService.Data;
+using AttendanceAppProject.ApiService.Services;
 using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,11 +15,11 @@ namespace AttendanceAppProject.ApiService.Controllers
 	[ApiController]
 	public class StudentController : ControllerBase
 	{
-		private readonly ApplicationDbContext _context;
+		private readonly StudentService _service;
 
-		public StudentController(ApplicationDbContext context)
+		public StudentController(StudentService service)
 		{
-			_context = context;
+			_service = service;
 		}
 
         /* GET: api/Student
@@ -30,7 +30,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Student>>> GetStudents()
         {
-            return await _context.Students.ToListAsync();
+            return Ok(_service.GetStudentsAsync());
         }
 
         /* POST: api/Student
@@ -41,16 +41,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpPost]
         public async Task<ActionResult<Student>> AddStudent([FromBody] StudentDto dto)
         {
-            var student = new Student
-            {
-                UtdId = dto.UtdId,
-                FirstName = dto.FirstName,
-                LastName = dto.LastName,
-                Username = dto.Username
-            };
-
-            _context.Students.Add(student);
-            await _context.SaveChangesAsync();
+            var student = await _service.AddStudentAsync(dto);
 
             return CreatedAtAction(nameof(GetStudents), new { id = student.UtdId }, student);
         }
@@ -69,8 +60,8 @@ namespace AttendanceAppProject.ApiService.Controllers
                 return BadRequest("UtdId is required."); // 400
             }
 
-            var exists = await _context.Students.AnyAsync(s => s.UtdId == UtdId);
-            if(!exists)
+            var exists = _service.StudentExistsAsync(UtdId);
+            if(exists == null)
             {
                 return NotFound($"Student with ID {UtdId} not found"); // 404
             }
