@@ -1,6 +1,4 @@
-﻿// Canh Nguyen 
-
-using System;
+﻿using System;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using AttendanceAppProject.ProfessorLogin.Models;
@@ -12,13 +10,13 @@ namespace AttendanceAppProject.ProfessorLogin
     public partial class LoginWindow : Window
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly IProfessorAuthClient _authClient;
 
         public LoginWindow(IServiceProvider serviceProvider)
         {
             InitializeComponent();
             _serviceProvider = serviceProvider;
-            // Uncomment and implement the actual authentication service when ready
-            // _authService = serviceProvider.GetRequiredService<IProfessorAuthService>(); 
+            _authClient = serviceProvider.GetRequiredService<IProfessorAuthClient>();
             ProfessorIdTextBox.Focus();
 
             this.Loaded += async (s, e) => await CheckApiConnectionAsync();
@@ -48,7 +46,7 @@ namespace AttendanceAppProject.ProfessorLogin
             }
         }
 
-        private void LoginButton_Click(object sender, RoutedEventArgs e)
+        private async void LoginButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -73,8 +71,22 @@ namespace AttendanceAppProject.ProfessorLogin
                     return;
                 }
 
-                // Use mock authentication for now
-                ProfessorModel professor = MockDataProvider.GetMockProfessor(professorId, password);
+                // Show loading message
+                StatusTextBlock.Text = "Authenticating...";
+
+                // First try with the API
+                ProfessorModel professor = await _authClient.LoginAsync(professorId, password);
+
+                // If API fails, fall back to mock data for testing purposes
+                if (professor == null && (
+                    professorId == "js123" ||
+                    professorId == "jd123" ||
+                    professorId == "rj123" ||
+                    professorId == "test"))
+                {
+                    professor = MockDataProvider.GetMockProfessor(professorId, password);
+                    StatusTextBlock.Text = "API login failed. Using mock data for demo purposes.";
+                }
 
                 if (professor != null)
                 {

@@ -2,7 +2,7 @@ using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Data;
 using Microsoft.AspNetCore.Builder;
-using AttendanceAppProject.Dto.Models;
+using AttendanceAppProject.ApiService.Dto.Models;
 using AttendanceAppProject.ApiService.JsonConverters;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,11 +14,14 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 	?? throw new InvalidOperationException("DefaultConnection is missing in appsettings.json");
 
 // Add service defaults & Aspire client integrations.
-// builder.AddServiceDefaults()
+// builder.AddServiceDefaults();
+
+// Add services to the container.
+builder.Services.AddProblemDetails();
 
 // Register EF Core with MySQL, add database context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-	options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
+options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
 		ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
 
 // Enable Controllers, add JSON converters

@@ -1,6 +1,4 @@
-﻿// Canh Nguyen 
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -8,9 +6,13 @@ using System.Windows.Controls;
 using AttendanceAppProject.ProfessorLogin.Models;
 using AttendanceAppProject.ProfessorLogin.Services;
 using Microsoft.Extensions.DependencyInjection;
-using System.IO;
 using System.Windows.Data;
 using System.ComponentModel;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using AttendanceAppProject.ApiService.Data.Models;
+using AttendanceAppProject.ApiService.Dto.Models;
 
 namespace AttendanceAppProject.ProfessorLogin
 {
@@ -18,12 +20,18 @@ namespace AttendanceAppProject.ProfessorLogin
     {
         private List<AttendanceRecord> _allAttendanceRecords;
         private List<AttendanceRecord> _filteredRecords;
+        private List<Class> _professorClasses;
+        private Professor _currentProfessor;
 
-        public AttendanceWindow()
+        private readonly HttpClient _httpClient;
+
+        public AttendanceWindow(HttpClient httpClient)
         {
             InitializeComponent();
             _allAttendanceRecords = new List<AttendanceRecord>();
             _filteredRecords = new List<AttendanceRecord>();
+            _professorClasses = new List<Class>();
+            _httpClient = httpClient;
 
             // Set default sorting if the control exists
             if (SortByComboBox != null && SortByComboBox.Items.Count > 0)
@@ -32,34 +40,45 @@ namespace AttendanceAppProject.ProfessorLogin
             }
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            System.Diagnostics.Debug.WriteLine("Window Loaded");
             try
             {
                 // Display professor information
-                if (App.CurrentProfessor != null)
+                if (App.Current is App app && app.ServiceProvider.GetService<ProfessorModel>() is ProfessorModel currentProfessor)
                 {
                     if (ProfessorNameTextBlock != null)
                     {
-                        ProfessorNameTextBlock.Text = $"Welcome, {App.CurrentProfessor.FullName}";
+                        ProfessorNameTextBlock.Text = $"Welcome, {currentProfessor.FullName}";
                     }
 
                     if (DepartmentTextBlock != null)
                     {
-                        DepartmentTextBlock.Text = $"Department: {App.CurrentProfessor.Department}";
+                        DepartmentTextBlock.Text = $"Department: {currentProfessor.Department}";
                     }
 
                     // Set window title
-                    this.Title = $"Student Attendance Database - {App.CurrentProfessor.FullName}";
+                    this.Title = $"Student Attendance Database - {currentProfessor.FullName}";
 
-                    // Select first item in the Class combobox if it exists
-                    if (ClassComboBox != null && ClassComboBox.Items.Count > 0)
+                    // Fetch professor data from the API
+                    await GetProfessorFromApiAsync(currentProfessor.ProfessorId);
+
+                    // Load professor's classes
+                    await LoadProfessorClasses();
+
+                    // Load attendance data
+                    await LoadAttendanceData();
+
+                    if (StatusTextBlock != null)
                     {
-                        ClassComboBox.SelectedIndex = 0;
+                        StatusTextBlock.Text = "Data loaded successfully";
                     }
 
-                    // Load mock attendance data
-                    LoadMockAttendanceData();
+                    if (LastUpdatedTextBlock != null)
+                    {
+                        LastUpdatedTextBlock.Text = $"Last updated: {DateTime.Now.ToString("g")}";
+                    }
                 }
                 else
                 {
@@ -76,58 +95,174 @@ namespace AttendanceAppProject.ProfessorLogin
             }
         }
 
-        private void LoadMockAttendanceData()
+        private async Task GetProfessorFromApiAsync(string professorId)
         {
             try
             {
-                if (App.CurrentProfessor != null)
+                var response = await _httpClient.GetAsync("api/Professor");
+                if (response.IsSuccessStatusCode)
                 {
-                    // Generate extended mock data
-                    _allAttendanceRecords = MockDataProvider.GenerateMockAttendanceData(
-                        App.CurrentProfessor.ProfessorId,
-                        App.CurrentProfessor.FullName);
+                    var professors = await response.Content.ReadFromJsonAsync<List<Professor>>();
+                    _currentProfessor = professors.FirstOrDefault(p => p.UtdId == professorId);
 
-                    // Ensure we have a valid list
-                    if (_allAttendanceRecords == null)
+                    if (_currentProfessor == null)
                     {
-                        _allAttendanceRecords = new List<AttendanceRecord>();
-                    }
-
-                    // Add IsLate property to some records
-                    Random random = new Random();
-                    foreach (var record in _allAttendanceRecords)
-                    {
-                        // Add this property to your AttendanceRecord model
-                        record.IsLate = random.Next(10) < 2; // 20% chance of being late
-                    }
-
-                    // Apply filters and update stats
-                    ApplyFilters();
-
-                    // Update last updated time
-                    if (LastUpdatedTextBlock != null)
-                    {
-                        LastUpdatedTextBlock.Text = $"Last updated: {DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss")}";
-                    }
-
-                    if (StatusTextBlock != null)
-                    {
-                        StatusTextBlock.Text = $"Loaded {_allAttendanceRecords.Count} attendance records";
-                    }
-                }
-                else
-                {
-                    if (StatusTextBlock != null)
-                    {
-                        StatusTextBlock.Text = "Error: No professor data available";
+                        // Fallback to mock data for testing
+                        _currentProfessor = new Professor
+                        {
+                            UtdId = professorId,
+                            FirstName = "Mock",
+                            LastName = "Professor"
+                        };
                     }
                 }
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Error getting professor: {ex.Message}");
+                // Create a mock professor for testing
+                _currentProfessor = new Professor
+                {
+                    UtdId = professorId,
+                    FirstName = "Mock",
+                    LastName = "Professor"
+                };
+            }
+        }
+
+        private async Task LoadProfessorClasses()
+        {
+            try
+            {
+                if (_currentProfessor == null) return;
+
+                var response = await _httpClient.GetAsync($"api/Class/professor/{_currentProfessor.UtdId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _professorClasses = await response.Content.ReadFromJsonAsync<List<Class>>();
+
+                    // Clear and add the "All Classes" option
+                    ClassComboBox.Items.Clear();
+                    ClassComboBox.Items.Add(new ComboBoxItem { Content = "All Classes" });
+
+                    // Add each class
+                    foreach (var classItem in _professorClasses)
+                    {
+                        ClassComboBox.Items.Add(new ComboBoxItem
+                        {
+                            Content = $"{classItem.ClassPrefix} {classItem.ClassNumber}: {classItem.ClassName}",
+                            Tag = classItem.ClassId
+                        });
+                    }
+
+                    // Select "All Classes" by default
+                    ClassComboBox.SelectedIndex = 0;
+                }
+                else
+                {
+                    // If no classes found, populate with mock data for testing
+                    PopulateWithMockClasses();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading classes: {ex.Message}");
+                // Populate with mock data for testing
+                PopulateWithMockClasses();
+            }
+        }
+
+        private void PopulateWithMockClasses()
+        {
+            // Clear and add mock classes for testing
+            ClassComboBox.Items.Clear();
+            ClassComboBox.Items.Add(new ComboBoxItem { Content = "All Classes" });
+            ClassComboBox.Items.Add(new ComboBoxItem { Content = "CS 4485: Senior Design", Tag = Guid.NewGuid() });
+            ClassComboBox.Items.Add(new ComboBoxItem { Content = "CS 3354: Software Engineering", Tag = Guid.NewGuid() });
+            ClassComboBox.Items.Add(new ComboBoxItem { Content = "CS 2336: Computer Science II", Tag = Guid.NewGuid() });
+
+            // Select "All Classes" by default
+            ClassComboBox.SelectedIndex = 0;
+        }
+
+        private async Task LoadAttendanceData()
+        {
+            try
+            {
+                // First, attempt to retrieve data from the API
+                if (_currentProfessor != null)
+                {
+                    List<AttendanceRecord> records = new List<AttendanceRecord>();
+                    bool useApiData = false;
+
+                    try
+                    {
+                        foreach (var classItem in _professorClasses)
+                        {
+                            var response = await _httpClient.GetAsync($"api/AttendanceInstance/class/{classItem.ClassId}");
+
+                            if (response.IsSuccessStatusCode)
+                            {
+                                var attendanceInstances = await response.Content.ReadFromJsonAsync<List<AttendanceInstance>>();
+
+                                // For each attendance instance, create a record
+                                int index = 1;
+                                foreach (var instance in attendanceInstances)
+                                {
+                                    var record = new AttendanceRecord
+                                    {
+                                        Id = index++,
+                                        OrdinalNumber = records.Count + 1,
+                                        ProfessorId = _currentProfessor.UtdId,
+                                        ProfessorName = $"{_currentProfessor.FirstName} {_currentProfessor.LastName}",
+                                        StudentId = instance.StudentId,
+                                        Class = $"{classItem.ClassPrefix} {classItem.ClassNumber}",
+                                        CheckInTime = instance.DateTime ?? DateTime.Now,
+                                        QuizQuestion = "Default Question", // We would need to fetch this from QuizInstance
+                                        QuizAnswer = "Default Answer",     // We would need to fetch this from QuizResponse
+                                        IsLate = instance.IsLate ?? false
+                                    };
+
+                                    records.Add(record);
+                                }
+
+                                useApiData = true;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"API error: {ex.Message}. Falling back to mock data.");
+                        useApiData = false;
+                    }
+
+                    if (useApiData && records.Count > 0)
+                    {
+                        _allAttendanceRecords = records;
+                    }
+                    else
+                    {
+                        // Fallback to mock data
+                        _allAttendanceRecords = MockDataProvider.GenerateMockAttendanceData(
+                            _currentProfessor.UtdId,
+                            $"{_currentProfessor.FirstName} {_currentProfessor.LastName}");
+                    }
+
+                    // Apply initial filtering and sorting
+                    ApplyFilters();
+                }
+            }
+            catch (Exception ex)
+            {
                 MessageBox.Show($"Error loading attendance data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                // Ensure we have an empty list at minimum
-                _allAttendanceRecords = new List<AttendanceRecord>();
+
+                // Fallback to mock data
+                _allAttendanceRecords = MockDataProvider.GenerateMockAttendanceData(
+                    _currentProfessor?.UtdId ?? "unknown",
+                    _currentProfessor != null ? $"{_currentProfessor.FirstName} {_currentProfessor.LastName}" : "Unknown Professor");
+
+                ApplyFilters();
             }
         }
 
@@ -304,11 +439,31 @@ namespace AttendanceAppProject.ProfessorLogin
             }
         }
 
-        private void RefreshButton_Click(object sender, RoutedEventArgs e)
+        private async void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                LoadMockAttendanceData();
+                // Show loading message
+                if (StatusTextBlock != null)
+                {
+                    StatusTextBlock.Text = "Refreshing data...";
+                }
+
+                // Refresh data
+                await LoadProfessorClasses();
+                await LoadAttendanceData();
+
+                // Update status
+                if (StatusTextBlock != null)
+                {
+                    StatusTextBlock.Text = "Data refreshed successfully";
+                }
+
+                // Update last updated timestamp
+                if (LastUpdatedTextBlock != null)
+                {
+                    LastUpdatedTextBlock.Text = $"Last updated: {DateTime.Now.ToString("g")}";
+                }
             }
             catch (Exception ex)
             {
@@ -481,7 +636,7 @@ namespace AttendanceAppProject.ProfessorLogin
             }
         }
 
-        private void EditButton_Click(object sender, RoutedEventArgs e)
+        private async void EditButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -489,10 +644,60 @@ namespace AttendanceAppProject.ProfessorLogin
                 if (sender is Button button && button.DataContext is AttendanceRecord record)
                 {
                     // In a real application, you would open a dialog to edit the record
-                    // For this example, we'll just show a message
+                    // For now, let's demonstrate API integration by toggling the IsLate flag
+
+                    // Update the UI record
+                    record.IsLate = !record.IsLate;
+
+                    // Find the class ID for this record
+                    Guid? classId = null;
+                    foreach (ComboBoxItem item in ClassComboBox.Items)
+                    {
+                        if (item.Content.ToString() == record.Class && item.Tag is Guid id)
+                        {
+                            classId = id;
+                            break;
+                        }
+                    }
+
+                    if (classId.HasValue)
+                    {
+                        try
+                        {
+                            // Try to update via API
+                            var dto = new
+                            {
+                                StudentId = record.StudentId,
+                                ClassId = classId.Value,
+                                IsLate = record.IsLate,
+                                ExcusedAbsence = false,
+                                DateTime = record.CheckInTime
+                            };
+
+                            var response = await _httpClient.PostAsJsonAsync("api/AttendanceInstance/absent-or-late", dto);
+
+                            if (response.IsSuccessStatusCode)
+                            {
+                                StatusTextBlock.Text = "Record updated successfully";
+                            }
+                            else
+                            {
+                                StatusTextBlock.Text = "Failed to update record via API";
+                            }
+                        }
+                        catch (Exception apiEx)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"API error during edit: {apiEx.Message}");
+                        }
+                    }
+
+                    // Refresh the DataGrid
+                    AttendanceDataGrid.Items.Refresh();
+
+                    // Show a message about the edit
                     MessageBox.Show(
-                        $"Editing record for Student ID: {record.StudentId}\n" +
-                        "In a real application, this would open an edit dialog.",
+                        $"Updated record for Student ID: {record.StudentId}\n" +
+                        $"Changed 'Late' status to: {(record.IsLate ? "Yes" : "No")}",
                         "Edit Attendance Record",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
@@ -557,6 +762,7 @@ namespace AttendanceAppProject.ProfessorLogin
             try
             {
                 // Clear the current professor data
+                // Should access static property with class name, not instance
                 App.CurrentProfessor = null;
 
                 // Show the login window

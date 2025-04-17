@@ -1,5 +1,4 @@
 ﻿using System;
-
 namespace AttendanceAppProject.ApiService.Models
 {
     public class AttendanceRecord
@@ -12,8 +11,9 @@ namespace AttendanceAppProject.ApiService.Models
         public DateTime CheckInTime { get; set; } = DateTime.Now;
         public string QuizQuestion { get; set; } = string.Empty;
         public string QuizAnswer { get; set; } = string.Empty;
-
         // This property is not stored in the database - it's only for UI display
         public int OrdinalNumber { get; set; }
+        // Adding the IsLate property to fix the error
+        public bool IsLate { get; set; }
     }
 }

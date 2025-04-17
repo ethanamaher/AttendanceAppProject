@@ -9,16 +9,15 @@ namespace AttendanceAppProject.ApiService
     {
         public static IServiceCollection AddApiServices(this IServiceCollection services, IConfiguration configuration)
         {
-            // Register DbContext
+            // Register DbContext - changed from UseSqlServer to UseMySql since you're using MySQL
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
+                options.UseMySql(
                     configuration.GetConnectionString("DefaultConnection"),
-                    b => b.MigrationsAssembly("AttendanceAppProject.Web")));
+                    ServerVersion.AutoDetect(configuration.GetConnectionString("DefaultConnection"))));
 
             // Register services
             services.AddScoped<IAttendanceService, AttendanceService>();
             services.AddScoped<IProfessorAuthService, ProfessorAuthService>();
-
             return services;
         }
     }
