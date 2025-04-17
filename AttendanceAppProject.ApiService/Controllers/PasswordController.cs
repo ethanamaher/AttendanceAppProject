@@ -6,7 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Data;
-using AttendanceAppProject.ApiService.Dto.Models;  // Updated namespace
+using AttendanceAppProject.ApiService.Services;
+using AttendanceAppProject.Dto.Models;
 
 // API Controller for Password
 namespace AttendanceAppProject.ApiService.Controllers
@@ -15,10 +16,11 @@ namespace AttendanceAppProject.ApiService.Controllers
     [ApiController]
     public class PasswordController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-        public PasswordController(ApplicationDbContext context)
+        private readonly PasswordService _service;
+
+        public PasswordController(PasswordService service)
         {
-            _context = context;
+            _service = service;
         }
         /* GET: api/password
          * Get all passwords
@@ -28,7 +30,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Password>>> GetPasswords()
         {
-            return await _context.Passwords.ToListAsync();
+            return Ok(await _service.GetPasswordsAsync());
         }
         /* POST: api/Password
          * Add a password to the database
@@ -38,18 +40,23 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpPost]
         public async Task<ActionResult<Password>> AddPassword([FromBody] PasswordDto dto)
         {
-            var password = new Password
-            {
-                PasswordId = Guid.NewGuid(), // Auto-generate
-                ClassId = dto.ClassId,
-                PasswordText = dto.PasswordText,
-                DateAssigned = dto.DateAssigned ?? DateOnly.FromDateTime(DateTime.Now)
-            };
-            _context.Passwords.Add(password);
-            await _context.SaveChangesAsync();
+            var password = await _service.AddPasswordAsync(dto);
             return CreatedAtAction(nameof(GetPasswords), new { id = password.PasswordId }, password);
         }
 
-        // Rest of the code remains the same...
+        /* POST: api/Password/validate 
+         * Validates a password based on ClassId, Password text, and the date assigned. Client side sends this data over in a PasswordDto object
+         * - request body: PasswordDto (containing fields ClassId, PasswordText, Date based upon student input form)
+         * - resposne body: true if valid, false if not
+         */
+
+        [HttpPost("validate")]
+        public async Task<ActionResult<bool>> ValidatePassword([FromBody] PasswordDto dto)
+        {
+            var exists = await _service.ValidatePasswordAsync(dto);
+
+            return Ok(exists); // true if valid, false if not
+        }
+
     }
 }

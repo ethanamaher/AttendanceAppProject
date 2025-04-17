@@ -8,5 +8,9 @@ public partial class Professor
 
 	public string LastName { get; set; } = null!;
 
-	public virtual ICollection<Class> Classes { get; set; } = new List<Class>();
+    public string PasswordHash { get; set; } = string.Empty;
+    public string Department { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+
+    public virtual ICollection<Class> Classes { get; set; } = new List<Class>();
 }

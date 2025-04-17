@@ -1,6 +1,13 @@
-﻿@page "/"
+﻿<!--
+Home Page Component
+Handles student form submission for attendance app and navigates to quiz page on successful submission
+
+Written by Ethan Maher
+-->
+@page "/"
 @using System.Timers
 @implements IDisposable
+@using System.ComponentModel.DataAnnotations
 @inject NavigationManager NavigationManager
 @inject HttpClient Http
 @using AttendanceAppProject.Dto.Models
@@ -30,12 +37,12 @@
             Incorrect Student Information. Please try again.
         </div>
     }
-    <EditForm Model="studentResponse" OnValidSubmit="SubmitForm" FormName="Student_Response_Form">
-
+    <EditForm Model="@studentResponse" OnValidSubmit="@SubmitForm">
         <!-- field for student id -->
         <div class="student-id-field">
             <label class="field-label">Student ID</label>
-            <InputText @bind-Value="studentResponse!.studentID" placeholder="Enter your student ID" />
+            <InputText @bind-Value="studentResponse!.studentId" placeholder="Enter your student ID" />
+            <ValidationMessage For="@(() => studentResponse.studentId)" />
         </div>
 
 
@@ -51,9 +58,10 @@
                 @foreach (ClassDto classDto in classesList)
                 {
                     <!-- for each class, display its name and tie value with its Guid -->
-                    <option value="@classDto.ClassId">@classDto.ClassName</option>
+                    <option value="@classDto.ClassId">@classDto.ClassPrefix@classDto.ClassNumber @classDto.ClassName (@classDto.StartTime - @classDto.EndTime)</option>
                 }
             </InputSelect>
+            <ValidationMessage For="@(() => studentResponse.classId)" />
         </div>
 
 
@@ -62,27 +70,30 @@
         <div class="password-field">
             <label class="field-label">Password</label>
             <InputText @bind-Value="studentResponse!.formPassword" placeholder="Enter your password" />
+            <ValidationMessage For="@(() => studentResponse.formPassword)" />
         </div>
 
 
 
         <!-- button to handle form submission -->
         <div class="submit-button-container">
-            <button type="submit">Submit</button>
+            <button type="submit" disabled="@isSubmitting">Submit</button>
         </div>
 
+        <DataAnnotationsValidator />
+        <ValidationSummary />
     </EditForm>
 </div>
 
 @code {
     [SupplyParameterFromForm]
     private StudentResponse? studentResponse { get; set; }
+
     private string currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
     private Timer? secondsTimer;
-    private bool showLoginError = false;
 
-    // List to store student information for now
-    private List<StudentRecord> studentDatabase = new List<StudentRecord>();
+    private bool showLoginError = false;
+    private bool isSubmitting = false;
 
     // list to store classes for dropdown
     public List<ClassDto> classesList = new List<ClassDto>();
@@ -105,7 +116,19 @@
     // load classes from database
     private async Task LoadClassesAsync()
     {
-        classesList = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
+            if (response is not null)
+            {
+                classesList = response;
+            }
+        }
+        catch (Exception e)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading classes: {e.Message}");
+        }
+
     }
 
     // method to update time on page automatically
@@ -121,82 +144,84 @@
     // Clean up timer when component is disposed
     public void Dispose()
     {
-        secondsTimer?.Dispose();
+        if (secondsTimer is not null)
+        {
+            secondsTimer.Stop();
+            secondsTimer.Dispose();
+        }
     }
 
     // can integrate status codes for which part of form is invalid
-    private async void FormError() {
+    private void FormError()
+    {
         // Incorrect credentials - show error message
         showLoginError = true;
-        System.Diagnostics.Debug.WriteLine("Login failed - incorrect information. Showing error message.");
-
         // Clear only the password field for retry
         studentResponse.formPassword = "";
+
+        System.Diagnostics.Debug.WriteLine("Login failed - incorrect information. Showing error message.");
     }
 
     // handle form submission
-    private async void SubmitForm()
+    private async Task SubmitForm()
     {
-        System.Diagnostics.Debug.WriteLine("Form Submission Detected");
-
-        // checking for any empty data in form
-        if(studentResponse.studentID == null || studentResponse.classId == Guid.Empty || studentResponse.formPassword == null) {
-            System.Diagnostics.Debug.WriteLine("Invalid information input");
-        }
-
-        // Debug the current state
-        System.Diagnostics.Debug.WriteLine($"StudentID: {studentResponse.studentID}");
-        System.Diagnostics.Debug.WriteLine($"ClassID: {studentResponse.classId}");
-
-        var studentExists = await Http.PostAsJsonAsync("api/student/exists", studentResponse.studentID);
-        System.Diagnostics.Debug.WriteLine($"Student Exists: {studentExists.IsSuccessStatusCode}");
-        System.Diagnostics.Debug.WriteLine($"Response: {studentExists}");
-        // if student does not exist
-        // can also further go into response statuscodes
-        // 404 - not found
-        // 400 - bad request
-        if (!studentExists.IsSuccessStatusCode)
+        isSubmitting = true;
+        try
         {
-            FormError();
-            return;
-        }
+            // if student does not exist
+            // can also further go into response statuscodes
+            // 404 - not found
+            // 400 - bad request
 
-        var classExists = await Http.PostAsJsonAsync("api/class/exists", studentResponse.classId);
-        System.Diagnostics.Debug.WriteLine($"Class Exists: {classExists.IsSuccessStatusCode}");
-        System.Diagnostics.Debug.WriteLine($"Response: {classExists}");
-        // if class does not exist
-        // should never be 404
-        // if errors, will be bad request
-        if (!classExists.IsSuccessStatusCode)
-        {
-            FormError();
-            return;
-        }
-        // Login successful, reset error flag
-        showLoginError = false;
+            var studentExists = await Http.PostAsJsonAsync("api/student/exists", studentResponse.studentId);
+            if (!studentExists.IsSuccessStatusCode)
+            {
+                System.Diagnostics.Debug.WriteLine("Student not found");
+                FormError();
+                return;
+            }
 
-        System.Diagnostics.Debug.WriteLine($"Login successful for: {studentResponse}");
-        System.Diagnostics.Debug.WriteLine("Navigating to: /quiz");
+            // if class does not exist
+            // should never be 404
+            // if errors, will be bad request
+            var classExists = await Http.PostAsJsonAsync("api/class/exists", studentResponse.classId);
+            if (!classExists.IsSuccessStatusCode)
+            {
+                System.Diagnostics.Debug.WriteLine("Class not found");
+                FormError();
+                return;
+            }
+
+            var studentIdEncoded = Uri.EscapeDataString(studentResponse.studentId ?? "");
+            var classIdEncoded = Uri.EscapeDataString(studentResponse.classId.ToString() ?? "");
 
             // Login successful, redirect to Quiz.razor with query parameters
-        NavigationManager.NavigateTo($"/quiz?studentId={Uri.EscapeDataString(studentResponse.studentID)}&class={Uri.EscapeDataString(studentResponse.classId.ToString())}");
-    }
+            NavigationManager.NavigateTo($"/quiz?studentId={studentIdEncoded}&class={classIdEncoded}");
 
-    // Student record model for database comparison
-    public class StudentRecord
-    {
-        public string StudentID { get; set; } = "";
-        public string Password { get; set; } = "";
-        public Guid ClassId { get; set; } = Guid.Empty;
+
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error during submission: {ex.Message}");
+            showLoginError = true;
+
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
     }
 
     /*  Class for getting student info responses from form */
     public class StudentResponse
     {
+        [Required(ErrorMessage = "Student ID is Required")]
+        public string? studentId { get; set; }
 
-        public string? studentID { get; set; }
+        [Required(ErrorMessage = "Class ID is Required")]
         public Guid? classId { get; set; }
 
+        [Required(ErrorMessage = "Password is Required")]
         public string? formPassword { get; set; }
     }
 }

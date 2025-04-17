@@ -14,4 +14,8 @@ public class ProfessorDto
 	public string FirstName { get; set; } = null!;
 
 	public string LastName { get; set; } = null!;
+
+    public string PasswordHash { get; set; } = string.Empty;
+    public string Department { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
 }

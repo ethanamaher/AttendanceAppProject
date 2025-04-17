@@ -4,6 +4,7 @@ using AttendanceAppProject.ApiService.Data;
 using Microsoft.AspNetCore.Builder;
 using AttendanceAppProject.ApiService.Dto.Models;
 using AttendanceAppProject.ApiService.JsonConverters;
+using AttendanceAppProject.ApiService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +31,19 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
     options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
 });
+
+// Register Service Classes
+builder.Services.AddScoped<AttendanceInstanceService>();
+builder.Services.AddScoped<ClassScheduleService>();
+builder.Services.AddScoped<ClassService>();
+builder.Services.AddScoped<PasswordService>();
+builder.Services.AddScoped<ProfessorService>();
+builder.Services.AddScoped<QuizAnswerService>();
+builder.Services.AddScoped<QuizInstanceService>();
+builder.Services.AddScoped<QuizQuestionService>();
+builder.Services.AddScoped<StudentClassService>();
+builder.Services.AddScoped<StudentService>();
+
 
 // Add CORS Policy 
 builder.Services.AddCors(options =>

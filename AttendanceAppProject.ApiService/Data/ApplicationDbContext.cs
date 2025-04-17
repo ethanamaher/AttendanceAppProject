@@ -27,8 +27,9 @@ public partial class ApplicationDbContext : DbContext
 	public virtual DbSet<QuizInstance> QuizInstances { get; set; }
 
 	public virtual DbSet<QuizQuestion> QuizQuestions { get; set; }
+    public virtual DbSet<QuizAnswer> QuizAnswers { get; set; }
 
-	public virtual DbSet<QuizResponse> QuizResponses { get; set; }
+    public virtual DbSet<QuizResponse> QuizResponses { get; set; }
 
 	public virtual DbSet<Student> Students { get; set; }
 
@@ -215,27 +216,13 @@ public partial class ApplicationDbContext : DbContext
 		{
 			entity.HasKey(e => e.QuestionId).HasName("PRIMARY");
 
+
 			entity.ToTable("quiz_questions");
 
 			entity.HasIndex(e => e.QuizId, "fk_quizQuestions_quizId");
 
 			entity.Property(e => e.QuestionId).HasColumnName("Question_id");
-			entity.Property(e => e.AnswerA)
-				.HasMaxLength(255)
-				.HasColumnName("Answer_a");
-			entity.Property(e => e.AnswerB)
-				.HasMaxLength(255)
-				.HasColumnName("Answer_b");
-			entity.Property(e => e.AnswerC)
-				.HasMaxLength(255)
-				.HasColumnName("Answer_c");
-			entity.Property(e => e.AnswerD)
-				.HasMaxLength(255)
-				.HasColumnName("Answer_d");
-			entity.Property(e => e.CorrectAnswer)
-				.HasMaxLength(1)
-				.IsFixedLength()
-				.HasColumnName("Correct_answer");
+
 			entity.Property(e => e.QuestionText)
 				.HasMaxLength(500)
 				.HasColumnName("Question_text");
@@ -247,7 +234,27 @@ public partial class ApplicationDbContext : DbContext
 				.HasConstraintName("fk_quizQuestions_quizId");
 		});
 
-		modelBuilder.Entity<QuizResponse>(entity =>
+        modelBuilder.Entity<QuizAnswer>(entity =>
+        {
+            entity.HasKey(e => e.AnswerId).HasName("PRIMARY");
+            entity.Property(e => e.AnswerId).HasColumnName("Answer_id");
+
+            entity.ToTable("quiz_answers");
+
+            entity.HasIndex(e => e.QuestionId, "fk_questionId_quizQuestions");
+            entity.HasIndex(e => e.QuizId, "fk_quizId_quizInstance");
+
+            entity.Property(e => e.QuizId).HasColumnName("Quiz_id");
+            entity.Property(e => e.QuestionId).HasColumnName("Question_id");
+
+            entity.Property(e => e.AnswerText)
+                .HasMaxLength(255)
+                .HasColumnName("Answer_text");
+
+            entity.Property(e => e.IsCorrect).HasColumnName("Answer_isCorrect");
+        });
+
+        modelBuilder.Entity<QuizResponse>(entity =>
 		{
 			entity.HasKey(e => e.ResponseId).HasName("PRIMARY");
 

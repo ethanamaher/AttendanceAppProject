@@ -2,7 +2,8 @@
 using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Data;
-using AttendanceAppProject.ApiService.Dto.Models;
+using AttendanceAppProject.Dto.Models;
+using AttendanceAppProject.ApiService.Services;
 
 // API Controller for Password
 
@@ -12,23 +13,23 @@ namespace AttendanceAppProject.ApiService.Controllers
 	[ApiController]
 	public class QuizQuestionController : ControllerBase
 	{
-		private readonly ApplicationDbContext _context;
+		private readonly QuizQuestionService _service;
 
-		public QuizQuestionController(ApplicationDbContext context)
+		public QuizQuestionController(QuizQuestionService service)
 		{
-			_context = context;
+			_service = service;
 		}
 
-		/* GET: api/quizquestions
-         * Get all passwords
+        /* GET: api/quizquestions
+         * Get quiz questions by id
          * - request body: none
-         * - response body: Passwords
+         * - response body: <IEnumerable<QuizQuestion>
          */
-		[HttpGet("{QuizId}")]
+        [HttpGet("{QuizId}")]
 		public async Task<ActionResult<IEnumerable<QuizQuestion>>> GetQuestionsById(Guid QuizId)
 		{
 			System.Diagnostics.Debug.WriteLine($"Looking up quiz {QuizId}");
-			return await _context.QuizQuestions.Where(qi => qi.QuizId == QuizId).ToListAsync();
+			return Ok(await _service.GetQuestionsByIdAsync(QuizId));
 		}
 	}
 }
