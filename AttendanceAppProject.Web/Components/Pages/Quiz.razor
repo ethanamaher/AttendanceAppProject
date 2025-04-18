@@ -56,73 +56,74 @@
             <div class="loading-spinner">
                 Loading...
             </div>
-        }
+        } else {
 
-        <!-- if the student is not valid, should be checked before on home page submission thus should not happen in normal use-->
-        @if (!isValidStudent)
-        {
-            <div class="invalid-access">
-                <h2>Invalid Access</h2>
-                <p>You must log in through the home page to access this quiz.</p>
-                <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
-            </div>
-        }
-
-        @if (quizCompleted)
-        {
-            <div class="quiz-completed">
-                <h2>Attendance Recorded</h2>
-                @if(quizExists)
-                {
-                    <div class="score">Your Score: @correctAnswers / @quizQuestions.Count</div>
-
-                    <br />
-                }
-
-                <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
-
-            </div>
-
-
-        } else
-        {
-            <!-- quiz display -->
-            @if (quizExists)
+            <!-- if the student is not valid, should be checked before on home page submission thus should not happen in normal use-->
+            @if (!isValidStudent)
             {
-                <EditForm Model="@quizQuestionModels" OnSubmit="SubmitQuiz">
-                    @foreach (QuizQuestionModel quizQuestion in quizQuestionModels)
+                <div class="invalid-access">
+                    <h2>Invalid Access</h2>
+                    <p>You must log in through the home page to access this quiz.</p>
+                    <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
+                </div>
+            }
+
+            @if (quizCompleted)
+            {
+                <div class="quiz-completed">
+                    <h2>Attendance Recorded</h2>
+                    @if(quizExists)
                     {
-                        <div class="quiz-question">
-                            <div class="question-number">
-                                Question @(quizQuestions.IndexOf(quizQuestion.QuestionDto) + 1) of @quizQuestions.Count
-                            </div>
-
-
-                            <div class="question-text">
-                                <strong>@quizQuestion.QuestionDto.QuestionText</strong>
-                            </div>
-
-                            <InputRadioGroup @bind-Value="quizQuestion.SelectedAnswerId" Name="@quizQuestion.QuestionDto.QuestionId.ToString()">
-                                @foreach (QuizAnswerDto answerDto in quizQuestion.Answers)
-                                {
-                                    <label>
-                                        <InputRadio Value="@answerDto.AnswerId" />
-                                        <span class="ms-2">@answerDto.AnswerText</span><br />
-                                    </label>
-                                }
-                            </InputRadioGroup>
-                        </div>
+                        <div class="score">Your Score: @correctAnswers / @quizQuestions.Count</div>
 
                         <br />
                     }
 
-                    <!-- button to handle form submission -->
-                    <div class="submit-button-container">
-                        <button type="submit" disabled="@isSubmitting">
-                            @(isSubmitting ? "Submitting Quiz..." : "Submit")
-                        </button>
-                    </div>
-                </EditForm>
+                    <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
+
+                </div>
+
+
+            } else
+            {
+                <!-- quiz display -->
+                @if (quizExists)
+                {
+                    <EditForm Model="@quizQuestionModels" OnSubmit="SubmitQuiz">
+                        @foreach (QuizQuestionModel quizQuestion in quizQuestionModels)
+                        {
+                            <div class="quiz-question">
+                                <div class="question-number">
+                                    Question @(quizQuestions.IndexOf(quizQuestion.QuestionDto) + 1) of @quizQuestions.Count
+                                </div>
+
+
+                                <div class="question-text">
+                                    <strong>@quizQuestion.QuestionDto.QuestionText</strong>
+                                </div>
+
+                                <InputRadioGroup @bind-Value="quizQuestion.SelectedAnswerId" Name="@quizQuestion.QuestionDto.QuestionId.ToString()">
+                                    @foreach (QuizAnswerDto answerDto in quizQuestion.Answers)
+                                    {
+                                        <label>
+                                            <InputRadio Value="@answerDto.AnswerId" />
+                                            <span class="ms-2">@answerDto.AnswerText</span><br />
+                                        </label>
+                                    }
+                                </InputRadioGroup>
+                            </div>
+
+                            <br />
+                        }
+
+                        <!-- button to handle form submission -->
+                        <div class="submit-button-container">
+                            <button type="submit" disabled="@isSubmitting">
+                                @(isSubmitting ? "Submitting Quiz..." : "Submit")
+                            </button>
+                        </div>
+                    </EditForm>
+                }
             }
         }
     </div>

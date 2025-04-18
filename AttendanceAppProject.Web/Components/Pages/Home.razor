@@ -32,67 +32,76 @@ Written by Ethan Maher
 </div>
 
 <div class="form-container">
-    @if (showLoginError)
+
+    @if (isLoading)
     {
-        <div class="error-message">
-            Incorrect Student Information. Please try again.
+        <div class="loading-spinner">
+            Loading...
         </div>
+    } else {
+
+        @if (showLoginError)
+        {
+            <div class="error-message">
+                Incorrect Student Information. Please try again.
+            </div>
+        }
+        <EditForm Model="@studentResponse" OnValidSubmit="@SubmitForm">
+            <!-- field for student id -->
+            <div class="student-id-field">
+                <label class="field-label">Student ID</label>
+                <InputText @bind-Value="studentResponse!.studentId" placeholder="Enter your student ID" />
+                <ValidationMessage For="@(() => studentResponse.studentId)" />
+            </div>
+
+
+
+
+            <!-- dropdown field for class selection -->
+            <div class="class-field">
+                <label class="field-label">Class</label>
+
+                @if (classesList.Count > 0)
+                {
+                    <InputSelect @bind-Value="studentResponse!.classId">
+                        <!-- default value -->
+                        <option value="@Guid.Empty">Select a Class</option>
+                        @foreach (ClassDto classDto in classesList)
+                        {
+                            <!-- for each class, display its name and tie value with its Guid -->
+                            <option value="@classDto.ClassId">@classDto.ClassPrefix@classDto.ClassNumber @classDto.ClassName (@classDto.StartTime - @classDto.EndTime)</option>
+                        }
+
+                    </InputSelect>
+                    <ValidationMessage For="@(() => studentResponse.classId)" />
+                } else
+                {
+                    <!-- if there are no classes to choose from, do not allow selection -->
+                    <span style="color:red; font-style: italic;">No classes to choose from right now.</span>
+                }
+
+            </div>
+
+
+
+            <!-- form password field -->
+            <div class="password-field">
+                <label class="field-label">Password</label>
+                <InputText @bind-Value="studentResponse!.formPassword" placeholder="Enter your password" />
+                <ValidationMessage For="@(() => studentResponse.formPassword)" />
+            </div>
+
+
+
+            <!-- button to handle form submission -->
+            <div class="submit-button-container">
+                <button type="submit" disabled="@isSubmitting">Submit</button>
+            </div>
+
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+        </EditForm>
     }
-    <EditForm Model="@studentResponse" OnValidSubmit="@SubmitForm">
-        <!-- field for student id -->
-        <div class="student-id-field">
-            <label class="field-label">Student ID</label>
-            <InputText @bind-Value="studentResponse!.studentId" placeholder="Enter your student ID" />
-            <ValidationMessage For="@(() => studentResponse.studentId)" />
-        </div>
-
-
-
-
-        <!-- dropdown field for class selection -->
-        <div class="class-field">
-            <label class="field-label">Class</label>
-
-            @if (classesList.Count > 0)
-            {
-                <InputSelect @bind-Value="studentResponse!.classId">
-                    <!-- default value -->
-                    <option value="@Guid.Empty">Select a Class</option>
-                    @foreach (ClassDto classDto in classesList)
-                    {
-                        <!-- for each class, display its name and tie value with its Guid -->
-                        <option value="@classDto.ClassId">@classDto.ClassPrefix@classDto.ClassNumber @classDto.ClassName (@classDto.StartTime - @classDto.EndTime)</option>
-                    }
-
-                </InputSelect>
-                <ValidationMessage For="@(() => studentResponse.classId)" />
-            } else
-            {
-                <!-- if there are no classes to choose from, do not allow selection -->
-                <span style="color:red; font-style: italic;">No classes to choose from right now.</span>
-            }
-
-        </div>
-
-
-
-        <!-- form password field -->
-        <div class="password-field">
-            <label class="field-label">Password</label>
-            <InputText @bind-Value="studentResponse!.formPassword" placeholder="Enter your password" />
-            <ValidationMessage For="@(() => studentResponse.formPassword)" />
-        </div>
-
-
-
-        <!-- button to handle form submission -->
-        <div class="submit-button-container">
-            <button type="submit" disabled="@isSubmitting">Submit</button>
-        </div>
-
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-    </EditForm>
 </div>
 
 @code {
@@ -104,6 +113,9 @@ Written by Ethan Maher
 
     private bool showLoginError = false;
     private bool isSubmitting = false;
+
+    // used to show loading display when page is loading
+    private bool isLoading = true;
 
     // list to store classes for dropdown
     public List<ClassDto> classesList = new List<ClassDto>();
@@ -119,11 +131,12 @@ Written by Ethan Maher
         studentResponse ??= new();
         // Load classes
         await LoadClassesAsync();
-        
+
 
         // for valid classes load professors
 
         System.Diagnostics.Debug.WriteLine("Home component initialized");
+        isLoading = false;
     }
 
     // load classes from database
