@@ -63,7 +63,6 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpPost("exists")]
         public async Task<ActionResult<bool>> StudentExists([FromBody] String UtdId)
         {
-			System.Diagnostics.Debug.WriteLine($"Request for student {UtdId}");
 			if (string.IsNullOrWhiteSpace(UtdId))
             {
                 return BadRequest("UtdId is required."); // 400
