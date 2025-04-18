@@ -2,7 +2,7 @@ using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Data;
 using Microsoft.AspNetCore.Builder;
-using AttendanceAppProject.ApiService.Dto.Models;
+using AttendanceAppProject.Dto.Models;
 using AttendanceAppProject.ApiService.JsonConverters;
 using AttendanceAppProject.ApiService.Services;
 

@@ -3,7 +3,7 @@ using AttendanceAppProject.ApiService.Services;
 using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using AttendanceAppProject.ApiService.Dto.Models;
+using AttendanceAppProject.Dto.Models;
 
 // API controller for Quiz Instance
 

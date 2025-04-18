@@ -1,50 +1,37 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Net.Http;
 using System.Windows;
-using AttendanceAppProject.ProfessorLogin;
-using AttendanceAppProject.ProfessorLogin.Models;
-using Microsoft.Extensions.DependencyInjection;
+using AttendanceAppProject.ProfessorLogin.Services;
+using AttendanceAppProject.Dto.Models;
 
 namespace AttendanceAppProject.ProfessorLogin
 {
     public partial class App : Application
     {
         public IServiceProvider ServiceProvider { get; private set; }
-        public static ProfessorModel CurrentProfessor { get; set; }
+        public static ProfessorDto CurrentProfessor { get; set; }
 
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-            // Configure services
-            var serviceCollection = new ServiceCollection();
-            ConfigureServices(serviceCollection);
+            var services = new ServiceCollection();
+            ConfigureServices(services);
+            ServiceProvider = services.BuildServiceProvider();
 
-            ServiceProvider = serviceCollection.BuildServiceProvider();
-
-            // Start with the login window
             var loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
             loginWindow.Show();
         }
 
         private void ConfigureServices(IServiceCollection services)
         {
-            // Configure HttpClient with base address
-            services.AddSingleton<HttpClient>(provider =>
+            services.AddSingleton(new HttpClient
             {
-                var client = new HttpClient
-                {
-                    BaseAddress = new Uri("http://localhost:5001/")
-                };
-                return client;
+                BaseAddress = new Uri("https://localhost:7530/")
             });
 
-            // Register the authentication services
             services.AddSingleton<IProfessorAuthClient, ProfessorAuthClient>();
-            services.AddSingleton<IProfessorAuthService, ProfessorAuthService>();
-
-            // Register windows with HttpClient dependency injection
             services.AddTransient<LoginWindow>();
-            services.AddTransient<AttendanceWindow>(provider =>
-                new AttendanceWindow(provider.GetRequiredService<HttpClient>()));
+            services.AddTransient<AttendanceWindow>();
         }
     }
 }

@@ -75,7 +75,7 @@ namespace AttendanceAppProject.ProfessorLogin
                 StatusTextBlock.Text = "Authenticating...";
 
                 // First try with the API
-                ProfessorModel professor = await _authClient.LoginAsync(professorId, password);
+                var professor = await _authClient.LoginAsync(professorId, password);
 
                 // If API fails, fall back to mock data for testing purposes
                 if (professor == null && (
@@ -98,7 +98,7 @@ namespace AttendanceAppProject.ProfessorLogin
                     // if (rememberMe) { /* Save credentials logic */ }
 
                     // Show a welcome message
-                    MessageBox.Show($"Welcome, {professor.FullName}!\nDepartment: {professor.Department}",
+                    MessageBox.Show($"Welcome, {professor.FirstName}!\nDepartment: {professor.Department}",
                         "Login Successful", MessageBoxButton.OK, MessageBoxImage.Information);
 
                     // Open the attendance window
