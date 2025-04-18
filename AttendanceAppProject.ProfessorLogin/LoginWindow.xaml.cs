@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
-using AttendanceAppProject.ProfessorLogin.Models;
+using AttendanceAppProject.Dto.Models;
 using AttendanceAppProject.ProfessorLogin.Services;
 using System.Net.Http;
 

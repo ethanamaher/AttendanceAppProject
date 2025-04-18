@@ -4,14 +4,14 @@ using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using AttendanceAppProject.ProfessorLogin.Models;
+using AttendanceAppProject.Dto.Models;
 using AttendanceAppProject.ApiService.Data.Models;
 
 namespace AttendanceAppProject.ProfessorLogin
 {
     public interface IProfessorAuthService
     {
-        Task<ProfessorModel> AuthenticateAsync(string professorId, string password);
+        Task<ProfessorDto> AuthenticateAsync(string professorId, string password);
     }
 
     public class ProfessorAuthService : IProfessorAuthService
@@ -23,7 +23,7 @@ namespace AttendanceAppProject.ProfessorLogin
             _httpClient = httpClient;
         }
 
-        public async Task<ProfessorModel> AuthenticateAsync(string professorId, string password)
+        public async Task<ProfessorDto> AuthenticateAsync(string professorId, string password)
         {
             try
             {
@@ -40,10 +40,11 @@ namespace AttendanceAppProject.ProfessorLogin
                         // For demo purposes, accept any password
                         // In a real application, the API would validate the password
 
-                        return new ProfessorModel
+                        return new ProfessorDto
                         {
-                            ProfessorId = professor.UtdId,
-                            FullName = $"{professor.FirstName} {professor.LastName}",
+                            UtdId = professor.UtdId,
+                            FirstName = $"{professor.FirstName}",
+                            LastName = $"{professor.LastName}",
                             Department = "Computer Science", // Hard-coded for demo
                             Email = $"{professor.FirstName.ToLower()}.{professor.LastName.ToLower()}@utdallas.edu"
                         };

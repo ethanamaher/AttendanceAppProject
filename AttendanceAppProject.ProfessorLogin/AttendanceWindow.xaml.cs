@@ -471,6 +471,12 @@ namespace AttendanceAppProject.ProfessorLogin
             }
         }
 
+        // define this properly later on - just added it here for now to avoid an error
+        private void ClassComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ApplyFilters();
+        }
+
         private void DateFilterPicker_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
         {
             try
