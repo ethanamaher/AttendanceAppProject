@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using AttendanceAppProject.ApiService.Data;
+using AttendanceAppProject.ApiService.Services.DesktopApp;
 
 namespace AttendanceAppProject.ApiService
 {

@@ -8,10 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Services;
 using AttendanceAppProject.Dto.Models;
 
-// API controller for Professor
 namespace AttendanceAppProject.ApiService.Controllers
 {
-    [Route("api/[controller]")] // Automatically becomes "api/professor"
+    [Route("api/[controller]")]
     [ApiController]
     public class ProfessorController : ControllerBase
     {
@@ -21,6 +20,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         {
             _service = service;
         }
+
         /* GET: api/professor
          * Get all professor records
          * - request body: none
@@ -31,6 +31,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         {
             return Ok(await _service.GetProfessorsAsync());
         }
+
         /* POST: api/Professor
          * Add a professor to the database
          * - request body: ProfessorDto
@@ -40,8 +41,23 @@ namespace AttendanceAppProject.ApiService.Controllers
         public async Task<ActionResult<Professor>> AddProfessor([FromBody] ProfessorDto dto)
         {
             var professor = await _service.AddProfessorAsync(dto);
-
             return CreatedAtAction(nameof(GetProfessors), new { id = professor.UtdId }, professor);
+        }
+
+        /* POST: api/professor/login
+         * Authenticate a professor by ID and password
+         * - request body: object with ProfessorId and Password
+         * - response body: Professor or 401 Unauthorized
+         */
+        [HttpPost("login")]
+        public async Task<ActionResult<Professor>> Login([FromBody] ProfessorDto dto)
+        {
+            var professor = await _service.AuthenticateProfessorAsync(dto.UtdId, dto.Password);
+
+            if (professor == null)
+                return Unauthorized("Invalid credentials.");
+
+            return Ok(professor);
         }
     }
 }
