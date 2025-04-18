@@ -7,20 +7,20 @@ using AttendanceAppProject.ApiService.Services;
 using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using AttendanceAppProject.Dto.Models;  
+using AttendanceAppProject.Dto.Models;
 
 namespace AttendanceAppProject.ApiService.Controllers
 {
-	[Route("api/[controller]")] // Automatically becomes "api/student"
-	[ApiController]
-	public class StudentController : ControllerBase
-	{
-		private readonly StudentService _service;
+    [Route("api/[controller]")] // Automatically becomes "api/student"
+    [ApiController]
+    public class StudentController : ControllerBase
+    {
+        private readonly StudentService _service;
 
-		public StudentController(StudentService service)
-		{
-			_service = service;
-		}
+        public StudentController(StudentService service)
+        {
+            _service = service;
+        }
 
         /* GET: api/Student
          * Get all students from the database
@@ -53,14 +53,14 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpPost("exists")]
         public async Task<ActionResult<bool>> StudentExists([FromBody] String UtdId)
         {
-			System.Diagnostics.Debug.WriteLine($"Request for student {UtdId}");
-			if (string.IsNullOrWhiteSpace(UtdId))
+            System.Diagnostics.Debug.WriteLine($"Request for student {UtdId}");
+            if (string.IsNullOrWhiteSpace(UtdId))
             {
                 return BadRequest("UtdId is required."); // 400
             }
 
             var exists = await _service.StudentExistsAsync(UtdId);
-            if(!exists)
+            if (!exists)
             {
                 return NotFound($"Student with ID {UtdId} not found"); // 404
             }

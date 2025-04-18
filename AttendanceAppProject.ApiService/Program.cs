@@ -22,7 +22,7 @@ builder.Services.AddProblemDetails();
 
 // Register EF Core with MySQL, add database context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
+	options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
 		ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
 
 // Enable Controllers, add JSON converters

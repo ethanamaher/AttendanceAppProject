@@ -2,6 +2,7 @@
  * Handles HTTP GET and POST requests for attendance instances, allowing for retrieval and creation of passwords, as well as verifying if a password sent in by the client side exists in the database.
  * Written by Maaz Raza 
  */
+
 using Microsoft.AspNetCore.Mvc;
 using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ using AttendanceAppProject.ApiService.Services;
 using AttendanceAppProject.Dto.Models;
 
 // API Controller for Password
+
 namespace AttendanceAppProject.ApiService.Controllers
 {
     [Route("api/[controller]")] // Automatically becomes "api/password"
@@ -22,6 +24,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         {
             _service = service;
         }
+
         /* GET: api/password
          * Get all passwords
          * - request body: none
@@ -32,6 +35,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         {
             return Ok(await _service.GetPasswordsAsync());
         }
+
         /* POST: api/Password
          * Add a password to the database
          * - request body: PasswordDto
@@ -60,3 +64,4 @@ namespace AttendanceAppProject.ApiService.Controllers
 
     }
 }
+
