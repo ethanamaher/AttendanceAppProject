@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using AttendanceAppProject.ProfessorLogin.Models;
+using AttendanceAppProject.Dto.Models;
 using AttendanceAppProject.ProfessorLogin.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows.Data;
@@ -11,26 +11,24 @@ using System.ComponentModel;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using AttendanceAppProject.ApiService.Data.Models;
-using AttendanceAppProject.ApiService.Dto.Models;
 
 namespace AttendanceAppProject.ProfessorLogin
 {
     public partial class AttendanceWindow : Window
     {
-        private List<AttendanceRecord> _allAttendanceRecords;
-        private List<AttendanceRecord> _filteredRecords;
-        private List<Class> _professorClasses;
-        private Professor _currentProfessor;
+        private List<AttendanceInstanceDto> _allAttendanceInstanceDtos;
+        private List<AttendanceInstanceDto> _filteredRecords;
+        private List<ClassDto> _professorClassDtos;
+        private ProfessorDto _currentProfessor;
 
         private readonly HttpClient _httpClient;
 
         public AttendanceWindow(HttpClient httpClient)
         {
             InitializeComponent();
-            _allAttendanceRecords = new List<AttendanceRecord>();
-            _filteredRecords = new List<AttendanceRecord>();
-            _professorClasses = new List<Class>();
+            _allAttendanceInstanceDtos = new List<AttendanceInstanceDto>();
+            _filteredRecords = new List<AttendanceInstanceDto>();
+            _professorClassDtos = new List<ClassDto>();
             _httpClient = httpClient;
 
             // Set default sorting if the control exists
@@ -46,11 +44,11 @@ namespace AttendanceAppProject.ProfessorLogin
             try
             {
                 // Display professor information
-                if (App.Current is App app && app.ServiceProvider.GetService<ProfessorModel>() is ProfessorModel currentProfessor)
+                if (App.Current is App app && app.ServiceProvider.GetService<ProfessorDto>() is ProfessorDto currentProfessor)
                 {
                     if (ProfessorNameTextBlock != null)
                     {
-                        ProfessorNameTextBlock.Text = $"Welcome, {currentProfessor.FullName}";
+                        ProfessorNameTextBlock.Text = $"Welcome, {currentProfessor.FirstName}";
                     }
 
                     if (DepartmentTextBlock != null)
@@ -59,13 +57,13 @@ namespace AttendanceAppProject.ProfessorLogin
                     }
 
                     // Set window title
-                    this.Title = $"Student Attendance Database - {currentProfessor.FullName}";
+                    this.Title = $"Student Attendance Database - {currentProfessor.FirstName}";
 
                     // Fetch professor data from the API
-                    await GetProfessorFromApiAsync(currentProfessor.ProfessorId);
+                    await GetProfessorFromApiAsync(currentProfessor.UtdId);
 
                     // Load professor's classes
-                    await LoadProfessorClasses();
+                    await LoadProfessorClassDtos();
 
                     // Load attendance data
                     await LoadAttendanceData();
@@ -102,13 +100,13 @@ namespace AttendanceAppProject.ProfessorLogin
                 var response = await _httpClient.GetAsync("api/Professor");
                 if (response.IsSuccessStatusCode)
                 {
-                    var professors = await response.Content.ReadFromJsonAsync<List<Professor>>();
+                    var professors = await response.Content.ReadFromJsonAsync<List<ProfessorDto>>();
                     _currentProfessor = professors.FirstOrDefault(p => p.UtdId == professorId);
 
                     if (_currentProfessor == null)
                     {
                         // Fallback to mock data for testing
-                        _currentProfessor = new Professor
+                        _currentProfessor = new ProfessorDto
                         {
                             UtdId = professorId,
                             FirstName = "Mock",
@@ -121,7 +119,7 @@ namespace AttendanceAppProject.ProfessorLogin
             {
                 System.Diagnostics.Debug.WriteLine($"Error getting professor: {ex.Message}");
                 // Create a mock professor for testing
-                _currentProfessor = new Professor
+                _currentProfessor = new ProfessorDto
                 {
                     UtdId = professorId,
                     FirstName = "Mock",
@@ -130,24 +128,24 @@ namespace AttendanceAppProject.ProfessorLogin
             }
         }
 
-        private async Task LoadProfessorClasses()
+        private async Task LoadProfessorClassDtos()
         {
             try
             {
                 if (_currentProfessor == null) return;
 
-                var response = await _httpClient.GetAsync($"api/Class/professor/{_currentProfessor.UtdId}");
+                var response = await _httpClient.GetAsync($"api/ClassDto/professor/{_currentProfessor.UtdId}");
 
                 if (response.IsSuccessStatusCode)
                 {
-                    _professorClasses = await response.Content.ReadFromJsonAsync<List<Class>>();
+                    _professorClassDtos = await response.Content.ReadFromJsonAsync<List<ClassDto>>();
 
-                    // Clear and add the "All Classes" option
+                    // Clear and add the "All ClassDtos" option
                     ClassComboBox.Items.Clear();
-                    ClassComboBox.Items.Add(new ComboBoxItem { Content = "All Classes" });
+                    ClassComboBox.Items.Add(new ComboBoxItem { Content = "All ClassDtos" });
 
                     // Add each class
-                    foreach (var classItem in _professorClasses)
+                    foreach (var classItem in _professorClassDtos)
                     {
                         ClassComboBox.Items.Add(new ComboBoxItem
                         {
@@ -156,33 +154,33 @@ namespace AttendanceAppProject.ProfessorLogin
                         });
                     }
 
-                    // Select "All Classes" by default
+                    // Select "All ClassDtos" by default
                     ClassComboBox.SelectedIndex = 0;
                 }
                 else
                 {
                     // If no classes found, populate with mock data for testing
-                    PopulateWithMockClasses();
+                    PopulateWithMockClassDtos();
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading classes: {ex.Message}");
                 // Populate with mock data for testing
-                PopulateWithMockClasses();
+                PopulateWithMockClassDtos();
             }
         }
 
-        private void PopulateWithMockClasses()
+        private void PopulateWithMockClassDtos()
         {
             // Clear and add mock classes for testing
             ClassComboBox.Items.Clear();
-            ClassComboBox.Items.Add(new ComboBoxItem { Content = "All Classes" });
+            ClassComboBox.Items.Add(new ComboBoxItem { Content = "All ClassDtos" });
             ClassComboBox.Items.Add(new ComboBoxItem { Content = "CS 4485: Senior Design", Tag = Guid.NewGuid() });
             ClassComboBox.Items.Add(new ComboBoxItem { Content = "CS 3354: Software Engineering", Tag = Guid.NewGuid() });
             ClassComboBox.Items.Add(new ComboBoxItem { Content = "CS 2336: Computer Science II", Tag = Guid.NewGuid() });
 
-            // Select "All Classes" by default
+            // Select "All ClassDtos" by default
             ClassComboBox.SelectedIndex = 0;
         }
 
@@ -193,36 +191,24 @@ namespace AttendanceAppProject.ProfessorLogin
                 // First, attempt to retrieve data from the API
                 if (_currentProfessor != null)
                 {
-                    List<AttendanceRecord> records = new List<AttendanceRecord>();
+                    List<AttendanceInstanceDto> records = new List<AttendanceInstanceDto>();
                     bool useApiData = false;
 
                     try
                     {
-                        foreach (var classItem in _professorClasses)
+                        foreach (var classItem in _professorClassDtos)
                         {
                             var response = await _httpClient.GetAsync($"api/AttendanceInstance/class/{classItem.ClassId}");
 
                             if (response.IsSuccessStatusCode)
                             {
-                                var attendanceInstances = await response.Content.ReadFromJsonAsync<List<AttendanceInstance>>();
+                                var attendanceInstances = await response.Content.ReadFromJsonAsync<List<AttendanceInstanceDto>>();
 
                                 // For each attendance instance, create a record
                                 int index = 1;
                                 foreach (var instance in attendanceInstances)
                                 {
-                                    var record = new AttendanceRecord
-                                    {
-                                        Id = index++,
-                                        OrdinalNumber = records.Count + 1,
-                                        ProfessorId = _currentProfessor.UtdId,
-                                        ProfessorName = $"{_currentProfessor.FirstName} {_currentProfessor.LastName}",
-                                        StudentId = instance.StudentId,
-                                        Class = $"{classItem.ClassPrefix} {classItem.ClassNumber}",
-                                        CheckInTime = instance.DateTime ?? DateTime.Now,
-                                        QuizQuestion = "Default Question", // We would need to fetch this from QuizInstance
-                                        QuizAnswer = "Default Answer",     // We would need to fetch this from QuizResponse
-                                        IsLate = instance.IsLate ?? false
-                                    };
+                                    var record = instance;
 
                                     records.Add(record);
                                 }
@@ -239,12 +225,12 @@ namespace AttendanceAppProject.ProfessorLogin
 
                     if (useApiData && records.Count > 0)
                     {
-                        _allAttendanceRecords = records;
+                        _allAttendanceInstanceDtos = records;
                     }
                     else
                     {
                         // Fallback to mock data
-                        _allAttendanceRecords = MockDataProvider.GenerateMockAttendanceData(
+                        _allAttendanceInstanceDtos = MockDataProvider.GenerateMockAttendanceData(
                             _currentProfessor.UtdId,
                             $"{_currentProfessor.FirstName} {_currentProfessor.LastName}");
                     }
@@ -258,7 +244,7 @@ namespace AttendanceAppProject.ProfessorLogin
                 MessageBox.Show($"Error loading attendance data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
                 // Fallback to mock data
-                _allAttendanceRecords = MockDataProvider.GenerateMockAttendanceData(
+                _allAttendanceInstanceDtos = MockDataProvider.GenerateMockAttendanceData(
                     _currentProfessor?.UtdId ?? "unknown",
                     _currentProfessor != null ? $"{_currentProfessor.FirstName} {_currentProfessor.LastName}" : "Unknown Professor");
 
@@ -271,13 +257,13 @@ namespace AttendanceAppProject.ProfessorLogin
             try
             {
                 // Make sure we have attendance records to filter
-                if (_allAttendanceRecords == null)
+                if (_allAttendanceInstanceDtos == null)
                 {
-                    _allAttendanceRecords = new List<AttendanceRecord>();
+                    _allAttendanceInstanceDtos = new List<AttendanceInstanceDto>();
                 }
 
                 // Create a new filtered list from all records
-                _filteredRecords = new List<AttendanceRecord>(_allAttendanceRecords);
+                _filteredRecords = new List<AttendanceInstanceDto>(_allAttendanceInstanceDtos);
 
                 // Apply class filter if selected
                 if (ClassComboBox != null && ClassComboBox.SelectedIndex > 0) // Skip "All Classes"
@@ -285,8 +271,8 @@ namespace AttendanceAppProject.ProfessorLogin
                     var selectedItem = ClassComboBox.SelectedItem as ComboBoxItem;
                     if (selectedItem != null)
                     {
-                        string selectedClass = selectedItem.Content?.ToString() ?? string.Empty;
-                        _filteredRecords = _filteredRecords.Where(r => r.Class == selectedClass).ToList();
+                        string selectedClassId = selectedItem.Content?.ToString() ?? string.Empty;
+                        _filteredRecords = _filteredRecords.Where(r => r.ClassId.ToString() == selectedClassId).ToList();
                     }
                 }
 
@@ -295,7 +281,7 @@ namespace AttendanceAppProject.ProfessorLogin
                 {
                     DateTime selectedDate = DateFilterPicker.SelectedDate.Value;
                     _filteredRecords = _filteredRecords.Where(r =>
-                        r.CheckInTime.Date == selectedDate.Date).ToList();
+                        r.DateTime == selectedDate.Date).ToList();
                 }
 
                 // Apply date range filter if both dates are selected
@@ -306,7 +292,7 @@ namespace AttendanceAppProject.ProfessorLogin
                     DateTime endDate = EndDatePicker.SelectedDate.Value.AddDays(1).AddSeconds(-1); // End of day
 
                     _filteredRecords = _filteredRecords.Where(r =>
-                        r.CheckInTime >= startDate && r.CheckInTime <= endDate).ToList();
+                        r.DateTime >= startDate && r.DateTime <= endDate).ToList();
 
                     if (DateRangeTextBlock != null)
                     {
@@ -333,11 +319,13 @@ namespace AttendanceAppProject.ProfessorLogin
                 ApplySorting();
 
                 // Update ordinal numbers
+                /*
                 int counter = 1;
                 foreach (var record in _filteredRecords)
                 {
                     record.OrdinalNumber = counter++;
                 }
+                */
 
                 // Update the DataGrid
                 if (AttendanceDataGrid != null)
@@ -385,16 +373,16 @@ namespace AttendanceAppProject.ProfessorLogin
                 switch (sortOption)
                 {
                     case "Sort by Date (New-Old)":
-                        _filteredRecords = _filteredRecords.OrderByDescending(r => r.CheckInTime).ToList();
+                        _filteredRecords = _filteredRecords.OrderByDescending(r => r.DateTime).ToList();
                         break;
                     case "Sort by Date (Old-New)":
-                        _filteredRecords = _filteredRecords.OrderBy(r => r.CheckInTime).ToList();
+                        _filteredRecords = _filteredRecords.OrderBy(r => r.DateTime).ToList();
                         break;
                     case "Sort by Student ID":
                         _filteredRecords = _filteredRecords.OrderBy(r => r.StudentId).ToList();
                         break;
-                    case "Sort by Class":
-                        _filteredRecords = _filteredRecords.OrderBy(r => r.Class).ThenBy(r => r.StudentId).ToList();
+                    case "Sort by ClassDto":
+                        _filteredRecords = _filteredRecords.OrderBy(r => r.ClassId).ThenBy(r => r.StudentId).ToList();
                         break;
                 }
             }
@@ -420,14 +408,14 @@ namespace AttendanceAppProject.ProfessorLogin
 
                 // Update class distribution
                 var classDistribution = _filteredRecords
-                    .GroupBy(r => r.Class)
-                    .Select(g => new { Class = g.Key, Count = g.Count() })
+                    .GroupBy(r => r.ClassId)
+                    .Select(g => new { ClassDto = g.Key, Count = g.Count() })
                     .OrderByDescending(x => x.Count);
 
-                string distribution = "Class distribution:\n";
+                string distribution = "ClassDto distribution:\n";
                 foreach (var item in classDistribution)
                 {
-                    distribution += $"- {item.Class}: {item.Count} records\n";
+                    distribution += $"- {item.ClassDto}: {item.Count} records\n";
                 }
 
                 ClassDistributionTextBlock.Text = distribution;
@@ -450,7 +438,7 @@ namespace AttendanceAppProject.ProfessorLogin
                 }
 
                 // Refresh data
-                await LoadProfessorClasses();
+                await LoadProfessorClassDtos();
                 await LoadAttendanceData();
 
                 // Update status
@@ -471,7 +459,7 @@ namespace AttendanceAppProject.ProfessorLogin
             }
         }
 
-        private void ClassComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ClassDtoComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             try
             {
@@ -615,16 +603,17 @@ namespace AttendanceAppProject.ProfessorLogin
             try
             {
                 // Get the clicked record
-                if (sender is Button button && button.DataContext is AttendanceRecord record)
+                if (sender is Button button && button.DataContext is AttendanceInstanceDto record)
                 {
                     // Show details in a message box
                     MessageBox.Show(
                         $"Student ID: {record.StudentId}\n" +
-                        $"Class: {record.Class}\n" +
-                        $"Check-in Time: {record.CheckInTime}\n" +
-                        $"Quiz Question: {record.QuizQuestion}\n" +
-                        $"Quiz Answer: {record.QuizAnswer}\n" +
-                        $"Late: {(record.IsLate ? "Yes" : "No")}",
+                        $"ClassDto: {record.ClassId}\n" +
+                        $"Check-in Time: {record.DateTime}\n",
+                        // can retrieve this data via an api call later on
+                        // $"Quiz Question: {record.QuizQuestion}\n" +
+                        // $"Quiz Answer: {record.QuizAnswer}\n" +
+                        // $"Late: {(record.IsLate ? "Yes" : "No")}",
                         "Attendance Record Details",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
@@ -641,7 +630,7 @@ namespace AttendanceAppProject.ProfessorLogin
             try
             {
                 // Get the clicked record
-                if (sender is Button button && button.DataContext is AttendanceRecord record)
+                if (sender is Button button && button.DataContext is AttendanceInstanceDto record)
                 {
                     // In a real application, you would open a dialog to edit the record
                     // For now, let's demonstrate API integration by toggling the IsLate flag
@@ -653,7 +642,7 @@ namespace AttendanceAppProject.ProfessorLogin
                     Guid? classId = null;
                     foreach (ComboBoxItem item in ClassComboBox.Items)
                     {
-                        if (item.Content.ToString() == record.Class && item.Tag is Guid id)
+                        if (item.Content.ToString() == record.ClassId.ToString() && item.Tag is Guid id)
                         {
                             classId = id;
                             break;
@@ -668,10 +657,10 @@ namespace AttendanceAppProject.ProfessorLogin
                             var dto = new
                             {
                                 StudentId = record.StudentId,
-                                ClassId = classId.Value,
+                                ClassDtoId = classId.Value,
                                 IsLate = record.IsLate,
                                 ExcusedAbsence = false,
-                                DateTime = record.CheckInTime
+                                DateTime = record.DateTime
                             };
 
                             var response = await _httpClient.PostAsJsonAsync("api/AttendanceInstance/absent-or-late", dto);
@@ -697,7 +686,7 @@ namespace AttendanceAppProject.ProfessorLogin
                     // Show a message about the edit
                     MessageBox.Show(
                         $"Updated record for Student ID: {record.StudentId}\n" +
-                        $"Changed 'Late' status to: {(record.IsLate ? "Yes" : "No")}",
+                        $"Changed 'Late' status to: {((bool)record.IsLate ? "Yes" : "No")}",
                         "Edit Attendance Record",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
