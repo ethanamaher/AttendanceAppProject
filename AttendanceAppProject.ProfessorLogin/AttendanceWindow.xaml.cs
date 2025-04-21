@@ -8,6 +8,7 @@ using AttendanceAppProject.ProfessorLogin.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows.Data;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
@@ -25,6 +26,8 @@ namespace AttendanceAppProject.ProfessorLogin
 
         public AttendanceWindow(HttpClient httpClient)
         {
+            Debug.WriteLine("prof from dash: " + App.CurrentProfessor.FirstName + " " + App.CurrentProfessor.LastName);
+            Debug.WriteLine("Dashboard init");
             InitializeComponent();
             _allAttendanceInstanceDtos = new List<AttendanceInstanceDto>();
             _filteredRecords = new List<AttendanceInstanceDto>();
@@ -37,12 +40,23 @@ namespace AttendanceAppProject.ProfessorLogin
                 SortByComboBox.SelectedIndex = 0;
             }
         }
-
+        //object sender, RoutedEventArgs e
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("Window Loaded");
+            Debug.WriteLine("Window Loaded");
             try
             {
+                this.Title = $"Student Attendance Database - {App.CurrentProfessor.FirstName} {App.CurrentProfessor.LastName}";
+
+                // Fetch professor data from the API
+                await GetProfessorFromApiAsync(App.CurrentProfessor.UtdId);
+
+                // Load professor's classes
+                await LoadProfessorClassDtos();
+
+                // Load attendance data
+                await LoadAttendanceData();
+                
                 // Display professor information
                 _currentProfessor = App.CurrentProfessor;
 
@@ -110,6 +124,7 @@ namespace AttendanceAppProject.ProfessorLogin
 
         private async Task LoadProfessorClassDtos()
         {
+            System.Diagnostics.Debug.WriteLine($"Loading the classes for {_currentProfessor}");
             try
             {
                 if (_currentProfessor == null) return;

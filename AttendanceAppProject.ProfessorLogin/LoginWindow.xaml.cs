@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using AttendanceAppProject.Dto.Models;
 using AttendanceAppProject.ProfessorLogin.Services;
 using System.Net.Http;
+using System.Diagnostics;
 
 namespace AttendanceAppProject.ProfessorLogin
 {
@@ -11,11 +12,18 @@ namespace AttendanceAppProject.ProfessorLogin
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IProfessorAuthClient _authClient;
+        //Chris Palmer
+        //Professor Model is from the AttendanceAppProject.ProfessorLogin.Models namespace
+        //declare empty professor instance
+        public ProfessorDto? professor;
 
         public LoginWindow(IServiceProvider serviceProvider)
         {
+            Debug.WriteLine("Login init");
             InitializeComponent();
             _serviceProvider = serviceProvider;
+            //will return null if authentication failed
+            //will return ProfessorModel otherwise
             _authClient = serviceProvider.GetRequiredService<IProfessorAuthClient>();
             ProfessorIdTextBox.Focus();
 
@@ -46,17 +54,26 @@ namespace AttendanceAppProject.ProfessorLogin
             }
         }
 
-        private async void LoginButton_Click(object sender, RoutedEventArgs e)
+        //Chris Palmer
+        public ProfessorDto GetProfessor()
         {
+            return this.professor;            
+        }
+        public async void LoginButton_Click(object sender, RoutedEventArgs e)
+        {
+
+            //Christopher Palmer
             try
             {
-                // Clear previous status
-                StatusTextBlock.Text = string.Empty;
 
-                // Get entered credentials
+                //declaring professor object
+                //get entered information
                 string professorId = ProfessorIdTextBox.Text.Trim();
                 string password = PasswordBox.Password;
+                Debug.WriteLine("profID: " + professorId + ", pass: " + password);
+                
 
+                //Ensuring both fields are filled out
                 if (string.IsNullOrWhiteSpace(professorId))
                 {
                     StatusTextBlock.Text = "Please enter your Professor ID";
@@ -70,40 +87,47 @@ namespace AttendanceAppProject.ProfessorLogin
                     PasswordBox.Focus();
                     return;
                 }
+                // instantiate professor from database. returns ProfessorModel
+                this.professor = await _authClient.LoginAsync(professorId, password);
+                
+                
+                // Clear previous status
+                StatusTextBlock.Text = string.Empty;
 
                 // Show loading message
                 StatusTextBlock.Text = "Authenticating...";
 
-                // First try with the API
-                var professor = await _authClient.LoginAsync(professorId, password);
 
                 // If API fails, fall back to mock data for testing purposes
-                if (professor == null && (
+                if (this.professor == null && (
                     professorId == "js123" ||
                     professorId == "jd123" ||
                     professorId == "rj123" ||
                     professorId == "test"))
                 {
-                    professor = MockDataProvider.GetMockProfessor(professorId, password);
+                    this.professor = MockDataProvider.GetMockProfessor(professorId, password);
                     StatusTextBlock.Text = "API login failed. Using mock data for demo purposes.";
                 }
 
-                if (professor != null)
+                if (this.professor != null)
                 {
                     // Store the professor data for use in other windows
-                    App.CurrentProfessor = professor;
+                    App.CurrentProfessor = this.professor;
 
                     // Handle "Remember Me" checkbox if needed
                     bool rememberMe = RememberMeCheckBox.IsChecked ?? false;
                     // if (rememberMe) { /* Save credentials logic */ }
 
                     // Show a welcome message
-                    MessageBox.Show($"Welcome, {professor.FirstName}!\nDepartment: {professor.Department}",
+                    MessageBox.Show($"Welcome, {this.professor.FirstName} {this.professor.LastName}!\nDepartment: {this.professor.Department}",
                         "Login Successful", MessageBoxButton.OK, MessageBoxImage.Information);
 
                     // Open the attendance window
                     var attendanceWindow = _serviceProvider.GetRequiredService<AttendanceWindow>();
                     attendanceWindow.Show();
+
+                    // Update MainWindow reference
+                    Application.Current.MainWindow = attendanceWindow;
 
                     // Close the login window
                     this.Close();

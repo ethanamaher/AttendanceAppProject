@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Windows;
 using AttendanceAppProject.ProfessorLogin.Services;
 using AttendanceAppProject.Dto.Models;
+using System.Diagnostics;
 
 namespace AttendanceAppProject.ProfessorLogin
 {
@@ -14,11 +15,14 @@ namespace AttendanceAppProject.ProfessorLogin
 
         private void Application_Startup(object sender, StartupEventArgs e)
         {
+            Debug.WriteLine("Program.cs & Application Startup");
             var services = new ServiceCollection();
+            Debug.WriteLine("Services Configuration");
             ConfigureServices(services);
             ServiceProvider = services.BuildServiceProvider();
 
             var loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
+            Debug.WriteLine("login instance created");
             loginWindow.Show();
         }
 

@@ -20,7 +20,8 @@ namespace AttendanceAppProject.ProfessorLogin
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            __httpClient = new HttpClient()
+            Debug.WriteLine("On Startup");
+            //__httpClient = new HttpClient()
             {
                 BaseAddress = new Uri("http://localhost:5001/") // Trailing slash is important!
             };
@@ -36,14 +37,15 @@ namespace AttendanceAppProject.ProfessorLogin
         public IConfiguration? Configuration { get; private set; }
 
         // Static property to store logged in professor data for use across windows
-        public static Professor CurrentProfessor { get; set; }
+        //public static Professor CurrentProfessor { get; set; }
 
         private static App _current;
         public static new App Current => _current ??= (App)Application.Current;
 
 
-        private void Application_Startup(object sender, StartupEventArgs e)
+        private async void Application_Startup(object sender, StartupEventArgs e)
         {
+            Debug.WriteLine("App Startup");
             _current = this; // Set the static reference
             base.OnStartup(e);
 
@@ -65,8 +67,23 @@ namespace AttendanceAppProject.ProfessorLogin
                 ConfigureServices(serviceCollection);
                 ServiceProvider = serviceCollection.BuildServiceProvider();
 
+                //display login window
+                //loginWindow = new LoginWindow()
                 var loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
+                Diagnostics.Debug.WriteLine("login instance created");
                 loginWindow.Show();
+                
+
+                //some kind of await statement to wait for login verification
+                ProfessorModel currentProf = await loginWindow.GetProfessorAsync();
+                
+                Debug.WriteLine("LOGIN WINDOW CREATED AND AWAITED THE GET PROF");
+                Debug.WriteLine(currentProf);
+                loginWindow.Close();
+
+                //decalring dashboard
+                var attendanceWindow = _serviceProvider.GetRequiredService<AttendanceWindow>();
+                attendanceWindow.Show();
             }
             catch (Exception ex)
             {
