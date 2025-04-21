@@ -330,12 +330,11 @@
                       IsReadOnly="True"
                       ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="No." Binding="{Binding OrdinalNumber}" Width="60"/>
+                    
                     <DataGridTextColumn Header="Student ID" Binding="{Binding StudentId}" Width="100"/>
-                    <DataGridTextColumn Header="Class" Binding="{Binding Class}" Width="100"/>
-                    <DataGridTextColumn Header="Check In Time" Binding="{Binding CheckInTime, StringFormat={}{0:MM/dd/yyyy HH:mm:ss}}" Width="150"/>
-                    <DataGridTextColumn Header="Quiz Question" Binding="{Binding QuizQuestion}" Width="*"/>
-                    <DataGridTextColumn Header="Quiz Answer" Binding="{Binding QuizAnswer}" Width="150"/>
+                    <DataGridTextColumn Header="Class" Binding="{Binding ClassId}" Width="100"/>
+                    <DataGridTextColumn Header="Check In Time" Binding="{Binding DateTime, StringFormat={}{0:MM/dd/yyyy HH:mm:ss}}" Width="150"/>
+                    
                     <DataGridTemplateColumn Header="Actions" Width="Auto">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>

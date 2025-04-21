@@ -18,14 +18,11 @@ namespace AttendanceAppProject.ApiService.Controllers
     {
         private readonly AttendanceInstanceService _service;
 
-        private readonly ApplicationDbContext _context;
-
 
         // Dependency injection - allows ASP.NET Core to pass an instance of ApplicationDbContext into the controller's constructor whenever the API is called so it can interact with the db
-        public AttendanceInstanceController(AttendanceInstanceService service, ApplicationDbContext context)
+        public AttendanceInstanceController(AttendanceInstanceService service)
         {
             _service = service;
-            _context = context;
         }
 
         /* GET: api/AttendanceInstance

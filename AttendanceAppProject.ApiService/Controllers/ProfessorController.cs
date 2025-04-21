@@ -52,6 +52,8 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<Professor>> Login([FromBody] ProfessorDto dto)
         {
+            Console.WriteLine($"Login attempt: {dto.UtdId}");
+
             var professor = await _service.AuthenticateProfessorAsync(dto.UtdId, dto.Password);
 
             if (professor == null)

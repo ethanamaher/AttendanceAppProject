@@ -25,24 +25,24 @@ namespace AttendanceAppProject.ProfessorLogin
 
         private async Task CheckApiConnectionAsync()
         {
-            try
+            while (true)
             {
-                using var client = new HttpClient();
-                client.BaseAddress = new Uri("https://localhost:7530/"); // Your actual API base URL
+                try
+                {
+                    using var client = new HttpClient { BaseAddress = new Uri("https://localhost:7530/") };
+                    var response = await client.GetAsync("api/student");
+                    if (response.IsSuccessStatusCode)
+                    {
+                        MessageBox.Show("✅ Connected to API!", "API Status", MessageBoxButton.OK, MessageBoxImage.Information);
+                        return;
+                    }
+                }
+                catch
+                {
+                    // Suppress errors
+                }
 
-                var response = await client.GetAsync("api/student"); // A known working endpoint
-                if (response.IsSuccessStatusCode)
-                {
-                    MessageBox.Show("✅ Successfully connected to API!", "Connection Test", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
-                {
-                    MessageBox.Show($"❌ API responded with status code: {response.StatusCode}", "Connection Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"❌ Could not connect to API: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                await Task.Delay(2000); // Try again after 2 seconds
             }
         }
 

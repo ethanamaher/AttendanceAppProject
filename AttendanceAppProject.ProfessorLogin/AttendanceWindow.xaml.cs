@@ -44,43 +44,23 @@ namespace AttendanceAppProject.ProfessorLogin
             try
             {
                 // Display professor information
-                if (App.Current is App app && app.ServiceProvider.GetService<ProfessorDto>() is ProfessorDto currentProfessor)
+                _currentProfessor = App.CurrentProfessor;
+
+                if (_currentProfessor != null)
                 {
-                    if (ProfessorNameTextBlock != null)
-                    {
-                        ProfessorNameTextBlock.Text = $"Welcome, {currentProfessor.FirstName}";
-                    }
+                    ProfessorNameTextBlock.Text = $"Welcome, {_currentProfessor.FirstName}";
+                    DepartmentTextBlock.Text = $"Department: {_currentProfessor.Department}";
+                    this.Title = $"Student Attendance Database - {_currentProfessor.FirstName}";
 
-                    if (DepartmentTextBlock != null)
-                    {
-                        DepartmentTextBlock.Text = $"Department: {currentProfessor.Department}";
-                    }
-
-                    // Set window title
-                    this.Title = $"Student Attendance Database - {currentProfessor.FirstName}";
-
-                    // Fetch professor data from the API
-                    await GetProfessorFromApiAsync(currentProfessor.UtdId);
-
-                    // Load professor's classes
+                    await GetProfessorFromApiAsync(_currentProfessor.UtdId);
                     await LoadProfessorClassDtos();
-
-                    // Load attendance data
                     await LoadAttendanceData();
 
-                    if (StatusTextBlock != null)
-                    {
-                        StatusTextBlock.Text = "Data loaded successfully";
-                    }
-
-                    if (LastUpdatedTextBlock != null)
-                    {
-                        LastUpdatedTextBlock.Text = $"Last updated: {DateTime.Now.ToString("g")}";
-                    }
+                    StatusTextBlock.Text = "Data loaded successfully";
+                    LastUpdatedTextBlock.Text = $"Last updated: {DateTime.Now:g}";
                 }
                 else
                 {
-                    // This shouldn't happen, but handle it gracefully
                     MessageBox.Show("No professor data available. Please log in again.",
                         "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     ShowLoginWindow();
@@ -134,15 +114,21 @@ namespace AttendanceAppProject.ProfessorLogin
             {
                 if (_currentProfessor == null) return;
 
-                var response = await _httpClient.GetAsync($"api/ClassDto/professor/{_currentProfessor.UtdId}");
+                var response = await _httpClient.GetAsync($"api/Class/professor/{_currentProfessor.UtdId}");
 
                 if (response.IsSuccessStatusCode)
                 {
                     _professorClassDtos = await response.Content.ReadFromJsonAsync<List<ClassDto>>();
 
+                    System.Diagnostics.Debug.WriteLine($"Loaded {_professorClassDtos.Count} classes for professor {_currentProfessor?.UtdId}");
+                    foreach (var c in _professorClassDtos)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Class: {c.ClassId} - {c.ClassPrefix} {c.ClassNumber}");
+                    }
+
                     // Clear and add the "All ClassDtos" option
                     ClassComboBox.Items.Clear();
-                    ClassComboBox.Items.Add(new ComboBoxItem { Content = "All ClassDtos" });
+                    ClassComboBox.Items.Add(new ComboBoxItem { Content = "All Classes" });
 
                     // Add each class
                     foreach (var classItem in _professorClassDtos)
@@ -159,6 +145,7 @@ namespace AttendanceAppProject.ProfessorLogin
                 }
                 else
                 {
+                    System.Diagnostics.Debug.WriteLine($"Failed to load classes. Status: {response.StatusCode}");
                     // If no classes found, populate with mock data for testing
                     PopulateWithMockClassDtos();
                 }
@@ -198,6 +185,7 @@ namespace AttendanceAppProject.ProfessorLogin
                     {
                         foreach (var classItem in _professorClassDtos)
                         {
+                            System.Diagnostics.Debug.WriteLine($"Attempting to fetch attendance for class: {classItem.ClassId}");
                             var response = await _httpClient.GetAsync($"api/AttendanceInstance/class/{classItem.ClassId}");
 
                             if (response.IsSuccessStatusCode)
@@ -265,14 +253,14 @@ namespace AttendanceAppProject.ProfessorLogin
                 // Create a new filtered list from all records
                 _filteredRecords = new List<AttendanceInstanceDto>(_allAttendanceInstanceDtos);
 
-                // Apply class filter if selected
                 if (ClassComboBox != null && ClassComboBox.SelectedIndex > 0) // Skip "All Classes"
                 {
                     var selectedItem = ClassComboBox.SelectedItem as ComboBoxItem;
-                    if (selectedItem != null)
+                    if (selectedItem != null && selectedItem.Tag is Guid selectedClassId)
                     {
-                        string selectedClassId = selectedItem.Content?.ToString() ?? string.Empty;
-                        _filteredRecords = _filteredRecords.Where(r => r.ClassId.ToString() == selectedClassId).ToList();
+                        _filteredRecords = _filteredRecords
+                            .Where(r => r.ClassId == selectedClassId)
+                            .ToList();
                     }
                 }
 
