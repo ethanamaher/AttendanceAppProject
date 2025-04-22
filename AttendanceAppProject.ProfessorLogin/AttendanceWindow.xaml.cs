@@ -62,9 +62,9 @@ namespace AttendanceAppProject.ProfessorLogin
 
                 if (_currentProfessor != null)
                 {
-                    ProfessorNameTextBlock.Text = $"Welcome, {_currentProfessor.FirstName}";
+                    ProfessorNameTextBlock.Text = $"Welcome, {_currentProfessor.FirstName} {_currentProfessor.LastName}";
                     DepartmentTextBlock.Text = $"Department: {_currentProfessor.Department}";
-                    this.Title = $"Student Attendance Database - {_currentProfessor.FirstName}";
+                    this.Title = $"Student Attendance Database - {_currentProfessor.FirstName} {_currentProfessor.LastName}";
 
                     await GetProfessorFromApiAsync(_currentProfessor.UtdId);
                     await LoadProfessorClassDtos();
