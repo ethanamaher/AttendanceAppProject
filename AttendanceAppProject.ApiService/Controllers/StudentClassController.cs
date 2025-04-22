@@ -8,6 +8,7 @@ using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using AttendanceAppProject.ApiService.Data;
 using AttendanceAppProject.Dto.Models;
+using AttendanceAppProject.ApiService.Services;
 
 namespace AttendanceAppProject.ApiService.Controllers
 {
@@ -15,11 +16,11 @@ namespace AttendanceAppProject.ApiService.Controllers
     [ApiController]
     public class StudentClassController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly StudentClassService _service;
 
-        public StudentClassController(ApplicationDbContext context)
+        public StudentClassController(StudentClassService service)
         {
-            _context = context;
+            _service = service;
         }
 
         /* GET: api/StudentClass
@@ -30,7 +31,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<StudentClass>>> GetStudentClasses()
         {
-            return await _context.StudentClasses.ToListAsync();
+            return Ok(await _service.GetStudentClassesAsync());
         }
 
         /* POST: api/StudentClass
@@ -41,15 +42,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpPost]
         public async Task<ActionResult<StudentClass>> AddStudentClass([FromBody] StudentClassDto dto)
         {
-            var studentClass = new StudentClass
-            {
-                StudentClassId = Guid.NewGuid(), // Auto-generate
-                StudentId = dto.StudentId,
-                ClassId = dto.ClassId
-            };
-
-            _context.StudentClasses.Add(studentClass);
-            await _context.SaveChangesAsync();
+            var studentClass = await _service.AddStudentClassAsync(dto);
 
             return CreatedAtAction(nameof(GetStudentClasses), new { id = studentClass.StudentClassId }, studentClass);
         }
@@ -70,8 +63,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         [HttpPost("check-enrollment")]
         public async Task<ActionResult<bool>> CheckEnrollment([FromBody] EnrollmentCheckDto dto)
         {
-            var exists = await _context.StudentClasses
-                .AnyAsync(sc => sc.StudentId == dto.Student.UtdId && sc.ClassId == dto.Class.ClassId); // sc is StudentClass object within the database
+            var exists = await _service.CheckEnrollmentAsync(dto);
 
             return Ok(exists); // true if enrolled, false otherwise
         }

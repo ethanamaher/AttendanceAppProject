@@ -1,34 +1,34 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using AttendanceAppProject.ApiService.Data.Models;
 using Microsoft.EntityFrameworkCore;
-using AttendanceAppProject.ApiService.Data;
+using AttendanceAppProject.ApiService.Services;
 using AttendanceAppProject.Dto.Models;
 
-// API Controller for Password
+// API Controller for Quiz Answers
 
 namespace AttendanceAppProject.ApiService.Controllers
 {
-    [Route("api/[controller]")] // Automatically becomes "api/password"
+    [Route("api/[controller]")] // Automatically becomes "api/QuizAnswer"
     [ApiController]
     public class QuizAnswerController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly QuizAnswerService _service;
 
-        public QuizAnswerController(ApplicationDbContext context)
+        public QuizAnswerController(QuizAnswerService service)
         {
-            _context = context;
+            _service = service;
         }
 
-        /* GET: api/quizquestions
-         * Get all passwords
-         * - request body: none
-         * - response body: Passwords
+        /* GET: api/QuizAnswers/{QuestionId}
+         * Get quiz answers by the question Id
+         * - request body: QuestionId
+         * - response body: QuizAnswers
          */
         [HttpGet("{QuestionId}")]
         public async Task<ActionResult<IEnumerable<QuizAnswer>>> GetAnswersById(Guid QuestionId)
         {
             System.Diagnostics.Debug.WriteLine($"Looking up answers for {QuestionId}");
-            return await _context.QuizAnswers.Where(qanswer => qanswer.QuestionId == QuestionId).ToListAsync();
+            return Ok(await _service.GetAnswersByIdAsync(QuestionId));
         }
     }
 }

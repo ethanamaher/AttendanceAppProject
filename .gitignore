@@ -367,3 +367,4 @@ appsettings.json
 /AttendanceAppProject.Web/wwwroot/app.min.css
 /AttendanceAppProject.Web/tailwind.css
 /AttendanceAppProject.Web/tailwind.output.css
+/AttendanceAppProject.ApiService/appsettings.json

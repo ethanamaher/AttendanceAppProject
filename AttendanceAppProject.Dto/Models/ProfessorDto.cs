@@ -11,11 +11,11 @@ public class ProfessorDto
 {
     public string UtdId { get; set; } = null!; // PK
 
-	public string FirstName { get; set; } = null!;
+	public string FirstName { get; set; } = string.Empty;
 
-	public string LastName { get; set; } = null!;
+	public string LastName { get; set; } = string.Empty;
 
-    public string PasswordHash { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
     public string Department { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
 }

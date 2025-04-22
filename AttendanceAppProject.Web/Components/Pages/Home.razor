@@ -4,7 +4,6 @@ Handles student form submission for attendance app and navigates to quiz page on
 
 Written by Ethan Maher
 -->
-
 @page "/"
 @using System.Timers
 @implements IDisposable
@@ -140,52 +139,16 @@ Written by Ethan Maher
     // load classes from database
     private async Task LoadClassesAsync()
     {
-        // take current time from when classes load, can also pull from time page begins initializing
-        DateTime now = DateTime.Now;
-        TimeOnly timeNow = TimeOnly.FromDateTime(now);
-        try {
+        try
+        {
             var response = await Http.GetFromJsonAsync<List<ClassDto>>("api/class");
-            if(response is not null) {
-
-                //classesList = response;
-                foreach(ClassDto classDto in response)
-                {
-                    var classScheduleList = await Http.GetFromJsonAsync<List<ClassScheduleDto>>($"api/classschedule/{classDto.ClassId}");
-
-                    DayOfWeek today = now.DayOfWeek;
-                    
-                    // check if there is class today for a given class
-                    // parse DayOfWeek strings to DayOfWeek and if it does it is valid
-                    // strings are stored as "Monday", "Tuesday", etc. so this works
-                    bool hasClassToday = classScheduleList.Any(
-                        cd => cd.DayOfWeek != null &&
-                        Enum.TryParse(cd.DayOfWeek, true, out DayOfWeek parsed) &&
-                        parsed == today
-                    );
-
-                    // if no class today for this class continue
-                    if(!hasClassToday)
-                    {
-                        continue;
-                    }
-
-
-                    // check if class is going on at this time
-                    // give buffer of 15 minutes before and after class to accept attendance
-                    TimeOnly? adjustedStartTime = classDto.StartTime.Value.AddMinutes(-15);
-                    TimeOnly? adjustedEndTime = classDto.EndTime.Value.AddMinutes(15);
-
-                    // null check
-                    if(adjustedStartTime is not null && adjustedEndTime is not null)
-                    {
-                        if (timeNow > adjustedStartTime && timeNow < adjustedEndTime)
-                        {
-                            classesList.Add(classDto);
-                        }
-                    }
-                }
-            } 
-        }   catch(Exception e) {
+            if (response is not null)
+            {
+                classesList = response;
+            }
+        }
+        catch (Exception e)
+        {
             System.Diagnostics.Debug.WriteLine($"Error loading classes: {e.Message}");
         }
 
@@ -212,13 +175,14 @@ Written by Ethan Maher
     }
 
     // can integrate status codes for which part of form is invalid
-    private void FormError() {
+    private void FormError()
+    {
         // Incorrect credentials - show error message
         showLoginError = true;
         // Clear only the password field for retry
         studentResponse.formPassword = "";
 
-        System.Diagnostics.Debug.WriteLine("Login failed - incorrect information. Showing error message.");     
+        System.Diagnostics.Debug.WriteLine("Login failed - incorrect information. Showing error message.");
     }
 
     // handle form submission
@@ -243,7 +207,7 @@ Written by Ethan Maher
             // if class does not exist
             // should never be 404
             // if errors, will be bad request
-            var classExists = await Http.PostAsJsonAsync("api/class/exists", studentResponse.classId);   
+            var classExists = await Http.PostAsJsonAsync("api/class/exists", studentResponse.classId);
             if (!classExists.IsSuccessStatusCode)
             {
                 System.Diagnostics.Debug.WriteLine("Class not found");
@@ -258,21 +222,23 @@ Written by Ethan Maher
             NavigationManager.NavigateTo($"/quiz?studentId={studentIdEncoded}&class={classIdEncoded}");
 
 
-        } 
-        catch(Exception ex) {
+        }
+        catch (Exception ex)
+        {
             System.Diagnostics.Debug.WriteLine($"Error during submission: {ex.Message}");
             showLoginError = true;
 
         }
-        finally {
+        finally
+        {
             isSubmitting = false;
-        }   
+        }
     }
 
     /*  Class for getting student info responses from form */
     public class StudentResponse
     {
-        [Required (ErrorMessage = "Student ID is Required")]
+        [Required(ErrorMessage = "Student ID is Required")]
         public string? studentId { get; set; }
 
         [Required(ErrorMessage = "Class ID is Required")]
