@@ -38,14 +38,12 @@ namespace AttendanceAppProject.ApiService.Controllers
 		[HttpGet("{ClassId}")]
 		public async Task<ActionResult<QuizInstance>> GetQuizById(Guid ClassId)
 		{
-			System.Diagnostics.Debug.WriteLine($"-----Quiz CONTROLLER-----");
-			System.Diagnostics.Debug.WriteLine($"Getting Quiz For {ClassId}");
 			var quizInstance = await _context.QuizInstances.FirstOrDefaultAsync(qi => qi.ClassId == ClassId);
-			System.Diagnostics.Debug.WriteLine($"{quizInstance.QuizId.ToString()}");
-
+			
+			// check http response for quizinstance, if no quiz either just submit automatically or allow to submit
 			if (quizInstance == null)
 			{
-				return NotFound();
+                return NotFound();
 			}
 
 			return quizInstance;

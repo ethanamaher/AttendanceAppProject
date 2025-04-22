@@ -5,6 +5,8 @@
 @inject HttpClient Http
 @using System.Text.Json
 @using AttendanceAppProject.Dto.Models
+@using System.Net.Sockets
+@using System.Net
 
 <PageTitle>Student Quiz</PageTitle>
 
@@ -54,60 +56,75 @@
             <div class="loading-spinner">
                 Loading...
             </div>
-        }
+        } else {
 
-        <!-- if the student is not valid, should be checked before on home page submission thus should not happen in normal use-->
-        @if (!isValidStudent)
-        {
-            <div class="invalid-access">
-                <h2>Invalid Access</h2>
-                <p>You must log in through the home page to access this quiz.</p>
-                <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
-            </div>
-        }
-        <!-- quiz display -->
-        @if (!quizCompleted)
-        {
-            <EditForm Model="@quizQuestionModels" OnSubmit="SubmitQuiz">
-                @foreach(QuizQuestionModel quizQuestion in quizQuestionModels)
-                {
-                    <div class="quiz-question">
-                        <div class="question-number">
-                            Question @(quizQuestions.IndexOf(quizQuestion.QuestionDto) + 1) of @quizQuestions.Count
-                        </div>
-
-
-                        <div class="question-text">
-                            <strong>@quizQuestion.QuestionDto.QuestionText</strong>
-                        </div>
-
-                        <InputRadioGroup @bind-Value="quizQuestion.SelectedAnswerId" Name="@quizQuestion.QuestionDto.QuestionId.ToString()">
-                            @foreach (QuizAnswerDto answerDto in quizQuestion.Answers)
-                            {
-                                <label>
-                                    <InputRadio Value="@answerDto.AnswerId" />
-                                    <span class="ms-2">@answerDto.AnswerText</span><br />
-                                </label>
-                            }
-                        </InputRadioGroup>
-                    </div><br />
-                }
-
-                <!-- button to handle form submission -->
-                <div class="submit-button-container">
-                    <button type="submit" disabled="@isSubmitting">
-                        @(isSubmitting ? "Submitting Quiz..." : "Submit")
-                    </button>
+            <!-- if the student is not valid, should be checked before on home page submission thus should not happen in normal use-->
+            @if (!isValidStudent)
+            {
+                <div class="invalid-access">
+                    <h2>Invalid Access</h2>
+                    <p>You must log in through the home page to access this quiz.</p>
+                    <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
                 </div>
-            </EditForm>
-        }
-        else
-        {
-            <div class="quiz-completed">
-                <h2>Quiz Submitted!</h2>
-                <div class="score">Your Score: @correctAnswers / @quizQuestions.Count</div><br />
-                <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
-            </div>
+            }
+
+            @if (quizCompleted)
+            {
+                <div class="quiz-completed">
+                    <h2>Attendance Recorded</h2>
+                    @if(quizExists)
+                    {
+                        <div class="score">Your Score: @correctAnswers / @quizQuestions.Count</div>
+
+                        <br />
+                    }
+
+                    <button @onclick="ReturnToHome" class="return-button">Return to Home</button>
+
+                </div>
+
+
+            } else
+            {
+                <!-- quiz display -->
+                @if (quizExists)
+                {
+                    <EditForm Model="@quizQuestionModels" OnSubmit="SubmitQuiz">
+                        @foreach (QuizQuestionModel quizQuestion in quizQuestionModels)
+                        {
+                            <div class="quiz-question">
+                                <div class="question-number">
+                                    Question @(quizQuestions.IndexOf(quizQuestion.QuestionDto) + 1) of @quizQuestions.Count
+                                </div>
+
+
+                                <div class="question-text">
+                                    <strong>@quizQuestion.QuestionDto.QuestionText</strong>
+                                </div>
+
+                                <InputRadioGroup @bind-Value="quizQuestion.SelectedAnswerId" Name="@quizQuestion.QuestionDto.QuestionId.ToString()">
+                                    @foreach (QuizAnswerDto answerDto in quizQuestion.Answers)
+                                    {
+                                        <label>
+                                            <InputRadio Value="@answerDto.AnswerId" />
+                                            <span class="ms-2">@answerDto.AnswerText</span><br />
+                                        </label>
+                                    }
+                                </InputRadioGroup>
+                            </div>
+
+                            <br />
+                        }
+
+                        <!-- button to handle form submission -->
+                        <div class="submit-button-container">
+                            <button type="submit" disabled="@isSubmitting">
+                                @(isSubmitting ? "Submitting Quiz..." : "Submit")
+                            </button>
+                        </div>
+                    </EditForm>
+                }
+            }
         }
     </div>
 </div>
@@ -129,11 +146,16 @@
     // used to lock submission button to prevent duplicate submissions
     private bool isSubmitting = false;
 
+    // used to determine if quiz exists for class selected
+    bool quizExists = false;
+
     // Quiz state
     private QuizInstanceDto quizInstance = new QuizInstanceDto();
     private List<QuizQuestionDto> quizQuestions = new List<QuizQuestionDto>();
     private List<List<QuizAnswerDto>> quizAnswers = new List<List<QuizAnswerDto>>();
+
     private List<QuizQuestionModel> quizQuestionModels = new();
+
 
     private bool quizCompleted = false;
     private int correctAnswers = 0;
@@ -153,15 +175,32 @@
             classDto = await Http.GetFromJsonAsync<ClassDto>($"api/class/{classId.ToString()}");
 
             // pull QuizInstance from database where classId matches query
-            quizInstance = await Http.GetFromJsonAsync<QuizInstanceDto>($"api/quizinstance/{classId.ToString()}");
+            HttpResponseMessage response = await Http.GetAsync($"api/quizinstance/{classId}");
+            if(response.IsSuccessStatusCode)
+            {
+                quizInstance = await response.Content.ReadFromJsonAsync<QuizInstanceDto>();
+                quizExists = true;
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // Handle 404 — quiz instance not found
+                Console.WriteLine("Quiz instance not found for this class.");
+            } else
+            {
+                // Handle Other Errors
+                Console.WriteLine("Quiz instance not found for this class.");
+            }
 
-            if(quizInstance?.QuizId == Guid.Empty) {
-                isValidStudent = false;
+
+            // if no quiz for given class, quiz instance will not be found and we can just submit attendance instance
+            if(!quizExists)
+            {
                 isLoading = false;
+                SubmitQuiz();
                 return;
             }
 
-            // Only load quiz question if student is valid
+            // Only load quiz question if quiz exists
             // Load quiz question
             await LoadQuizQuestions();
             // Load quiz answers
@@ -227,27 +266,23 @@
     }
 
     // method to handle quiz submissions
-
-    // TODO
-    // disable submission button when submitting quiz to prevent multiple
-    // get ip
-    // get datetime
+    // creates an attendance instance and posts to database
+    // and updates submission page to reflect quiz score if applciatble
     private async void SubmitQuiz()
     {
         isSubmitting = true;
         try
-        {
-            var ipResponse = await Http.GetStringAsync("https://api.ipify.org?format=json");
-            var obj = JsonSerializer.Deserialize<Dictionary<string, string>>(ipResponse);
-            string? ipAddress = obj?["ip"];
+        {   
+            // private ip
+            var ipResponse = getIP();
 
             AttendanceInstanceDto attendanceInstance = new()
                 {
                     StudentId = studentId,
                     ClassId = classId,
-                    IpAddress = ipAddress,
+                    IpAddress = ipResponse,
                     DateTime = DateTime.UtcNow
-                    // IsLate and ExcusedAbsence default to null as they are added from professor side
+                // IsLate and ExcusedAbsence default to null
                 };
 
 
@@ -258,12 +293,29 @@
             Console.WriteLine($"Error loading quiz answers: {ex.Message}");
         }
         finally
-        {
-            isSubmitting = false;
-            quizCompleted = true;
+        { 
+            if(quizExists) 
+            {
+                CalculateScore();
+            }
 
-            CalculateScore();
+            quizCompleted = true;
+            isSubmitting = false;
+
+            StateHasChanged();
         }
+    }
+
+    private string getIP()
+    {
+        string localIP;
+        using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
+        {
+            socket.Connect("8.8.8.8", 65530);
+            IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
+            localIP = endPoint.Address.ToString();
+        }
+        return localIP;
     }
 
     private void CalculateScore() {
