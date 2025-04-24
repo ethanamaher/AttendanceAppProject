@@ -167,5 +167,126 @@ namespace AttendanceAppProject.ApiService.Services
 
             return newAttendance;
         }
+
+        // Get students who missed X consecutive class meetings (days the class is scheduled to meet) for a specific class
+        public async Task<IEnumerable<StudentDto>> GetStudentsWithConsecutiveAbsencesAsync(Guid classId, int consecutiveMisses)
+        {
+            // Retrieve class details including schedule and enrolled students
+            var classInfo = await _context.Classes
+                .Include(c => c.ClassSchedules)
+                .Include(c => c.StudentClasses)
+                    .ThenInclude(sc => sc.Student)
+                .FirstOrDefaultAsync(c => c.ClassId == classId);
+
+            if (classInfo == null)
+                return Enumerable.Empty<StudentDto>();
+
+            // Days of the week when class meets (e.g., Monday, Wednesday)
+            var scheduledDaysOfWeek = classInfo.ClassSchedules.Select(cs => Enum.Parse<DayOfWeek>(cs.DayOfWeek)).ToList();
+
+            // Generate all scheduled class dates within start and end dates
+            var allClassDates = Enumerable.Range(0, (classInfo.EndDate.Value.ToDateTime(TimeOnly.MinValue) - classInfo.StartDate.Value.ToDateTime(TimeOnly.MinValue)).Days + 1)
+                .Select(offset => classInfo.StartDate.Value.AddDays(offset))
+                .Where(date => scheduledDaysOfWeek.Contains(date.DayOfWeek))
+                .ToList();
+
+            var absentStudents = new List<StudentDto>();
+
+            foreach (var studentClass in classInfo.StudentClasses)
+            {
+                int consecutiveAbsences = 0;
+                bool hasMetConsecutiveRequirement = false;
+
+                foreach (var classDate in allClassDates)
+                {
+                    // Check if attendance instance exists for the student on this date and is not excused
+                    bool attended = await _context.AttendanceInstances.AnyAsync(ai =>
+                        ai.ClassId == classId &&
+                        ai.StudentId == studentClass.StudentId &&
+                        ai.DateTime.HasValue &&
+                        DateOnly.FromDateTime(ai.DateTime.Value) == classDate);
+
+                    if (!attended)
+                        consecutiveAbsences++;
+                    else
+                        consecutiveAbsences = 0; // reset if student attended
+
+                    if (consecutiveAbsences >= consecutiveMisses)
+                    {
+                        hasMetConsecutiveRequirement = true;
+                        break; // no need to check further for this student
+                    }
+                }
+
+                if (hasMetConsecutiveRequirement)
+                {
+                    absentStudents.Add(new StudentDto
+                    {
+                        UtdId = studentClass.Student.UtdId,
+                        FirstName = studentClass.Student.FirstName,
+                        LastName = studentClass.Student.LastName,
+                        Username = studentClass.Student.Username
+                    });
+                }
+            }
+
+            return absentStudents;
+        }
+
+        // Get students who missed X total class meetings (days the class is scheduled to meet) for a specific class
+        public async Task<IEnumerable<StudentDto>> GetStudentsWhoMissedXClassesAsync(Guid classId, int missedClassesCount)
+        {
+            // Retrieve class details including schedule and enrolled students
+            var classInfo = await _context.Classes
+                .Include(c => c.ClassSchedules)
+                .Include(c => c.StudentClasses)
+                    .ThenInclude(sc => sc.Student)
+                .FirstOrDefaultAsync(c => c.ClassId == classId);
+
+            if (classInfo == null)
+                return Enumerable.Empty<StudentDto>();
+
+            // Days of the week when class meets
+            var scheduledDaysOfWeek = classInfo.ClassSchedules.Select(cs => Enum.Parse<DayOfWeek>(cs.DayOfWeek)).ToList();
+
+            // Generate all scheduled class dates within start and end dates
+            var allClassDates = Enumerable.Range(0, (classInfo.EndDate.Value.ToDateTime(TimeOnly.MinValue) - classInfo.StartDate.Value.ToDateTime(TimeOnly.MinValue)).Days + 1)
+                .Select(offset => classInfo.StartDate.Value.AddDays(offset))
+                .Where(date => scheduledDaysOfWeek.Contains(date.DayOfWeek))
+                .ToList();
+
+            var absentStudents = new List<StudentDto>();
+
+            foreach (var studentClass in classInfo.StudentClasses)
+            {
+                int totalAbsences = 0;
+
+                foreach (var classDate in allClassDates)
+                {
+                    // Check if attendance instance exists for the student on this date and is not excused
+                    bool attended = await _context.AttendanceInstances.AnyAsync(ai =>
+                        ai.ClassId == classId &&
+                        ai.StudentId == studentClass.StudentId &&
+                        ai.DateTime.HasValue &&
+                        DateOnly.FromDateTime(ai.DateTime.Value) == classDate);
+
+                    if (!attended)
+                        totalAbsences++;
+                }
+
+                if (totalAbsences >= missedClassesCount)
+                {
+                    absentStudents.Add(new StudentDto
+                    {
+                        UtdId = studentClass.Student.UtdId,
+                        FirstName = studentClass.Student.FirstName,
+                        LastName = studentClass.Student.LastName,
+                        Username = studentClass.Student.Username
+                    });
+                }
+            }
+
+            return absentStudents;
+        }
     }
 }

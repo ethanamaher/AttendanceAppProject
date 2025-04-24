@@ -158,5 +158,29 @@ namespace AttendanceAppProject.ApiService.Controllers
 
             return CreatedAtAction(nameof(GetAttendanceInstances), new { id = newAttendance.AttendanceId }, newAttendance);
         }
+
+        /* GET: api/AttendanceInstance/class/{classId}/consecutive-absences/{count}
+          * Get students who have missed X consecutive class meetings for the given class
+          * - request body: none
+          * - response body: IEnumerable<StudentDto>
+          * example usage: var absentStudents = await Http.GetFromJsonAsync<List<StudentDto>>($"api/AttendanceInstance/class/{classId}/consecutive-absences/{count}");
+          */
+        [HttpGet("class/{classId}/consecutive-absences/{count}")]
+        public async Task<ActionResult<IEnumerable<StudentDto>>> GetStudentsWithConsecutiveAbsences(Guid classId, int count)
+        {
+            return Ok(await _service.GetStudentsWithConsecutiveAbsencesAsync(classId, count));
+        }
+
+        /* GET: api/AttendanceInstance/class/{classId}/total-absences/{count}
+         * Get students who have missed X total class meetings for the given class
+         * - request body: none
+         * - response body: IEnumerable<StudentDto>
+         * example usage: var absentStudents = await Http.GetFromJsonAsync<List<StudentDto>>($"api/AttendanceInstance/class/{classId}/total-absences/{count}");
+         */
+        [HttpGet("class/{classId}/total-absences/{count}")]
+        public async Task<ActionResult<IEnumerable<StudentDto>>> GetStudentsWithTotalAbsences(Guid classId, int count)
+        {
+            return Ok(await _service.GetStudentsWhoMissedXClassesAsync(classId, count));
+        }
     }
 }
