@@ -9,15 +9,49 @@ namespace AttendanceAppProject.ApiService.Services
     {
         private readonly ApplicationDbContext _context;
 
+        // Constructor to initialize the ApplicationDbContext
         public QuizAnswerService(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // Get QuizAnswers by QuestionId
+        // Get quiz answers by QuestionId
         public async Task<IEnumerable<QuizAnswer>> GetAnswersByIdAsync(Guid QuestionId)
         {
             return await _context.QuizAnswers.Where(qanswer => qanswer.QuestionId == QuestionId).ToListAsync();
+        }
+
+        // Add a new quiz answer
+        public async Task<QuizAnswer> AddQuizAnswerAsync(QuizAnswerDto dto)
+        {
+            var newAnswer = new QuizAnswer
+            {
+                // Auto-generate AnswerId in the database side
+                QuestionId = (Guid)dto.QuestionId,
+                QuizId = (Guid)dto.QuizId,
+                AnswerText = dto.AnswerText,
+                IsCorrect = (bool)dto.IsCorrect
+            };
+
+            _context.QuizAnswers.Add(newAnswer);
+            await _context.SaveChangesAsync();
+
+            return newAnswer;
+        }
+
+        // Delete a quiz answer
+        public async Task<bool> DeleteQuizAnswerAsync(int AnswerId)
+        {
+            var answer = await _context.QuizAnswers.FindAsync(AnswerId);
+
+            if (answer == null)
+            {
+                return false;
+            }
+
+            _context.QuizAnswers.Remove(answer);
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

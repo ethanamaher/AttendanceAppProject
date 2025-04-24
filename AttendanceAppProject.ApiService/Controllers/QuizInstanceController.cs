@@ -1,11 +1,10 @@
-﻿using AttendanceAppProject.ApiService.Data;
-using AttendanceAppProject.ApiService.Services;
+﻿using Microsoft.AspNetCore.Mvc;
 using AttendanceAppProject.ApiService.Data.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using AttendanceAppProject.ApiService.Services;
 using AttendanceAppProject.Dto.Models;
+using Microsoft.EntityFrameworkCore;
 
-// API controller for Quiz Instance
+// API Controller for Quiz Instance
 
 namespace AttendanceAppProject.ApiService.Controllers
 {
@@ -15,25 +14,27 @@ namespace AttendanceAppProject.ApiService.Controllers
     {
         private readonly QuizInstanceService _service;
 
+        // Constructor to initialize the QuizInstanceService
         public QuizInstanceController(QuizInstanceService service)
         {
             _service = service;
         }
 
         /* GET: api/QuizInstance
-		 * Get all quizzes
+		 * Get all quiz instances (quizzes) in the system
 		 * - request body: none
-		 * - response body: QuizInstances
+		 * - response body: IEnumerable<QuizInstance>
 		 */
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Class>>> GetQuizzes()
+        public async Task<ActionResult<IEnumerable<QuizInstance>>> GetQuizzes()
         {
+            // Return all quiz instances
             return Ok(await _service.GetQuizzesAsync());
         }
 
-        /* GET: api/QuizInstance/{id}
-		 * Get quiz whose classId private key = id
-		 * - request body: Guid classId
+        /* GET: api/QuizInstance/{ClassId}
+		 * Get a quiz instance based on the associated class ID
+		 * - request body: none
 		 * - response body: QuizInstance
 		 */
         [HttpGet("{ClassId}")]
@@ -41,28 +42,69 @@ namespace AttendanceAppProject.ApiService.Controllers
         {
             var quizInstance = await _service.GetQuizByIdAsync(ClassId);
 
-            // check http response for quizinstance, if no quiz either just submit automatically or allow to submit
+            // Check if the quiz instance was found
             if (quizInstance == null)
             {
                 return NotFound();
             }
 
-            return quizInstance;
+            // Return the found quiz instance
+            return Ok(quizInstance);
         }
 
-
-
         /* POST: api/QuizInstance
-         * Add a quiz instance to the database
-         * - request body: QuizInstanceDto
-         * - response body: QuizInstance
-         */
+		 * Add a new quiz instance (quiz) to the database
+		 * - request body: QuizInstanceDto
+		 * - response body: QuizInstance
+		 */
         [HttpPost]
         public async Task<ActionResult<QuizInstance>> AddQuizInstance([FromBody] QuizInstanceDto dto)
         {
+            // Add the quiz instance to the database
             var newQuiz = await _service.AddQuizInstanceAsync(dto);
 
+            // Return the created quiz instance with a 201 status code
             return CreatedAtAction(nameof(GetQuizzes), new { id = newQuiz.QuizId }, newQuiz);
+        }
+
+        /* PUT: api/QuizInstance/{QuizId}
+		 * Update an existing quiz instance's class association
+		 * - request body: QuizInstanceDto (classId to update to)
+		 * - response body: QuizInstance
+		 */
+        [HttpPut("{QuizId}")]
+        public async Task<ActionResult<QuizInstance>> UpdateQuizClass(Guid QuizId, [FromBody] QuizInstanceDto dto)
+        {
+            var updatedQuiz = await _service.UpdateQuizClassAsync(QuizId, dto.ClassId);
+
+            // If the quiz wasn't found, return NotFound
+            if (updatedQuiz == null)
+            {
+                return NotFound();
+            }
+
+            // Return the updated quiz instance
+            return Ok(updatedQuiz);
+        }
+
+        /* DELETE: api/QuizInstance/{QuizId}
+		 * Delete a quiz instance
+		 * - request body: none
+		 * - response body: Status of the deletion
+		 */
+        [HttpDelete("{QuizId}")]
+        public async Task<ActionResult> DeleteQuizInstance(Guid QuizId)
+        {
+            var result = await _service.DeleteQuizInstanceAsync(QuizId);
+
+            // If the quiz wasn't found, return NotFound
+            if (!result)
+            {
+                return NotFound();
+            }
+
+            // Return status of deletion
+            return NoContent();
         }
     }
 }
