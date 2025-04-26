@@ -38,11 +38,34 @@ Written by Ethan Maher
             Loading...
         </div>
     } else {
-        @if (showLoginError)
+        @if (showLoginError != 0)
         {
-            <div class="error-message">
-                Incorrect Student Information. Please try again.
-            </div>
+            @switch(showLoginError)
+            {
+                case FormErrorCodes.StudentIdError:
+                    <div class="error-message">
+                        Invalid Student ID. Please try again.
+                    </div>
+                    break;
+                case FormErrorCodes.ClassError:
+                    <div class="error-message">
+                        Invalid Class. Please try again.
+                    </div>
+                    break;
+                case FormErrorCodes.PasswordError:
+                    <div class="error-message">
+                        Invalid Password. Please try again.
+                    </div>
+                    break;
+                case FormErrorCodes.MultipleErrors:
+                    <div class="error-message">
+                        Invalid Information. Please try again.
+                    </div>
+                    break;
+                case FormErrorCodes.NoErrors:
+                default:
+                    break;
+            }
         }
         <EditForm Model="@studentResponse" OnValidSubmit="@SubmitForm">
             <!-- field for student id -->
@@ -67,7 +90,15 @@ Written by Ethan Maher
                         @foreach (ClassDto classDto in classesList)
                         {
                             <!-- for each class, display its name and tie value with its Guid -->
-                            <option value="@classDto.ClassId">@classDto.ClassPrefix@classDto.ClassNumber @classDto.ClassName (@classDto.StartTime - @classDto.EndTime)</option>
+                            <option value="@classDto.ClassId">
+                                @classDto.ClassPrefix@classDto.ClassNumber @classDto.ClassName (@classDto.StartTime - @classDto.EndTime) - 
+                                @if(professorMap.TryGetValue(classDto.ProfUtdId, out var professor))
+                                {
+                                    var profName = professor.FirstName[0].ToString() + ". " + professor.LastName;
+                                    @profName
+                                }
+
+                            </option>
                         }
 
                     </InputSelect>
@@ -75,7 +106,7 @@ Written by Ethan Maher
                 } else
                 {
                     <!-- if there are no classes to choose from, do not allow selection -->
-                    <span style="color:red; font-style: italic;">No classes to choose from right now.</span>
+                    <span class="error-message">No classes to choose from right now.</span>
                 }
 
             </div>
@@ -96,8 +127,7 @@ Written by Ethan Maher
                 <button type="submit" disabled="@isSubmitting">Submit</button>
             </div>
 
-            <DataAnnotationsValidator />
-            <ValidationSummary />
+            <DataAnnotationsValidator />            
         </EditForm>
     }
 </div>
@@ -109,14 +139,15 @@ Written by Ethan Maher
     private string currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
     private Timer? secondsTimer;
 
-    private bool showLoginError = false;
+    private int showLoginError = 0;
     private bool isSubmitting = false;
 
     // used to show loading display when page is loading
     private bool isLoading = true;
 
     // list to store classes for dropdown
-    public List<ClassDto> classesList = new List<ClassDto>();
+    private List<ClassDto> classesList = new List<ClassDto>();
+    private Dictionary<string, ProfessorDto> professorMap = new Dictionary<string, ProfessorDto>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -127,6 +158,9 @@ Written by Ethan Maher
         secondsTimer.Elapsed += (sender, e) => UpdateTime();
 
         studentResponse ??= new();
+        //Load Professors
+        await LoadProfessorsAsync();
+
         // Load classes
         await LoadClassesAsync();
 
@@ -135,6 +169,24 @@ Written by Ethan Maher
 
         System.Diagnostics.Debug.WriteLine("Home component initialized");
         isLoading = false;
+    }
+
+    private async Task LoadProfessorsAsync()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<ProfessorDto>>("api/professor");
+            if(response is not null)
+            {
+                foreach(ProfessorDto professor in response)
+                {
+                    professorMap.Add(professor.UtdId, professor);
+                }
+            }
+        } catch(Exception e)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading professors: {e.Message}");
+        }
     }
 
     // load classes from database
@@ -153,7 +205,7 @@ Written by Ethan Maher
                     var classScheduleList = await Http.GetFromJsonAsync<List<ClassScheduleDto>>($"api/classschedule/{classDto.ClassId}");
 
                     DayOfWeek today = now.DayOfWeek;
-                    
+
                     // check if there is class today for a given class
                     // parse DayOfWeek strings to DayOfWeek and if it does it is valid
                     // strings are stored as "Monday", "Tuesday", etc. so this works
@@ -212,11 +264,34 @@ Written by Ethan Maher
     }
 
     // can integrate status codes for which part of form is invalid
-    private void FormError() {
+    private void FormError(int errorCode) {
         // Incorrect credentials - show error message
-        showLoginError = true;
+        showLoginError = errorCode;
         // Clear only the password field for retry
         studentResponse.formPassword = "";
+
+        switch(errorCode)
+        {
+            case FormErrorCodes.StudentIdError:
+                studentResponse.studentId = "";
+                studentResponse.formPassword = "";
+                return;
+            case FormErrorCodes.ClassError:
+                studentResponse.classId = null;
+                studentResponse.formPassword = "";
+                return;
+            case FormErrorCodes.PasswordError:
+                studentResponse.formPassword = "";
+                return;
+            case FormErrorCodes.MultipleErrors:
+                studentResponse.studentId = "";
+                studentResponse.formPassword = "";
+                studentResponse.classId = null;
+                return;
+            case FormErrorCodes.NoErrors:
+            default:
+                return;
+        }
 
         System.Diagnostics.Debug.WriteLine("Login failed - incorrect information. Showing error message.");     
     }
@@ -236,7 +311,7 @@ Written by Ethan Maher
             if (!studentExists.IsSuccessStatusCode)
             {
                 System.Diagnostics.Debug.WriteLine("Student not found");
-                FormError();
+                FormError(FormErrorCodes.StudentIdError);
                 return;
             }
 
@@ -247,7 +322,7 @@ Written by Ethan Maher
             if (!classExists.IsSuccessStatusCode)
             {
                 System.Diagnostics.Debug.WriteLine("Class not found");
-                FormError();
+                FormError(FormErrorCodes.ClassError);
                 return;
             }
 
@@ -261,7 +336,7 @@ Written by Ethan Maher
         } 
         catch(Exception ex) {
             System.Diagnostics.Debug.WriteLine($"Error during submission: {ex.Message}");
-            showLoginError = true;
+            showLoginError = 4;
 
         }
         finally {
@@ -280,5 +355,14 @@ Written by Ethan Maher
 
         [Required(ErrorMessage = "Password is Required")]
         public string? formPassword { get; set; }
+    }
+
+    public static class FormErrorCodes
+    {
+        public const int StudentIdError = 1;
+        public const int ClassError = 2;
+        public const int PasswordError = 3;
+        public const int MultipleErrors = 4; // For clearing multiple fields at once
+        public const int NoErrors = 0; // for random case should never be called
     }
 }
