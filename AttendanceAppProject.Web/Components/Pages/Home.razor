@@ -67,7 +67,15 @@ Written by Ethan Maher
                         @foreach (ClassDto classDto in classesList)
                         {
                             <!-- for each class, display its name and tie value with its Guid -->
-                            <option value="@classDto.ClassId">@classDto.ClassPrefix@classDto.ClassNumber @classDto.ClassName (@classDto.StartTime - @classDto.EndTime)</option>
+                            <option value="@classDto.ClassId">
+                                @classDto.ClassPrefix@classDto.ClassNumber @classDto.ClassName (@classDto.StartTime - @classDto.EndTime) - 
+                                @if(professorMap.TryGetValue(classDto.ProfUtdId, out var professor))
+                                {
+                                    var profName = professor.FirstName[0].ToString() + ". " + professor.LastName;
+                                    @profName
+                                }
+                                
+                            </option>
                         }
 
                     </InputSelect>
@@ -116,7 +124,8 @@ Written by Ethan Maher
     private bool isLoading = true;
 
     // list to store classes for dropdown
-    public List<ClassDto> classesList = new List<ClassDto>();
+    private List<ClassDto> classesList = new List<ClassDto>();
+    private Dictionary<string, ProfessorDto> professorMap = new Dictionary<string, ProfessorDto>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -127,6 +136,9 @@ Written by Ethan Maher
         secondsTimer.Elapsed += (sender, e) => UpdateTime();
 
         studentResponse ??= new();
+        //Load Professors
+        await LoadProfessorsAsync();
+
         // Load classes
         await LoadClassesAsync();
 
@@ -135,6 +147,24 @@ Written by Ethan Maher
 
         System.Diagnostics.Debug.WriteLine("Home component initialized");
         isLoading = false;
+    }
+
+    private async Task LoadProfessorsAsync()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<ProfessorDto>>("api/professor");
+            if(response is not null)
+            {
+                foreach(ProfessorDto professor in response)
+                {
+                    professorMap.Add(professor.UtdId, professor);
+                }
+            }
+        } catch(Exception e)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading professors: {e.Message}");
+        }
     }
 
     // load classes from database
