@@ -1,4 +1,5 @@
-﻿using System;
+﻿// Chris Palmer
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -43,14 +44,23 @@ namespace AttendanceAppProject.ProfessorLogin
 
         private async void CreateClass_Button(object sender, RoutedEventArgs e)
         {
+            //get start and end dates
+            DateTime? startDate = ClassStartDatePicker.SelectedDate;
+            DateTime? endDate = ClassEndDatePicker.SelectedDate;
+            
           //if all data provided create the class
-          if (ProfessorIDTextBox != null && ClassIDTextBox != null && ClassNameTextBox != null)
+          if (ProfessorIDTextBox != null && ClassIDTextBox != null && ClassNameTextBox != null && endDate != null && startDate != null)
           {
+            //if their not null convert to proper type
+            DateOnly startDateOnly = DateOnly.FromDateTime((DateTime) startDate);
+            DateOnly endDateOnly = DateOnly.FromDateTime((DateTime) endDate);
             ClassDto newClass = new()
             {
               ClassName = ClassNameTextBox.Text,
               ClassNumber = ClassIDTextBox.Text,
-              ProfUtdId = ProfessorIDTextBox.Text
+              ProfUtdId = ProfessorIDTextBox.Text,
+              StartDate = startDateOnly,
+              EndDate = endDateOnly
             };
 
           
@@ -67,7 +77,17 @@ namespace AttendanceAppProject.ProfessorLogin
           }
           else
           {
-            Debug.WriteLine("Missing required fields");
+                
+                // Fix for the MessageBox.Show call to resolve CS1503 errors
+                try
+                {
+                  MessageBox.Show("Missing required fields, try again", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch
+                {
+                  // Suppress errors
+                }
+                
           }
         }
   }

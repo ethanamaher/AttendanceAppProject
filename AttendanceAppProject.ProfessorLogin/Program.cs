@@ -36,6 +36,7 @@ namespace AttendanceAppProject.ProfessorLogin
             services.AddSingleton<IProfessorAuthClient, ProfessorAuthClient>();
             services.AddTransient<LoginWindow>();
             services.AddTransient<ClassCreationWindow>();
+            services.AddTransient<ClassDashboardWindow>();
             services.AddTransient<AttendanceWindow>();
         }
     }

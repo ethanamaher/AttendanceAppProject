@@ -1,4 +1,5 @@
-﻿using System;
+﻿// Cahn and Chris
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -140,7 +141,7 @@ namespace AttendanceAppProject.ProfessorLogin
                     Debug.WriteLine($"Loaded {_professorClassDtos.Count} classes for professor {_currentProfessor?.UtdId}");
                     foreach (var c in _professorClassDtos)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Class: {c.ClassId} - {c.ClassPrefix} {c.ClassNumber}");
+                        Debug.WriteLine($"Class: {c.ClassId} - {c.ClassPrefix} {c.ClassNumber}");
                     }
 
                     // Clear and add the "All ClassDtos" option
@@ -162,14 +163,14 @@ namespace AttendanceAppProject.ProfessorLogin
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"Failed to load classes. Status: {response.StatusCode}");
+                    Debug.WriteLine($"Failed to load classes. Status: {response.StatusCode}");
                     // If no classes found, populate with mock data for testing
                     PopulateWithMockClassDtos();
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error loading classes: {ex.Message}");
+                Debug.WriteLine($"Error loading classes: {ex.Message}");
                 // Populate with mock data for testing
                 PopulateWithMockClassDtos();
             }
@@ -609,6 +610,7 @@ namespace AttendanceAppProject.ProfessorLogin
             }
         }
 
+        //Shows details of an attendance record for a student
         private void DetailsButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -636,6 +638,7 @@ namespace AttendanceAppProject.ProfessorLogin
             }
         }
 
+        // Edit Student attendance instance to mark them as late
         private async void EditButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -687,7 +690,7 @@ namespace AttendanceAppProject.ProfessorLogin
                         }
                         catch (Exception apiEx)
                         {
-                            System.Diagnostics.Debug.WriteLine($"API error during edit: {apiEx.Message}");
+                            Debug.WriteLine($"API error during edit: {apiEx.Message}");
                         }
                     }
 
@@ -784,22 +787,12 @@ namespace AttendanceAppProject.ProfessorLogin
                 Debug.WriteLine("Showing create class window");
                 if (App.Current is App app && app.ServiceProvider != null)
                 {
-                    Debug.WriteLine("alksvnd");
-                    // Create a new login window
-                    var classWindow = new ClassCreationWindow(_httpClient);
-                    //var classWindow = app.ServiceProvider.GetRequiredService<ClassCreationWindow>();
+                    var classWindow = app.ServiceProvider.GetRequiredService<ClassCreationWindow>();
                     classWindow.Show();
                 }
-                else
-                {
-                    // Fallback if service provider is not available
-                    //var classWindow = new ClassCreationWindow(new ServiceCollection().BuildServiceProvider());
-                    //classWindow.BringIntoView();
-                }
-            }
-            catch
+            } catch(Exception ex)
             {
-
+                Debug.WriteLine($"Error showing class creation window: {ex.Message}");
             }
         }
         private void ShowLoginWindow()
@@ -823,6 +816,24 @@ namespace AttendanceAppProject.ProfessorLogin
             catch (Exception ex)
             {
                 MessageBox.Show($"Error opening login window: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ShowClassDashboardWindow(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Get the service provider
+                if (App.Current is App app && app.ServiceProvider != null)
+                {
+                    // Create a new Class Dashboard Window
+                    var classDashboard =  app.ServiceProvider.GetRequiredService<ClassDashboardWindow>();
+                    classDashboard.Show();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error opening class dashboard window: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

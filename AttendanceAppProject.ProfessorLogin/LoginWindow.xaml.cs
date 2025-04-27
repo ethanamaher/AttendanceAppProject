@@ -39,11 +39,11 @@ namespace AttendanceAppProject.ProfessorLogin
                 {
                     using var client = new HttpClient { BaseAddress = new Uri("https://localhost:7530/") };
                     var response = await client.GetAsync("api/student");
-                    if (response.IsSuccessStatusCode)
-                    {
-                        MessageBox.Show("✅ Connected to API!", "API Status", MessageBoxButton.OK, MessageBoxImage.Information);
-                        return;
-                    }
+                    //if (response.IsSuccessStatusCode)
+                    //{
+                    //    MessageBox.Show("✅ Connected to API!", "API Status", MessageBoxButton.OK, MessageBoxImage.Information);
+                    //    return;
+                    //}
                 }
                 catch
                 {

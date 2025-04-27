@@ -54,6 +54,8 @@ builder.Services.AddCors(options =>
 						.AllowAnyHeader());
 });
 
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+
 var app = builder.Build();
 
 // Enable CORS
