@@ -19,6 +19,7 @@ using AttendanceAppProject.Dto.Models;
 using AttendanceAppProject.ApiService.Services;
 using AttendanceAppProject.ApiService.Data;
 using Microsoft.Extensions.DependencyInjection;
+using Azure;
 
 namespace AttendanceAppProject.ProfessorLogin
 {
@@ -29,44 +30,45 @@ namespace AttendanceAppProject.ProfessorLogin
   {
     private List<ClassDto> _professorClassDtos;
     private ProfessorDto _currentProfessor;
-        private ServiceProvider serviceProvider;
-        private readonly HttpClient _httpClient;
-    private readonly ApplicationDbContext _dbContext; // Added field for ApplicationDbContext
 
-    public ClassCreationWindow(IServiceProvider serviceProvider, ApplicationDbContext dbContext)
+    private readonly HttpClient _httpClient;
+
+    public ClassCreationWindow(HttpClient httpClient)
     {
-      InitializeComponent();
-      _dbContext = dbContext; // Initialize the ApplicationDbContext
+            InitializeComponent();
+            _httpClient = httpClient;
     }
 
-        public ClassCreationWindow(ServiceProvider serviceProvider)
-        {
-            this.serviceProvider = serviceProvider;
-        }
+        
 
         private async void CreateClass_Button(object sender, RoutedEventArgs e)
-    {
-      //if all data provided create the class
-      if (ProfessorIDTextBox != null && ClassIDTextBox != null && ClassNameTextBox != null)
-      {
-        ClassDto newClass = new()
         {
-          ClassName = ClassNameTextBox.Text,
-          ClassNumber = ClassIDTextBox.Text,
-          ProfUtdId = ProfessorIDTextBox.Text
-        };
+          //if all data provided create the class
+          if (ProfessorIDTextBox != null && ClassIDTextBox != null && ClassNameTextBox != null)
+          {
+            ClassDto newClass = new()
+            {
+              ClassName = ClassNameTextBox.Text,
+              ClassNumber = ClassIDTextBox.Text,
+              ProfUtdId = ProfessorIDTextBox.Text
+            };
 
-        ClassService classService = new(serviceProvider,_dbContext); // Pass the required ApplicationDbContext
-        var classResponse = await classService.AddClassAsync(newClass); // Await the async method
-        if (classResponse != null)
-        {
-          Debug.WriteLine("Class created");
+          
+            var classResponse = await _httpClient.PostAsJsonAsync("api/Class", newClass); // Await the async method
+
+            if (classResponse.IsSuccessStatusCode)
+            {
+              Debug.WriteLine("Class created");
+            }
+            else
+            {
+              Debug.WriteLine($"Failed to create class. Status code: {classResponse.StatusCode}");
+            }
+          }
+          else
+          {
+            Debug.WriteLine("Missing required fields");
+          }
         }
-      }
-      else
-      {
-        Debug.WriteLine("Missing required fields");
-      }
-    }
   }
 }

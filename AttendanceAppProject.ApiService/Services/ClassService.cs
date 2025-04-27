@@ -15,10 +15,9 @@ namespace AttendanceAppProject.ApiService.Services
         private readonly ServiceProvider _serviceProvider;
         
 
-        public ClassService(ServiceProvider serviceProvider, ApplicationDbContext context)
+        public ClassService(ApplicationDbContext context)
         {
             _context = context;
-            _serviceProvider = serviceProvider;
         }
 
         // Get all classes

@@ -22,11 +22,9 @@ namespace AttendanceAppProject.ProfessorLogin
         private List<AttendanceInstanceDto> _filteredRecords;
         private List<ClassDto> _professorClassDtos;
         private ProfessorDto? _currentProfessor;
-        private readonly IServiceProvider serviceProvider;
-        private readonly ApplicationDbContext dbContext;
         private readonly HttpClient _httpClient;
 
-        public AttendanceWindow(HttpClient httpClient, IServiceProvider serviceProvider, ApplicationDbContext dbContext)
+        public AttendanceWindow(HttpClient httpClient)
         {
             Debug.WriteLine("prof from dash: " + App.CurrentProfessor.FirstName + " " + App.CurrentProfessor.LastName);
             Debug.WriteLine("Dashboard init");
@@ -35,8 +33,7 @@ namespace AttendanceAppProject.ProfessorLogin
             _filteredRecords = new List<AttendanceInstanceDto>();
             _professorClassDtos = new List<ClassDto>();
             _httpClient = httpClient;
-            this.serviceProvider = serviceProvider; // Assign the serviceProvider
-            this.dbContext = dbContext; // Assign the dbContext
+            
         
             // Set default sorting if the control exists
             if (SortByComboBox != null && SortByComboBox.Items.Count > 0)
@@ -789,7 +786,7 @@ namespace AttendanceAppProject.ProfessorLogin
                 {
                     Debug.WriteLine("alksvnd");
                     // Create a new login window
-                    var classWindow = new ClassCreationWindow(serviceProvider, dbContext);
+                    var classWindow = new ClassCreationWindow(_httpClient);
                     //var classWindow = app.ServiceProvider.GetRequiredService<ClassCreationWindow>();
                     classWindow.Show();
                 }
