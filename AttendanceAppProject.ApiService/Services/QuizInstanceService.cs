@@ -73,5 +73,22 @@ namespace AttendanceAppProject.ApiService.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+        // Update a quiz instance by QuizId
+        public async Task<QuizInstance?> UpdateQuizInstanceAsync(Guid quizId, QuizInstanceDto updatedQuiz)
+        {
+            var quizInstance = await _context.QuizInstances.FindAsync(quizId);
+            if (quizInstance == null)
+            {
+                return null;
+            }
+
+            quizInstance.ClassId = updatedQuiz.ClassId != Guid.Empty ? updatedQuiz.ClassId : quizInstance.ClassId;
+            quizInstance.StartTime = updatedQuiz.StartTime ?? quizInstance.StartTime;
+            quizInstance.EndTime = updatedQuiz.EndTime ?? quizInstance.EndTime;
+
+            await _context.SaveChangesAsync();
+            return quizInstance;
+        }
     }
 }

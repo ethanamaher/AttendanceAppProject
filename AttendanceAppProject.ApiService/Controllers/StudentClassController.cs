@@ -68,6 +68,36 @@ namespace AttendanceAppProject.ApiService.Controllers
             return Ok(exists); // true if enrolled, false otherwise
         }
 
+        /* PUT: api/StudentClass/{studentClassId}
+         * Update a student-class enrollment by StudentClassId
+         * - request body: StudentClassDto
+         * - response body: StudentClass
+         */
+        [HttpPut("{studentClassId}")]
+        public async Task<ActionResult<StudentClass>> UpdateStudentClass(Guid studentClassId, [FromBody] StudentClassDto updatedStudentClass)
+        {
+            var result = await _service.UpdateStudentClassAsync(studentClassId, updatedStudentClass);
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
+
+        /* DELETE: api/StudentClass/{studentClassId}
+         * Delete a student-class enrollment by StudentClassId
+         * - request body: none
+         * - response body: HttpResponse
+         */
+        [HttpDelete("{studentClassId}")]
+        public async Task<IActionResult> DeleteStudentClass(Guid studentClassId)
+        {
+            var success = await _service.DeleteStudentClassAsync(studentClassId);
+            if (!success)
+                return NotFound();
+
+            return NoContent();
+        }
+
     }
 }
 

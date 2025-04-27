@@ -79,5 +79,35 @@ namespace AttendanceAppProject.ApiService.Controllers
 
             return Ok(professor);
         }
+
+        /* PUT: api/Professor/{utdId}
+         * Update a professor by UtdId
+         * - request body: ProfessorDto
+         * - response body: Professor
+         */
+        [HttpPut("{utdId}")]
+        public async Task<ActionResult<Professor>> UpdateProfessor(string utdId, [FromBody] ProfessorDto updatedProfessor)
+        {
+            var professor = await _service.UpdateProfessorAsync(utdId, updatedProfessor);
+            if (professor == null)
+                return NotFound();
+
+            return Ok(professor);
+        }
+
+        /* DELETE: api/Professor/{utdId}
+         * Delete a professor by UtdId
+         * - request body: none
+         * - response body: HttpResponse
+         */
+        [HttpDelete("{utdId}")]
+        public async Task<IActionResult> DeleteProfessor(string utdId)
+        {
+            var success = await _service.DeleteProfessorAsync(utdId);
+            if (!success)
+                return NotFound();
+
+            return NoContent();
+        }
     }
 }

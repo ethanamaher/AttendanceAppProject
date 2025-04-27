@@ -49,5 +49,35 @@ namespace AttendanceAppProject.ApiService.Controllers
 
             return Ok(scheduleItem);
         }
+
+        /* PUT: api/ClassSchedule/{id}
+         * Update a class schedule by ID
+         * - request body: ClassScheduleDto
+         * - response body: ClassSchedule
+         */
+        [HttpPut("{id}")]
+        public async Task<ActionResult<ClassSchedule>> UpdateClassSchedule(Guid id, [FromBody] ClassScheduleDto updatedSchedule)
+        {
+            var schedule = await _service.UpdateClassScheduleAsync(id, updatedSchedule);
+            if (schedule == null)
+                return NotFound();
+
+            return Ok(schedule);
+        }
+
+        /* DELETE: api/ClassSchedule/{id}
+         * Delete a class schedule by ID
+         * - request body: none
+         * - response body: HttpResponse
+         */
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteClassSchedule(Guid id)
+        {
+            var success = await _service.DeleteClassScheduleAsync(id);
+            if (!success)
+                return NotFound();
+
+            return NoContent();
+        }
     }
 }

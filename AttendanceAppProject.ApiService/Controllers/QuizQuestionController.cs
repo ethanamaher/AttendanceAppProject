@@ -46,6 +46,21 @@ namespace AttendanceAppProject.ApiService.Controllers
             return CreatedAtAction(nameof(GetQuestionsById), new { QuizId = newQuestion.QuizId }, newQuestion);
         }
 
+        /* PUT: api/QuizQuestion/{questionId}
+         * Update a quiz question by QuestionId
+         * - request body: QuizQuestionDto
+         * - response body: QuizQuestion
+         */
+        [HttpPut("{questionId}")]
+        public async Task<ActionResult<QuizQuestion>> UpdateQuizQuestion(Guid questionId, [FromBody] QuizQuestionDto updatedQuestion)
+        {
+            var question = await _service.UpdateQuizQuestionAsync(questionId, updatedQuestion);
+            if (question == null)
+                return NotFound();
+
+            return Ok(question);
+        }
+
         /* DELETE: api/QuizQuestion/{QuestionId}
 		 * Delete a quiz question from the database
 		 * - request body: none

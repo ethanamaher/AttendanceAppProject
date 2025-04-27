@@ -49,5 +49,36 @@ namespace AttendanceAppProject.ApiService.Services
             );
             return exists;
         }
+
+        // Update a password by ID
+        public async Task<Password?> UpdatePasswordAsync(Guid id, PasswordDto updatedPassword)
+        {
+            var password = await _context.Passwords.FindAsync(id);
+            if (password == null)
+            {
+                return null;
+            }
+
+            password.PasswordText = updatedPassword.PasswordText ?? password.PasswordText;
+            password.DateAssigned = updatedPassword.DateAssigned ?? password.DateAssigned;
+            password.ClassId = updatedPassword.ClassId;
+
+            await _context.SaveChangesAsync();
+            return password;
+        }
+
+        // Delete a password by ID
+        public async Task<bool> DeletePasswordAsync(Guid id)
+        {
+            var password = await _context.Passwords.FindAsync(id);
+            if (password == null)
+            {
+                return false;
+            }
+
+            _context.Passwords.Remove(password);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

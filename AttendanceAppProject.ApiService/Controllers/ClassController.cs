@@ -92,5 +92,35 @@ namespace AttendanceAppProject.ApiService.Controllers
 
             return Ok(true);
         }
+
+        /* PUT: api/Class/{id}
+         * Update a class record by its ID
+         * - request body: ClassDto
+         * - response body: Updated Class
+         */
+        [HttpPut("{id}")]
+        public async Task<ActionResult<Class>> UpdateClass(Guid id, [FromBody] ClassDto dto)
+        {
+            var updatedClass = await _service.UpdateClassAsync(id, dto);
+            if (updatedClass == null)
+                return NotFound();
+
+            return Ok(updatedClass);
+        }
+
+        /* DELETE: api/Class/{id}
+         * Delete a class record by its ID
+         * - request body: none
+         * - response body: Success or NotFound
+         */
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteClass(Guid id)
+        {
+            var success = await _service.DeleteClassAsync(id);
+            if (!success)
+                return NotFound();
+
+            return Ok();
+        }
     }
 }

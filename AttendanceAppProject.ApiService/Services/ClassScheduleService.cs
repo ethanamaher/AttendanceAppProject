@@ -25,5 +25,35 @@ namespace AttendanceAppProject.ApiService.Services
         {
             return await _context.ClassSchedules.Where(c => c.ClassId == id).ToListAsync();
         }
+
+        // Update a class schedule by ID
+        public async Task<ClassSchedule?> UpdateClassScheduleAsync(Guid id, ClassScheduleDto updatedSchedule)
+        {
+            var schedule = await _context.ClassSchedules.FindAsync(id);
+            if (schedule == null)
+            {
+                return null;
+            }
+
+            schedule.DayOfWeek = updatedSchedule.DayOfWeek ?? schedule.DayOfWeek;
+            schedule.ClassId = updatedSchedule.ClassId;
+
+            await _context.SaveChangesAsync();
+            return schedule;
+        }
+
+        // Delete a class schedule by ID
+        public async Task<bool> DeleteClassScheduleAsync(Guid id)
+        {
+            var schedule = await _context.ClassSchedules.FindAsync(id);
+            if (schedule == null)
+            {
+                return false;
+            }
+
+            _context.ClassSchedules.Remove(schedule);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

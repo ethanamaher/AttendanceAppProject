@@ -76,5 +76,38 @@ namespace AttendanceAppProject.ApiService.Services
             var computedHash = CreatePasswordHash(password);
             return computedHash.Equals(storedHash, StringComparison.OrdinalIgnoreCase);
         }
+
+        // Update a professor by UtdId
+        public async Task<Professor?> UpdateProfessorAsync(string utdId, ProfessorDto updatedProfessor)
+        {
+            var professor = await _context.Professors.FindAsync(utdId);
+            if (professor == null)
+            {
+                return null;
+            }
+
+            professor.FirstName = updatedProfessor.FirstName ?? professor.FirstName;
+            professor.LastName = updatedProfessor.LastName ?? professor.LastName;
+            professor.Department = updatedProfessor.Department ?? professor.Department;
+            professor.Email = updatedProfessor.Email ?? professor.Email;
+            professor.PasswordHash = CreatePasswordHash(updatedProfessor.Password) ?? professor.PasswordHash;
+
+            await _context.SaveChangesAsync();
+            return professor;
+        }
+
+        // Delete a professor by UtdId
+        public async Task<bool> DeleteProfessorAsync(string utdId)
+        {
+            var professor = await _context.Professors.FindAsync(utdId);
+            if (professor == null)
+            {
+                return false;
+            }
+
+            _context.Professors.Remove(professor);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

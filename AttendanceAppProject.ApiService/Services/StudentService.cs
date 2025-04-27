@@ -38,5 +38,36 @@ namespace AttendanceAppProject.ApiService.Services
         {
             return await _context.Students.AnyAsync(s => s.UtdId == UtdId);
         }
+
+        // Update a student by UtdId
+        public async Task<Student?> UpdateStudentAsync(string utdId, StudentDto updatedStudent)
+        {
+            var student = await _context.Students.FindAsync(utdId);
+            if (student == null)
+            {
+                return null;
+            }
+
+            student.FirstName = updatedStudent.FirstName ?? student.FirstName;
+            student.LastName = updatedStudent.LastName ?? student.LastName;
+            student.Username = updatedStudent.Username ?? student.Username;
+
+            await _context.SaveChangesAsync();
+            return student;
+        }
+
+        // Delete a student by UtdId
+        public async Task<bool> DeleteStudentAsync(string utdId)
+        {
+            var student = await _context.Students.FindAsync(utdId);
+            if (student == null)
+            {
+                return false;
+            }
+
+            _context.Students.Remove(student);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

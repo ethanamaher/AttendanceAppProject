@@ -182,5 +182,41 @@ namespace AttendanceAppProject.ApiService.Controllers
         {
             return Ok(await _service.GetStudentsWhoMissedXClassesAsync(classId, count));
         }
+
+        /* PUT: api/AttendanceInstance/{id}
+         * Update an existing attendance instance
+         * - request body: AttendanceInstanceDto
+         * - response body: Updated AttendanceInstance
+         */
+        [HttpPut("{id}")]
+        public async Task<ActionResult<AttendanceInstance>> UpdateAttendanceInstance(Guid id, [FromBody] AttendanceInstanceDto dto)
+        {
+            var updated = await _service.UpdateAttendanceInstanceAsync(id, dto);
+
+            if (updated == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(updated);
+        }
+
+        /* DELETE: api/AttendanceInstance/{id}
+         * Delete an attendance instance by ID
+         * - request body: none
+         * - response body: HttpResponse
+         */
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAttendanceInstance(Guid id)
+        {
+            var success = await _service.DeleteAttendanceInstanceAsync(id);
+
+            if (!success)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
+        }
     }
 }

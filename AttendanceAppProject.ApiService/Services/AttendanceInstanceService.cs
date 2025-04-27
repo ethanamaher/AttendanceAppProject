@@ -288,5 +288,41 @@ namespace AttendanceAppProject.ApiService.Services
 
             return absentStudents;
         }
+
+        // Update an existing attendance instance
+        public async Task<AttendanceInstance?> UpdateAttendanceInstanceAsync(Guid id, AttendanceInstanceDto dto)
+        {
+            var attendance = await _context.AttendanceInstances.FindAsync(id);
+
+            if (attendance == null)
+            {
+                return null;
+            }
+
+            attendance.StudentId = dto.StudentId;
+            attendance.ClassId = dto.ClassId;
+            attendance.IpAddress = dto.IpAddress;
+            attendance.IsLate = dto.IsLate;
+            attendance.ExcusedAbsence = dto.ExcusedAbsence;
+            attendance.DateTime = dto.DateTime;
+
+            await _context.SaveChangesAsync();
+            return attendance;
+        }
+
+        // Delete an attendance instance by ID
+        public async Task<bool> DeleteAttendanceInstanceAsync(Guid id)
+        {
+            var attendance = await _context.AttendanceInstances.FindAsync(id);
+
+            if (attendance == null)
+            {
+                return false;
+            }
+
+            _context.AttendanceInstances.Remove(attendance);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

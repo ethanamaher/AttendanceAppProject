@@ -39,5 +39,35 @@ namespace AttendanceAppProject.ApiService.Services
                 .AnyAsync(sc => sc.StudentId == dto.Student.UtdId && sc.ClassId == dto.Class.ClassId); // sc is StudentClass object within the database
             return exists;
         }
+
+        // Update a student-class enrollment by StudentClassId
+        public async Task<StudentClass?> UpdateStudentClassAsync(Guid studentClassId, StudentClassDto updatedStudentClass)
+        {
+            var existingEnrollment = await _context.StudentClasses.FindAsync(studentClassId);
+            if (existingEnrollment == null)
+            {
+                return null;
+            }
+
+            existingEnrollment.StudentId = updatedStudentClass.StudentId ?? existingEnrollment.StudentId;
+            existingEnrollment.ClassId = updatedStudentClass.ClassId != Guid.Empty ? updatedStudentClass.ClassId : existingEnrollment.ClassId;
+
+            await _context.SaveChangesAsync();
+            return existingEnrollment;
+        }
+
+        // Delete a student-class enrollment by StudentClassId
+        public async Task<bool> DeleteStudentClassAsync(Guid studentClassId)
+        {
+            var enrollment = await _context.StudentClasses.FindAsync(studentClassId);
+            if (enrollment == null)
+            {
+                return false;
+            }
+
+            _context.StudentClasses.Remove(enrollment);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

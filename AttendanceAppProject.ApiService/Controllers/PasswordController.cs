@@ -62,6 +62,36 @@ namespace AttendanceAppProject.ApiService.Controllers
             return Ok(exists); // true if valid, false if not
         }
 
+        /* PUT: api/Password/{id}
+         * Update a password by ID
+         * - request body: PasswordDto
+         * - response body: Password
+         */
+        [HttpPut("{id}")]
+        public async Task<ActionResult<Password>> UpdatePassword(Guid id, [FromBody] PasswordDto updatedPassword)
+        {
+            var password = await _service.UpdatePasswordAsync(id, updatedPassword);
+            if (password == null)
+                return NotFound();
+
+            return Ok(password);
+        }
+
+        /* DELETE: api/Password/{id}
+         * Delete a password by ID
+         * - request body: none
+         * - response body: HttpResponse
+         */
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeletePassword(Guid id)
+        {
+            var success = await _service.DeletePasswordAsync(id);
+            if (!success)
+                return NotFound();
+
+            return NoContent();
+        }
+
     }
 }
 

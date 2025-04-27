@@ -67,5 +67,37 @@ namespace AttendanceAppProject.ApiService.Services
 
             return newClass;
         }
+
+        // Update a class by ID
+        public async Task<Class?> UpdateClassAsync(Guid id, ClassDto dto)
+        {
+            var existing = await _context.Classes.FindAsync(id);
+            if (existing == null)
+                return null;
+
+            existing.ClassName = dto.ClassName;
+            existing.ClassPrefix = dto.ClassPrefix;
+            existing.ClassNumber = dto.ClassNumber;
+            existing.StartDate = dto.StartDate;
+            existing.EndDate = dto.EndDate;
+            existing.StartTime = dto.StartTime;
+            existing.EndTime = dto.EndTime;
+            existing.ProfUtdId = dto.ProfUtdId;
+
+            await _context.SaveChangesAsync();
+            return existing;
+        }
+
+        // Delete a class by ID
+        public async Task<bool> DeleteClassAsync(Guid id)
+        {
+            var existing = await _context.Classes.FindAsync(id);
+            if (existing == null)
+                return false;
+
+            _context.Classes.Remove(existing);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }
