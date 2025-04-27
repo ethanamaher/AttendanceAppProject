@@ -202,6 +202,7 @@
                         </StackPanel>
                     </Expander>
 
+                    <!-- Date range filter-->
                     <Expander Header="Date Filter" 
                               Margin="0,0,0,10" 
                               IsExpanded="True"
@@ -231,6 +232,7 @@
                         </StackPanel>
                     </Expander>
 
+                    <!-- Student ID Filter-->
                     <Expander Header="Student Filter" 
                               Margin="0,0,0,10" 
                               IsExpanded="True"
@@ -318,6 +320,10 @@
                             Style="{StaticResource PrimaryButtonStyle}"
                             Click="PrintReportButton_Click"
                             Margin="0,0,15,0"/>
+                    <Button Content="Create Class" 
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Click="ShowClassCreationWindow"
+                    Margin="0,0,15,0"/>
                 </StackPanel>
             </Border>
 

@@ -69,6 +69,10 @@ ScaffoldingReadMe.txt
 # StyleCop
 StyleCopReport.xml
 
+#appsettings
+".\AttendanceAppProject.ProfessorLogin\bin\Debug\net8.0-windows10.0.22000.0\appsettings.Development.json"
+".\AttendanceAppProject.ApiService\appsettings.Development.json"
+
 # Files built by Visual Studio
 *_i.c
 *_p.c

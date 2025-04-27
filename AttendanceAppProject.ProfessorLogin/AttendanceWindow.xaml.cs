@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using AttendanceAppProject.ApiService.Data;
 
 namespace AttendanceAppProject.ProfessorLogin
 {
@@ -20,11 +21,12 @@ namespace AttendanceAppProject.ProfessorLogin
         private List<AttendanceInstanceDto> _allAttendanceInstanceDtos;
         private List<AttendanceInstanceDto> _filteredRecords;
         private List<ClassDto> _professorClassDtos;
-        private ProfessorDto _currentProfessor;
-
+        private ProfessorDto? _currentProfessor;
+        private readonly IServiceProvider serviceProvider;
+        private readonly ApplicationDbContext dbContext;
         private readonly HttpClient _httpClient;
 
-        public AttendanceWindow(HttpClient httpClient)
+        public AttendanceWindow(HttpClient httpClient, IServiceProvider serviceProvider, ApplicationDbContext dbContext)
         {
             Debug.WriteLine("prof from dash: " + App.CurrentProfessor.FirstName + " " + App.CurrentProfessor.LastName);
             Debug.WriteLine("Dashboard init");
@@ -33,13 +35,16 @@ namespace AttendanceAppProject.ProfessorLogin
             _filteredRecords = new List<AttendanceInstanceDto>();
             _professorClassDtos = new List<ClassDto>();
             _httpClient = httpClient;
-
+            this.serviceProvider = serviceProvider; // Assign the serviceProvider
+            this.dbContext = dbContext; // Assign the dbContext
+        
             // Set default sorting if the control exists
             if (SortByComboBox != null && SortByComboBox.Items.Count > 0)
             {
                 SortByComboBox.SelectedIndex = 0;
             }
         }
+
         //object sender, RoutedEventArgs e
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -135,7 +140,7 @@ namespace AttendanceAppProject.ProfessorLogin
                 {
                     _professorClassDtos = await response.Content.ReadFromJsonAsync<List<ClassDto>>();
 
-                    System.Diagnostics.Debug.WriteLine($"Loaded {_professorClassDtos.Count} classes for professor {_currentProfessor?.UtdId}");
+                    Debug.WriteLine($"Loaded {_professorClassDtos.Count} classes for professor {_currentProfessor?.UtdId}");
                     foreach (var c in _professorClassDtos)
                     {
                         System.Diagnostics.Debug.WriteLine($"Class: {c.ClassId} - {c.ClassPrefix} {c.ClassNumber}");
@@ -200,7 +205,7 @@ namespace AttendanceAppProject.ProfessorLogin
                     {
                         foreach (var classItem in _professorClassDtos)
                         {
-                            System.Diagnostics.Debug.WriteLine($"Attempting to fetch attendance for class: {classItem.ClassId}");
+                            Debug.WriteLine($"Attempting to fetch attendance for class: {classItem.ClassId}");
                             var response = await _httpClient.GetAsync($"api/AttendanceInstance/class/{classItem.ClassId}");
 
                             if (response.IsSuccessStatusCode)
@@ -775,6 +780,31 @@ namespace AttendanceAppProject.ProfessorLogin
             }
         }
 
+        private void ShowClassCreationWindow(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Debug.WriteLine("Showing create class window");
+                if (App.Current is App app && app.ServiceProvider != null)
+                {
+                    Debug.WriteLine("alksvnd");
+                    // Create a new login window
+                    var classWindow = new ClassCreationWindow(serviceProvider, dbContext);
+                    //var classWindow = app.ServiceProvider.GetRequiredService<ClassCreationWindow>();
+                    classWindow.Show();
+                }
+                else
+                {
+                    // Fallback if service provider is not available
+                    //var classWindow = new ClassCreationWindow(new ServiceCollection().BuildServiceProvider());
+                    //classWindow.BringIntoView();
+                }
+            }
+            catch
+            {
+
+            }
+        }
         private void ShowLoginWindow()
         {
             try

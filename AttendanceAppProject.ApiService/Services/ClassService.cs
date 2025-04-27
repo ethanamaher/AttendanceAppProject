@@ -12,10 +12,13 @@ namespace AttendanceAppProject.ApiService.Services
     public class ClassService
     {
         private readonly ApplicationDbContext _context;
+        private readonly ServiceProvider _serviceProvider;
+        
 
-        public ClassService(ApplicationDbContext context)
+        public ClassService(ServiceProvider serviceProvider, ApplicationDbContext context)
         {
             _context = context;
+            _serviceProvider = serviceProvider;
         }
 
         // Get all classes

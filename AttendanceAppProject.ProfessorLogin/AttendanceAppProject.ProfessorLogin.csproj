@@ -2,14 +2,17 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.22000.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+	  <TargetPlatformVersion>10.0.22000.0</TargetPlatformVersion>
+	  <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="App.xaml.cs" />
+    <Compile Remove="Page1.xaml.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,12 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="component\Images\professor.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="component\Images\loginbackground.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
+    <Page Remove="Page1.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,12 +39,22 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.4" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.4" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.4" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.250401001" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.3" />
     <PackageReference Include="System.Net.Http.Json" Version="9.0.4" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\AttendanceAppProject.ApiService\AttendanceAppProject.ApiService.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="component\Images\loginbackground.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="component\Images\professor.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

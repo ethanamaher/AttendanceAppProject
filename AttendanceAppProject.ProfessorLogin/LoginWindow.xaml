@@ -41,9 +41,10 @@
     <Grid>
         <!-- Background Image -->
         <Grid.Background>
-            <ImageBrush ImageSource="component\Images\loginbackground.png" Stretch="UniformToFill" Opacity="1"/>
+            <ImageBrush ImageSource="pack://siteoforigin:,,,/component/Images/loginbackground.png" Stretch="UniformToFill" Opacity="1"/>
         </Grid.Background>
 
+        
         <!-- Login box - vertically centered -->
         <Border Background="#FFFFFF" 
                 CornerRadius="10" 
