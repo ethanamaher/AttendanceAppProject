@@ -28,6 +28,11 @@ namespace AttendanceAppProject.ApiService.Services
             return await _context.Professors.ToListAsync();
         }
 
+        public async Task<Professor?> GetProfessorByIdAsync(String UtdId)
+        {
+            return await _context.Professors.FirstOrDefaultAsync(p => p.UtdId == UtdId);
+        }
+
         // Add a professor
         public async Task<Professor> AddProfessorAsync(ProfessorDto dto)
         {

@@ -24,12 +24,30 @@ namespace AttendanceAppProject.ApiService.Controllers
         /* GET: api/professor
          * Get all professor records
          * - request body: none
-         * - response body: Professors
+         * - response body: List<Professor>
          */
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Professor>>> GetProfessors()
         {
             return Ok(await _service.GetProfessorsAsync());
+        }
+
+
+        /* GET: api/Professor/{professorId}
+         * Get Professor record for given ProfessorId
+         * - request body: profUtdId string
+         * - response body: Professor
+         */
+
+        [HttpGet("{UtdId}")]
+        public async Task<ActionResult<Professor>> GetProfessor(string UtdId)
+        {
+            var professor = await _service.GetProfessorByIdAsync(UtdId);
+            if(professor == null)
+            {
+                return NotFound();
+            }
+            return professor;
         }
 
         /* POST: api/Professor
