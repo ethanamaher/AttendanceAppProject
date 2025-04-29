@@ -49,23 +49,39 @@ namespace AttendanceAppProject.ProfessorLogin
             DateTime? endDate = ClassEndDatePicker.SelectedDate;
             
           //if all data provided create the class
-          if (ProfessorIDTextBox != null && ClassIDTextBox != null && ClassNameTextBox != null && endDate != null && startDate != null)
+          if (ProfessorIDTextBox != null && ClassNumberTextBox != null && ClassNameTextBox != null && endDate != null && startDate != null)
           {
             //if their not null convert to proper type
             DateOnly startDateOnly = DateOnly.FromDateTime((DateTime) startDate);
             DateOnly endDateOnly = DateOnly.FromDateTime((DateTime) endDate);
+            
+            //create a new class
+            Guid tempID = Guid.NewGuid();
             ClassDto newClass = new()
             {
               ClassName = ClassNameTextBox.Text,
-              ClassNumber = ClassIDTextBox.Text,
+              ClassNumber = ClassNumberTextBox.Text,
               ProfUtdId = ProfessorIDTextBox.Text,
               StartDate = startDateOnly,
-              EndDate = endDateOnly
-            };
+              EndDate = endDateOnly,
+              ClassId = tempID
 
-          
+            };
             var classResponse = await _httpClient.PostAsJsonAsync("api/Class", newClass); // Await the async method
 
+            //submit password for quiz
+            Guid passwordID = Guid.NewGuid();
+            PasswordDto newPassword = new()
+            {
+                ClassId = tempID,
+                PasswordId = passwordID,
+                PasswordText = ClassPasswordTextBox.Text,
+                DateAssigned = DateOnly.FromDateTime(DateTime.Now)
+            };
+            
+            var passwordResponse = await _httpClient.PutAsJsonAsync($"api/Password/{newPassword.PasswordId}", newPassword); // Await the async method
+            
+                
             if (classResponse.IsSuccessStatusCode)
             {
               Debug.WriteLine("Class created");
@@ -89,6 +105,8 @@ namespace AttendanceAppProject.ProfessorLogin
                 }
                 
           }
+
+          //Window.Close();
         }
   }
 }

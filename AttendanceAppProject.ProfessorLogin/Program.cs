@@ -37,6 +37,7 @@ namespace AttendanceAppProject.ProfessorLogin
             services.AddTransient<LoginWindow>();
             services.AddTransient<ClassCreationWindow>();
             services.AddTransient<ClassDashboardWindow>();
+            services.AddTransient<EditPass>();
             services.AddTransient<AttendanceWindow>();
         }
     }

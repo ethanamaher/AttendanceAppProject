@@ -166,10 +166,9 @@
                 <!-- Column Headers-->
                 <DataGridTextColumn Header="ClassNumber" Binding="{Binding ClassNumber}" Width="80"/>
                 <DataGridTextColumn Header="Class Name" Binding="{Binding ClassName}" Width="100"/>
+                <DataGridTextColumn Header="ClassID" Binding="{Binding ClassId}" Width="100"/>
                 <DataGridTextColumn Header="Start Date" Binding="{Binding DateTime, StringFormat={}{0:MM/dd/yyyy HH:mm:ss}}" Width="100"/>
                 <DataGridTextColumn Header="End Date" Binding="{Binding DateTime, StringFormat={}{0:MM/dd/yyyy HH:mm:ss}}" Width="100"/>
-                <DataGridTextColumn Header="Start Time" Binding="{Binding DateTime, StringFormat={}{0:MM/dd/yyyy HH:mm:ss}}" Width="85"/>
-                <DataGridTextColumn Header="End Time" Binding="{Binding DateTime, StringFormat={}{0:MM/dd/yyyy HH:mm:ss}}" Width="85"/>
 
                 <!-- Row Template -->
                 <DataGridTemplateColumn Header="Actions" Width="Auto">
@@ -178,7 +177,9 @@
                             <Button Content="Edit" 
                                 Style="{StaticResource SecondaryButtonStyle}" 
                                 Padding="10,3" 
-                                Click="EditButton_Click"/>
+                                Click="EditButton_Click"
+                                Tag="{Binding ClassId}"
+                                />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

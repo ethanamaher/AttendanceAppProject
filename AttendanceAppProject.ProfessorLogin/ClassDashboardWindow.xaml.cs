@@ -19,6 +19,8 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using AttendanceAppProject.Dto.Models;
 using Microsoft.Extensions.DependencyInjection;
+using Azure;
+using AttendanceAppProject.ApiService.Data.Models;
 
 namespace AttendanceAppProject.ProfessorLogin
 {
@@ -71,13 +73,14 @@ namespace AttendanceAppProject.ProfessorLogin
                     ClassSelectionBox.Items.Clear();
                     ClassSelectionBox.Items.Add(new ComboBoxItem { Content = "All Classes" });
 
-                    // Add each class
+                    // Add each class to selection filter
                     foreach (var classItem in _professorClassDtos)
                     {
                         ClassSelectionBox.Items.Add(new ComboBoxItem
                         {
                             Content = $"{classItem.ClassPrefix} {classItem.ClassNumber}: {classItem.ClassName}",
-                            Tag = classItem.ClassId
+                            Tag = classItem.ClassId,
+                            
                         });
                     }
 
@@ -85,12 +88,12 @@ namespace AttendanceAppProject.ProfessorLogin
                     ClassSelectionBox.SelectedIndex = 0;
 
 
-                //draw class rows to the datagrid table
-                if (ClassDataGrid != null)
-                {
-                    ClassDataGrid.ItemsSource = null;
-                    ClassDataGrid.ItemsSource = _professorClassDtos;
-                }
+                    //draw class rows to the datagrid table
+                    if (ClassDataGrid != null)
+                    {
+                        ClassDataGrid.ItemsSource = null;
+                        ClassDataGrid.ItemsSource = _professorClassDtos;
+                    }
                 }
                 else
                 {
@@ -108,9 +111,33 @@ namespace AttendanceAppProject.ProfessorLogin
 
         }
 
-        // Add later to edit the password of a class
+        // Button to open edit password window
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
+            Guid selectedClassId = (Guid) ((Button) sender).Tag;
+            ClassDto _currentClass;
+
+            // for each class in the database
+            foreach (var classItem in _professorClassDtos)
+            {
+                //if the class id matches the selected class id
+                if ((Guid) classItem.ClassId == selectedClassId)
+                {
+                    _currentClass = classItem;
+                    Debug.WriteLine($"Class: {_currentClass.ClassId}");
+                    
+                    //create edit password window
+                    if (App.Current is App app && app.ServiceProvider != null)
+                    { 
+                        var editPassWindow = app.ServiceProvider.GetRequiredService<EditPass>();
+                        editPassWindow.SetProfessor((Guid)_currentClass.ClassId, _currentProfessor);
+                        editPassWindow.Show();   
+                    }
+                    
+                }
+                
+            }
+            
 
         }
     }

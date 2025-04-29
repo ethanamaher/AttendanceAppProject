@@ -50,7 +50,7 @@ namespace AttendanceAppProject.ApiService.Services
             return exists;
         }
 
-        // Update a password by ID
+        // Update a password by password ID
         public async Task<Password?> UpdatePasswordAsync(Guid id, PasswordDto updatedPassword)
         {
             var password = await _context.Passwords.FindAsync(id);

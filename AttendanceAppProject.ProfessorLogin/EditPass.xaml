@@ -1,13 +1,11 @@
-﻿<!-- Chris Palmer -->    
-    <Window x:Class="AttendanceAppProject.ProfessorLogin.ClassCreationWindow"
-      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:local="clr-namespace:AttendanceAppProject.ProfessorLogin"
-      mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800"
-      Title="ClassCreationWindow" Background="{DynamicResource BackgroundGradient}">
+﻿<Window x:Class="AttendanceAppProject.ProfessorLogin.EditPass"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AttendanceAppProject.ProfessorLogin"
+        mc:Ignorable="d"
+        Title="EditPass" Height="480" Width="545">
     <Window.Resources>
         <!-- Color Palette -->
         <Color x:Key="PrimaryGreen">#2E7D32</Color>
@@ -112,55 +110,45 @@
             <Setter Property="Background" Value="White"/>
         </Style>
     </Window.Resources>
-    <Grid>
-        <Rectangle HorizontalAlignment="Center" Height="403" Margin="0,47,0,0" VerticalAlignment="Top" Width="800" Fill="{DynamicResource VeryLightOrangeBrush}"/>
-        <TextBlock HorizontalAlignment="Left" Height="32" Margin="10,10,0,0" TextWrapping="Wrap" Text="Class Creation" VerticalAlignment="Top" Width="173" FontSize="24" FontWeight="Bold" Foreground="White"/>
-        <Grid HorizontalAlignment="Center" Height="313" Margin="0,94,0,0" VerticalAlignment="Top" Width="728">
-            <Rectangle HorizontalAlignment="Left" Height="313"  VerticalAlignment="Center" Width="364"/>
-            <Rectangle HorizontalAlignment="Right" Height="313" VerticalAlignment="Center" Width="364"/>
-            <!--Professor ID Input-->
-            <TextBlock HorizontalAlignment="Left" Height="32" TextWrapping="Wrap" Text="Professor ID" VerticalAlignment="Top" Width="139" FontSize="24" FontWeight="Bold" Foreground="{StaticResource PrimaryGreenBrush}"/>
-            <TextBox x:Name="ProfessorIDTextBox" Padding="8,5" Margin="0,32,396,242"/>
-            <Button Content="Create Class" 
-            Style="{StaticResource SecondaryButtonStyle}"
-            Click="CreateClass_Button"
-            Margin="418,204,54,54"/>
-            <!--Class Name-->
-            <TextBlock HorizontalAlignment="Left" Height="32" Margin="0,71,0,0" TextWrapping="Wrap" Text="Class Name" VerticalAlignment="Top" Width="278" FontSize="24" FontWeight="Bold" Foreground="{StaticResource PrimaryGreenBrush}"/>
-            <TextBox x:Name="ClassNameTextBox" Padding="8,5" Margin="0,103,396,171"/>
-            <!--Class Number-->
-            <TextBlock HorizontalAlignment="Left" Height="32" Margin="0,142,0,0" TextWrapping="Wrap" Text="Class Number" VerticalAlignment="Top" Width="278" FontSize="24" FontWeight="Bold" Foreground="{StaticResource PrimaryGreenBrush}"/>
-            <TextBox x:Name="ClassNumberTextBox" Padding="8,5" Margin="0,179,396,95"/>
 
-            <!-- Class Password-->
-            <TextBlock HorizontalAlignment="Left" Height="32" Margin="0,223,0,0" TextWrapping="Wrap" Text="Class Password" VerticalAlignment="Top" Width="278" FontSize="24" FontWeight="Bold" Foreground="{StaticResource PrimaryGreenBrush}"/>
-            <TextBox x:Name="ClassPasswordTextBox" Padding="8,5" Margin="0,255,396,19"/>
-            <!-- Start and End Calender-->
-            <Grid Margin="393,32,29,133" >
-                <TextBlock Margin = "10,-20,0,23" Foreground="{StaticResource PrimaryGreenBrush}" FontWeight="Bold" FontSize="24">Class Start and End Dates</TextBlock>
-                <StackPanel Margin="0,10,0,0">
-                    <Grid Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <DatePicker x:Name="ClassStartDatePicker" Grid.Column="0" />
-                        <TextBlock Text="to" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5,0"/>
-                        <DatePicker x:Name="ClassEndDatePicker" Grid.Column="2" />
-                    </Grid>
+    <Grid>
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{StaticResource HeaderGradient}" Padding="20,10" Margin="0,0,0,353">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Vertical">
+                    <TextBlock x:Name="ProfessorNameTextBlock" 
+                   Text="Welcome, Professor"
+                   FontSize="22" 
+                   FontWeight="Bold" 
+                   Foreground="White"/>
+                    <TextBlock x:Name="DepartmentTextBlock" 
+                   Text="Department"
+                   FontSize="16" 
+                   Foreground="White"
+                   Margin="0,5,0,0"/>
                 </StackPanel>
             </Grid>
-            
-            <!-- Class Start and End Times-->
-            <Grid Margin="392,103,29,133">
-                <TextBlock FontWeight="Bold" FontSize="16" Foreground="{StaticResource PrimaryGreenBrush}" Margin="0,0,214,54">Start Time:</TextBlock>
-                <DatePicker Margin="0,28,0,-28"></DatePicker>
-
-                <TextBlock Margin="171,0,52,54" FontWeight="Bold" FontSize="16" Foreground="{StaticResource PrimaryGreenBrush}">End Time:</TextBlock>
+        </Border>
+        <!-- Edit password box-->
+        <Border Grid.Row="0" Background="{StaticResource VeryLightOrangeBrush}" Padding="0,10" Margin="0,81,0,0">
+            <Grid>
+                <TextBlock Margin="10,0,10,306" FontWeight="Bold" FontSize="24" Foreground="{StaticResource PrimaryGreenBrush}">Previous Password:</TextBlock>
+                <TextBox Margin="10,37,10,240" Name="OldPassField"></TextBox>
+                <TextBlock Margin="20,130,0,176" FontWeight="Bold" FontSize="24" Foreground="{StaticResource PrimaryGreenBrush}">Enter New Password:</TextBlock>
+                <TextBox Margin="10,167,10,110" Name="NewPassField"></TextBox>
+                <Button Content="Submit New Password" 
+                Style="{StaticResource PrimaryButtonStyle}" 
+                Padding="10,3" 
+                Click="EditPass_Submit"
+                Margin="52,255,53,38"
+                Tag="{Binding ClassId}"/>
             </Grid>
-
-        </Grid>
-
+        </Border>
     </Grid>
+
 </Window>
