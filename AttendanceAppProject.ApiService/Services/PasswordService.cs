@@ -87,6 +87,7 @@ namespace AttendanceAppProject.ApiService.Services
         }
 
 
+        // get a password from its classId
         public async Task<Password?> GetPasswordByClassIdAsync(Guid classId)
         {
             var dto = await _context.Passwords.FirstOrDefaultAsync(p =>

@@ -92,6 +92,11 @@ namespace AttendanceAppProject.ApiService.Controllers
             return NoContent();
         }
 
+        /* GET: api/password/class/{classId}
+         * Get a password for a given class provided its classId
+         * - request body: Guid classId
+         * - request response: PasswordDto
+         */
         [HttpGet("class/{classId}")]
         public async Task<ActionResult<Password>> GetPasswordByClassId(Guid classId)
         {
