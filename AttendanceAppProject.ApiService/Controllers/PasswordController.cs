@@ -92,6 +92,18 @@ namespace AttendanceAppProject.ApiService.Controllers
             return NoContent();
         }
 
+        [HttpGet("class/{classId}")]
+        public async Task<ActionResult<Password>> GetPasswordByClassId(Guid classId)
+        {
+            var success = await _service.GetPasswordByClassIdAsync(classId);
+
+            // if notfound, no password exists
+            if (success == null)
+                return null;
+
+            return Ok(success);
+        }
+
     }
 }
 
