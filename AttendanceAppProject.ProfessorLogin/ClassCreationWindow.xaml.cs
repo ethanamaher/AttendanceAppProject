@@ -65,31 +65,34 @@ namespace AttendanceAppProject.ProfessorLogin
               StartDate = startDateOnly,
               EndDate = endDateOnly,
               ClassId = tempID
-
             };
-            var classResponse = await _httpClient.PostAsJsonAsync("api/Class", newClass); // Await the async method
+            var classResponse = await _httpClient.PostAsJsonAsync("api/Class", newClass);
 
             //submit password for quiz
-            Guid passwordID = Guid.NewGuid();
             PasswordDto newPassword = new()
             {
                 ClassId = tempID,
-                PasswordId = passwordID,
+                PasswordId = Guid.NewGuid(),
                 PasswordText = ClassPasswordTextBox.Text,
                 DateAssigned = DateOnly.FromDateTime(DateTime.Now)
             };
-            
-            var passwordResponse = await _httpClient.PutAsJsonAsync($"api/Password/{newPassword.PasswordId}", newPassword); // Await the async method
-            
-                
             if (classResponse.IsSuccessStatusCode)
             {
-              Debug.WriteLine("Class created");
+                var passwordResponse = await _httpClient.PutAsJsonAsync($"api/Password/{newPassword.PasswordId}", newPassword);
+                    if (passwordResponse.IsSuccessStatusCode)
+                    {
+                        Debug.WriteLine("Class successfully created with password");
+                    } else
+                    {
+                        MessageBox.Show("Password failed to create");
+                    }
             }
             else
             {
-              Debug.WriteLine($"Failed to create class. Status code: {classResponse.StatusCode}");
+                    MessageBox.Show("Class failed to create: " + classResponse.ReasonPhrase);
             }
+            
+            
           }
           else
           {
