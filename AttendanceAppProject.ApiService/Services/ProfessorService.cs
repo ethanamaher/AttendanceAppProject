@@ -17,6 +17,7 @@ namespace AttendanceAppProject.ApiService.Services
     {
         private readonly ApplicationDbContext _context;
 
+        // Constructor to initialize the ApplicationDbContext
         public ProfessorService(ApplicationDbContext context)
         {
             _context = context;

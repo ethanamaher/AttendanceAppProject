@@ -19,6 +19,7 @@ namespace AttendanceAppProject.ApiService.Controllers
     {
         private readonly ClassScheduleService _service;
 
+        // Dependency injection of the ClassScheduleService
         public ClassScheduleController(ClassScheduleService service)
         {
             _service = service;

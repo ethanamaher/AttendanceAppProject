@@ -50,14 +50,14 @@ namespace AttendanceAppProject.ApiService.Services
             return exists;
         }
 
-        // Update a password by password ID
-        public async Task<Password?> UpdatePasswordAsync(Guid id, PasswordDto updatedPassword)
+        // Update a password by class ID
+        public async Task<Password?> UpdatePasswordAsync(Guid classId, PasswordDto updatedPassword)
         {
             var password = await _context.Passwords.FirstOrDefaultAsync(p =>
-                p.ClassId == id
+                p.ClassId == classId
             );
 
-            System.Diagnostics.Debug.WriteLine($"Found Entry For: {id}");
+            System.Diagnostics.Debug.WriteLine($"Found Entry For: {classId}");
             if (password == null)
             {
                 return null;
@@ -65,7 +65,7 @@ namespace AttendanceAppProject.ApiService.Services
 
             password.PasswordText = updatedPassword.PasswordText ?? password.PasswordText;
             password.DateAssigned = updatedPassword.DateAssigned ?? password.DateAssigned;
-            password.ClassId = updatedPassword.ClassId;
+            // password.ClassId = updatedPassword.ClassId;
 
             await _context.SaveChangesAsync();
             return password;

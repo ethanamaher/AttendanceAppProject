@@ -16,6 +16,7 @@ namespace AttendanceAppProject.ApiService.Controllers
     {
         private readonly ProfessorService _service;
 
+        // Dependency injection of the professor service
         public ProfessorController(ProfessorService service)
         {
             _service = service;
@@ -24,7 +25,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         /* GET: api/professor
          * Get all professor records
          * - request body: none
-         * - response body: List<Professor>
+         * - response body: <IEnumerable<Professor>>
          */
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Professor>>> GetProfessors()

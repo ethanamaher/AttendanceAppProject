@@ -13,6 +13,7 @@ namespace AttendanceAppProject.ApiService.Services
     {
         private readonly ApplicationDbContext _context;
 
+        // Dependency injection - allows ASP.NET Core to pass an instance of ApplicationDbContext into the constructor so it can interact with the database
         public AttendanceInstanceService(ApplicationDbContext context)
         {
             _context = context;
@@ -73,6 +74,7 @@ namespace AttendanceAppProject.ApiService.Services
             return await query.ToListAsync();
         }
 
+        // Get all absences on a particular date
         public async Task<IEnumerable<Student>> GetAbsencesByDateAsync(Guid classId, string dateStr)
         {
             if (!DateOnly.TryParse(dateStr, out var parsedDate))
@@ -80,11 +82,13 @@ namespace AttendanceAppProject.ApiService.Services
                 throw new ArgumentException("Invalid date format. Use YYYY-MM-DD.");
             }
 
+            // all students enrolled in the class
             var enrolledStudents = await _context.StudentClasses
                 .Where(sc => sc.ClassId == classId)
                 .Select(sc => sc.Student)
                 .ToListAsync();
 
+            // students who were present on the given date
             var presentStudentIds = await _context.AttendanceInstances
                 .Where(ai =>
                     ai.ClassId == classId &&
@@ -94,6 +98,7 @@ namespace AttendanceAppProject.ApiService.Services
                 .Select(ai => ai.StudentId)
                 .ToListAsync();
 
+            // filtering out students who were present
             var absentStudents = enrolledStudents
                 .Where(s => !presentStudentIds.Contains(s.UtdId));
 

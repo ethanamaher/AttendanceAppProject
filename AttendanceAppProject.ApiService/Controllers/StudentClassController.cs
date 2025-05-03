@@ -18,6 +18,7 @@ namespace AttendanceAppProject.ApiService.Controllers
     {
         private readonly StudentClassService _service;
 
+        // Constructor to initialize the StudentClassService
         public StudentClassController(StudentClassService service)
         {
             _service = service;
@@ -26,7 +27,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         /* GET: api/StudentClass
          * Get all StudentClass records
          * - request body: none
-         * - response body: StudentClasses
+         * - response body: <IEnumerable<StudentClass>>
          */
         [HttpGet]
         public async Task<ActionResult<IEnumerable<StudentClass>>> GetStudentClasses()

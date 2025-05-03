@@ -9,16 +9,19 @@ namespace AttendanceAppProject.ApiService.Services
     {
         private readonly ApplicationDbContext _context;
 
+        // Constructor to initialize the ApplicationDbContext
         public StudentService(ApplicationDbContext context)
         {
             _context = context;
         }
 
+        // Get all students
         public async Task<IEnumerable<Student>> GetStudentsAsync()
         {
             return await _context.Students.ToListAsync();
         }
 
+        // Add a new student
         public async Task<Student> AddStudentAsync(StudentDto dto)
         {
             var student = new Student
@@ -34,6 +37,7 @@ namespace AttendanceAppProject.ApiService.Services
             return student;
         }
 
+        // Check if a student exists by UtdId
         public async Task<bool> StudentExistsAsync(String UtdId)
         {
             return await _context.Students.AnyAsync(s => s.UtdId == UtdId);

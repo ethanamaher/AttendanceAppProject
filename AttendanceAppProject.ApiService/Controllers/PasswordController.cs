@@ -20,6 +20,7 @@ namespace AttendanceAppProject.ApiService.Controllers
     {
         private readonly PasswordService _service;
 
+        // Dependency Injection of the PasswordService
         public PasswordController(PasswordService service)
         {
             _service = service;
@@ -28,7 +29,7 @@ namespace AttendanceAppProject.ApiService.Controllers
         /* GET: api/password
          * Get all passwords
          * - request body: none
-         * - response body: Passwords
+         * - response body: <IEnumerable<Password>>
          */
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Password>>> GetPasswords()
@@ -63,14 +64,14 @@ namespace AttendanceAppProject.ApiService.Controllers
         }
 
         /* PUT: api/Password/{id}
-         * Update a password by ID
+         * Update a password by Class ID
          * - request body: PasswordDto
          * - response body: Password
          */
-        [HttpPut("{id}")]
-        public async Task<ActionResult<Password>> UpdatePassword(Guid id, [FromBody] PasswordDto updatedPassword)
+        [HttpPut("{classId}")]
+        public async Task<ActionResult<Password>> UpdatePassword(Guid classId, [FromBody] PasswordDto updatedPassword)
         {
-            var password = await _service.UpdatePasswordAsync(id, updatedPassword);
+            var password = await _service.UpdatePasswordAsync(classId, updatedPassword);
             if (password == null)
                 return NotFound();
 
