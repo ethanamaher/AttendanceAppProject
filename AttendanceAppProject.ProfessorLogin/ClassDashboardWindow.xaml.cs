@@ -125,13 +125,36 @@ namespace AttendanceAppProject.ProfessorLogin
                 {
                     _currentClass = classItem;
                     Debug.WriteLine($"Class: {_currentClass.ClassId}");
-                    
-                    //create edit password window
-                    if (App.Current is App app && app.ServiceProvider != null)
-                    { 
-                        var editPassWindow = app.ServiceProvider.GetRequiredService<EditPass>();
-                        editPassWindow.SetProfessor((Guid)_currentClass.ClassId, _currentProfessor);
-                        editPassWindow.Show();   
+
+                    bool windowIsOpen = false;
+                    foreach(Window openWindow in Application.Current.Windows)
+                    {
+                        // if editpass window is already open, bring it to front
+                        if(openWindow is EditPass)
+                        {
+                            windowIsOpen = true;
+                            openWindow.Activate();
+                            break;
+                        }
+                    }
+
+                    if (!windowIsOpen)
+                    {
+                        //create edit password window
+                        if (App.Current is App app && app.ServiceProvider != null)
+                        {
+                            try
+                            {
+                                var editPassWindow = app.ServiceProvider.GetRequiredService<EditPass>();
+                                editPassWindow.SetProfessor((Guid)_currentClass.ClassId, _currentProfessor);
+                                editPassWindow.Show();
+                            } catch (Exception ex) {
+                                Debug.WriteLine("Error creating EditPass window");
+                            }
+                        } else
+                        {
+                            Debug.WriteLine("Error opening EditPass window");
+                        }
                     }
                     
                 }
