@@ -30,4 +30,8 @@ public class ClassDto
 
     public TimeOnly? EndTime { get; set; }
 
+    public Boolean? IsLate { get; set; }
+
+    public DateTime? DateTime { get; set; }
+
 }

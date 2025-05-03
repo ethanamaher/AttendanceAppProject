@@ -62,6 +62,7 @@ namespace AttendanceAppProject.ProfessorLogin
             if (!response.IsSuccessStatusCode)
             {
               MessageBox.Show($"Incorrect old password: {response.ReasonPhrase}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    System.Diagnostics.Debug.WriteLine(response.ToString());
               return;
             }
           }

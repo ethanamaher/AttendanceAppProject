@@ -53,7 +53,11 @@ namespace AttendanceAppProject.ApiService.Services
         // Update a password by password ID
         public async Task<Password?> UpdatePasswordAsync(Guid id, PasswordDto updatedPassword)
         {
-            var password = await _context.Passwords.FindAsync(id);
+            var password = await _context.Passwords.FirstOrDefaultAsync(p =>
+                p.ClassId == id
+            );
+
+            System.Diagnostics.Debug.WriteLine($"Found Entry For: {id}");
             if (password == null)
             {
                 return null;
