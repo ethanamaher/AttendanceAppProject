@@ -171,15 +171,25 @@
                 <DataGridTextColumn Header="End Date" Binding="{Binding DateTime, StringFormat={}{0:MM/dd/yyyy HH:mm:ss}}" Width="100"/>
 
                 <!-- Row Template -->
-                <DataGridTemplateColumn Header="Actions" Width="Auto">
+                <DataGridTemplateColumn Header="Actions" Width="110">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Content="Edit" 
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="Edit" 
                                 Style="{StaticResource SecondaryButtonStyle}" 
-                                Padding="10,3" 
+                                Padding="10,10" 
                                 Click="EditButton_Click"
                                 Tag="{Binding ClassId}"
+                                Width="40"
+                                /> 
+                                <Button Content="Delete" 
+                                Style="{StaticResource DangerButtonStyle}" 
+                                Padding="10,10" 
+                                Click="DeleteButton_Click"
+                                Tag="{Binding ClassId}"
+                                Width="50"
                                 />
+                            </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

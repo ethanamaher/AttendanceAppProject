@@ -163,5 +163,39 @@ namespace AttendanceAppProject.ProfessorLogin
             
 
         }
+
+        private async void DeleteButton_Click(object sender, RoutedEventArgs e)
+        {
+            Guid selectedClassId = (Guid)((Button)sender).Tag;
+            ClassDto _currentClass;
+
+            // for each class in the database
+            foreach (var classItem in _professorClassDtos)
+            {
+              //if the class id matches the selected class id
+              if ((Guid)classItem.ClassId == selectedClassId)
+              {
+                _currentClass = classItem;
+                // Show a Yes/No message box
+                var result = MessageBox.Show(
+                    $"Are you sure you want to delete {classItem.ClassName}? This action cannot be undone.",
+                    "Confirmation", // Added a title string here to fix the error
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning
+                );
+
+                // Check the user's response
+                if (result == MessageBoxResult.Yes)
+                {
+                  var deleteResponse = await _httpClient.DeleteAsync($"/api/class/{classItem.ClassId}");
+                  Debug.WriteLine($"Class {classItem.ClassName} deleted.");
+                }
+                else
+                {
+                  Debug.WriteLine($"Class {classItem.ClassName} deletion canceled.");
+                }
+              }
+            }
+        }
     }
 }
