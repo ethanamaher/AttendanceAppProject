@@ -326,6 +326,24 @@ Written by Ethan Maher
                 return;
             }
 
+
+            // if password is incorrect
+            var classPassword = await Http.GetFromJsonAsync<PasswordDto>($"api/password/class/{studentResponse.classId}");
+            System.Diagnostics.Debug.WriteLine(classPassword);
+
+            // checking response password to password from database
+            if (classPassword != null && studentResponse.formPassword != classPassword.PasswordText)
+            {
+                FormError(FormErrorCodes.PasswordError);
+                System.Diagnostics.Debug.WriteLine("Entered incorrect password");
+                return;
+            }
+
+            // if classPassword is null there is no entry in database i.e. no password for that class
+            // in that case just continue through
+
+            
+
             var studentIdEncoded = Uri.EscapeDataString(studentResponse.studentId ?? "");
             var classIdEncoded = Uri.EscapeDataString(studentResponse.classId.ToString() ?? "");
 

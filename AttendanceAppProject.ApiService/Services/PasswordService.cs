@@ -6,6 +6,7 @@ using AttendanceAppProject.ApiService.Data;
 using AttendanceAppProject.ApiService.Data.Models;
 using AttendanceAppProject.Dto.Models;
 using Microsoft.EntityFrameworkCore;
+using Windows.Devices.Display.Core;
 
 namespace AttendanceAppProject.ApiService.Services
 {
@@ -91,6 +92,23 @@ namespace AttendanceAppProject.ApiService.Services
             _context.Passwords.Remove(password);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+
+        // get a password from its classId
+        public async Task<Password?> GetPasswordByClassIdAsync(Guid classId)
+        {
+            var dto = await _context.Passwords.FirstOrDefaultAsync(p =>
+                p.ClassId == classId
+            );
+
+            if(dto == null)
+            {
+                System.Diagnostics.Debug.WriteLine("No password exists for this class");
+                return null;
+            }
+
+            return dto;
         }
     }
 }
