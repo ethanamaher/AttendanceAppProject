@@ -139,8 +139,12 @@ Written by Ethan Maher
     private string currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
     private Timer? secondsTimer;
 
+docu    // form error fields
     private int showLoginError = 0;
+
+    // used to show what was entered that invalidated form entry
     private string errorInfo;
+
     private bool isSubmitting = false;
 
     // used to show loading display when page is loading
@@ -165,17 +169,16 @@ Written by Ethan Maher
         // Load classes
         await LoadClassesAsync();
 
-
-        // for valid classes load professors
-
         System.Diagnostics.Debug.WriteLine("Home component initialized");
         isLoading = false;
     }
 
+    // Load all professors from database
     private async Task LoadProfessorsAsync()
     {
         try
         {
+            // get all professors and add to Map for use in dropdown
             var response = await Http.GetFromJsonAsync<List<ProfessorDto>>("api/professor");
             if(response is not null)
             {
@@ -273,21 +276,22 @@ Written by Ethan Maher
         {
             case FormErrorCodes.StudentIdError:
                 errorInfo = studentResponse.studentId;
+
                 studentResponse.studentId = "";
                 studentResponse.formPassword = "";
-
                 return;
             case FormErrorCodes.ClassError:
                 errorInfo = studentResponse.classId.ToString();
+
                 studentResponse.classId = null;
                 studentResponse.formPassword = "";
                 return;
             case FormErrorCodes.PasswordError:
                 errorInfo = studentResponse.formPassword;
+
                 studentResponse.formPassword = "";
                 return;
             case FormErrorCodes.MultipleErrors:
-                errorInfo = "Multiple Errors";
                 studentResponse.studentId = "";
                 studentResponse.formPassword = "";
                 studentResponse.classId = null;
@@ -309,8 +313,11 @@ Written by Ethan Maher
     private async Task SubmitForm()
     {
         isSubmitting = true;
+
+        // clear error field
         showLoginError = 0;
         errorInfo = "";
+
         try
         {
             // if student does not exist
@@ -408,6 +415,11 @@ Written by Ethan Maher
         public const int NoErrors = 0; // for random case should never be called
     }
 
+    /* 
+     * Form error type
+     * errorId which indicates which input field caused the error with FormErrorCodes type
+     * and studentResponse to use the current form state in error info output
+     */
     public class FormError
     {
         public int errorId { get; set; }
