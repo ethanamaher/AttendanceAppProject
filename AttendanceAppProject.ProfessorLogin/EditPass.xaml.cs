@@ -2,6 +2,7 @@
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -47,23 +48,41 @@ namespace AttendanceAppProject.ProfessorLogin
             //PasswordService passService = new PasswordService( context);
             //update password
             PasswordDto oldPassword = new PasswordDto();
-          oldPassword.PasswordText = OldPassField.Text;
+            oldPassword.PasswordText = OldPassField.Text;
+            oldPassword.ClassId = _classId;
           var updatedPassword = new PasswordDto
           {
             ClassId = _classId,
             PasswordText = NewPassField.Text, // Replace with the new password
             DateAssigned = DateOnly.FromDateTime(DateTime.Now) // Set the current date
           };
+
+
           try
           {
             //verify old password
-            //var verifyResponse = await _http.PostAsJsonAsync($"api/Password/{passwordId}");
-            var response = await _http.PutAsJsonAsync($"api/password/{_classId}", updatedPassword);
+            var validateResponse = await _http.PostAsJsonAsync($"api/Password/validate/", oldPassword);
+                if (!validateResponse.IsSuccessStatusCode)
+                {
+                    MessageBox.Show($"Failed to validate old password");
+                }
+                else
+                {
+                    MessageBox.Show($"Old password found for class {oldPassword.ClassId}");
+                }
+                
+                Debug.WriteLine($"HERHEHRE s{_classId}");
+            //attempt to update password
+            var response = await _http.PutAsJsonAsync($"api/password/{_classId}/", updatedPassword);
             if (!response.IsSuccessStatusCode)
             {
-              MessageBox.Show($"Incorrect old password: {response.ReasonPhrase}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    System.Diagnostics.Debug.WriteLine(response.ToString());
+              MessageBox.Show($"Failed to update pass: {response.ReasonPhrase}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+              System.Diagnostics.Debug.WriteLine(response.ToString());
               return;
+            }
+            else
+            {
+                MessageBox.Show($"Password Changed Successfully!");
             }
           }
           catch (Exception ex)

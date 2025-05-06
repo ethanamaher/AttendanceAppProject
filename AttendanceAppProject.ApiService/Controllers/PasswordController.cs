@@ -63,14 +63,16 @@ namespace AttendanceAppProject.ApiService.Controllers
             return Ok(exists); // true if valid, false if not
         }
 
-        /* PUT: api/Password/{id}
-         * Update a password by Class ID
+        /* PUT: api/Password/{classId}
+         * Update a password by class ID
          * - request body: PasswordDto
          * - response body: Password
          */
         [HttpPut("{classId}")]
         public async Task<ActionResult<Password>> UpdatePassword(Guid classId, [FromBody] PasswordDto updatedPassword)
         {
+            System.Diagnostics.Debug.WriteLine($"{updatedPassword.PasswordText}");
+            System.Diagnostics.Debug.WriteLine($"Attempting to update the password for class: {classId}");
             var password = await _service.UpdatePasswordAsync(classId, updatedPassword);
             if (password == null)
                 return NotFound();
@@ -91,6 +93,23 @@ namespace AttendanceAppProject.ApiService.Controllers
                 return NotFound();
 
             return NoContent();
+        }
+
+        /* GET: api/password/class/{classId}
+         * Get a password for a given class provided its classId
+         * - request body: Guid classId
+         * - request response: PasswordDto
+         */
+        [HttpGet("class/{classId}")]
+        public async Task<ActionResult<Password>> GetPasswordByClassId(Guid classId)
+        {
+            var success = await _service.GetPasswordByClassIdAsync(classId);
+
+            // if notfound, no password exists
+            if (success == null)
+                return null;
+
+            return Ok(success);
         }
 
     }

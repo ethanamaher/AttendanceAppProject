@@ -125,13 +125,36 @@ namespace AttendanceAppProject.ProfessorLogin
                 {
                     _currentClass = classItem;
                     Debug.WriteLine($"Class: {_currentClass.ClassId}");
-                    
-                    //create edit password window
-                    if (App.Current is App app && app.ServiceProvider != null)
-                    { 
-                        var editPassWindow = app.ServiceProvider.GetRequiredService<EditPass>();
-                        editPassWindow.SetProfessor((Guid)_currentClass.ClassId, _currentProfessor);
-                        editPassWindow.Show();   
+
+                    bool windowIsOpen = false;
+                    foreach(Window openWindow in Application.Current.Windows)
+                    {
+                        // if editpass window is already open, bring it to front
+                        if(openWindow is EditPass)
+                        {
+                            windowIsOpen = true;
+                            openWindow.Activate();
+                            break;
+                        }
+                    }
+
+                    if (!windowIsOpen)
+                    {
+                        //create edit password window
+                        if (App.Current is App app && app.ServiceProvider != null)
+                        {
+                            try
+                            {
+                                var editPassWindow = app.ServiceProvider.GetRequiredService<EditPass>();
+                                editPassWindow.SetProfessor((Guid)_currentClass.ClassId, _currentProfessor);
+                                editPassWindow.Show();
+                            } catch (Exception ex) {
+                                Debug.WriteLine("Error creating EditPass window");
+                            }
+                        } else
+                        {
+                            Debug.WriteLine("Error opening EditPass window");
+                        }
                     }
                     
                 }
@@ -139,6 +162,40 @@ namespace AttendanceAppProject.ProfessorLogin
             }
             
 
+        }
+
+        private async void DeleteButton_Click(object sender, RoutedEventArgs e)
+        {
+            Guid selectedClassId = (Guid)((Button)sender).Tag;
+            ClassDto _currentClass;
+
+            // for each class in the database
+            foreach (var classItem in _professorClassDtos)
+            {
+              //if the class id matches the selected class id
+              if ((Guid)classItem.ClassId == selectedClassId)
+              {
+                _currentClass = classItem;
+                // Show a Yes/No message box
+                var result = MessageBox.Show(
+                    $"Are you sure you want to delete {classItem.ClassName}? This action cannot be undone.",
+                    "Confirmation", // Added a title string here to fix the error
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning
+                );
+
+                // Check the user's response
+                if (result == MessageBoxResult.Yes)
+                {
+                  var deleteResponse = await _httpClient.DeleteAsync($"/api/class/{classItem.ClassId}");
+                  Debug.WriteLine($"Class {classItem.ClassName} deleted.");
+                }
+                else
+                {
+                  Debug.WriteLine($"Class {classItem.ClassName} deletion canceled.");
+                }
+              }
+            }
         }
     }
 }

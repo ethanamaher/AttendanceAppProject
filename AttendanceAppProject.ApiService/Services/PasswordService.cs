@@ -6,6 +6,7 @@ using AttendanceAppProject.ApiService.Data;
 using AttendanceAppProject.ApiService.Data.Models;
 using AttendanceAppProject.Dto.Models;
 using Microsoft.EntityFrameworkCore;
+using Windows.Devices.Display.Core;
 
 namespace AttendanceAppProject.ApiService.Services
 {
@@ -40,32 +41,40 @@ namespace AttendanceAppProject.ApiService.Services
         }
 
         // Validate that a password exists in the database
+        //removed data assigned because we don't know that information when changing password
         public async Task<bool> ValidatePasswordAsync(PasswordDto dto)
         {
             var exists = await _context.Passwords.AnyAsync(p =>
                 p.ClassId == dto.ClassId &&
-                p.PasswordText.ToLower() == dto.PasswordText.ToLower() &&
-                p.DateAssigned == dto.DateAssigned
+                p.PasswordText.ToLower() == dto.PasswordText.ToLower() //&&
+                //p.DateAssigned == dto.DateAssigned
             );
             return exists;
         }
 
         // Update a password by class ID
-        public async Task<Password?> UpdatePasswordAsync(Guid classId, PasswordDto updatedPassword)
+        public async Task<Password?> UpdatePasswordAsync(Guid inputClassId, PasswordDto updatedPassword)
         {
+            //get any password for that classs
+            
             var password = await _context.Passwords.FirstOrDefaultAsync(p =>
-                p.ClassId == classId
+                p.ClassId == inputClassId
             );
 
-            System.Diagnostics.Debug.WriteLine($"Found Entry For: {classId}");
+            //if there is a password debug output
             if (password == null)
             {
+                System.Diagnostics.Debug.WriteLine($"No passwords for {inputClassId} found.");
                 return null;
             }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"Found Entry For: {inputClassId}");
+            }
 
-            password.PasswordText = updatedPassword.PasswordText ?? password.PasswordText;
-            password.DateAssigned = updatedPassword.DateAssigned ?? password.DateAssigned;
-            // password.ClassId = updatedPassword.ClassId;
+            password.PasswordText = updatedPassword.PasswordText;// ?? password.PasswordText;
+            password.DateAssigned = updatedPassword.DateAssigned;// ?? password.DateAssigned;
+            //password.ClassId = updatedPassword.ClassId;
 
             await _context.SaveChangesAsync();
             return password;
@@ -83,6 +92,23 @@ namespace AttendanceAppProject.ApiService.Services
             _context.Passwords.Remove(password);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+
+        // get a password from its classId
+        public async Task<Password?> GetPasswordByClassIdAsync(Guid classId)
+        {
+            var dto = await _context.Passwords.FirstOrDefaultAsync(p =>
+                p.ClassId == classId
+            );
+
+            if(dto == null)
+            {
+                System.Diagnostics.Debug.WriteLine("No password exists for this class");
+                return null;
+            }
+
+            return dto;
         }
     }
 }

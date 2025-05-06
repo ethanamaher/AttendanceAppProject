@@ -44,17 +44,17 @@ Written by Ethan Maher
             {
                 case FormErrorCodes.StudentIdError:
                     <div class="error-message">
-                        Invalid Student ID. Please try again.
+                        Invalid Student ID: "@(errorInfo)". Please try again.
                     </div>
                     break;
                 case FormErrorCodes.ClassError:
                     <div class="error-message">
-                        Invalid Class. Please try again.
+                        Invalid Class: "@(errorInfo)". Please try again.
                     </div>
                     break;
                 case FormErrorCodes.PasswordError:
                     <div class="error-message">
-                        Invalid Password. Please try again.
+                        Incorret Password Entered: "@(errorInfo)". Please try again.
                     </div>
                     break;
                 case FormErrorCodes.MultipleErrors:
@@ -139,7 +139,12 @@ Written by Ethan Maher
     private string currentTime = DateTime.Now.ToString("MMM dd, yyyy HH:mm");
     private Timer? secondsTimer;
 
+    // form error fields
     private int showLoginError = 0;
+
+    // used to show what was entered that invalidated form entry
+    private string errorInfo;
+
     private bool isSubmitting = false;
 
     // used to show loading display when page is loading
@@ -164,17 +169,16 @@ Written by Ethan Maher
         // Load classes
         await LoadClassesAsync();
 
-
-        // for valid classes load professors
-
         System.Diagnostics.Debug.WriteLine("Home component initialized");
         isLoading = false;
     }
 
+    // Load all professors from database
     private async Task LoadProfessorsAsync()
     {
         try
         {
+            // get all professors and add to Map for use in dropdown
             var response = await Http.GetFromJsonAsync<List<ProfessorDto>>("api/professor");
             if(response is not null)
             {
@@ -221,7 +225,6 @@ Written by Ethan Maher
                         continue;
                     }
 
-
                     // check if class is going on at this time
                     // give buffer of 15 minutes before and after class to accept attendance
                     TimeOnly? adjustedStartTime = classDto.StartTime.Value.AddMinutes(-15);
@@ -264,23 +267,28 @@ Written by Ethan Maher
     }
 
     // can integrate status codes for which part of form is invalid
-    private void FormError(int errorCode) {
+    private void RaiseFormError(FormError error)
+    {
         // Incorrect credentials - show error message
-        showLoginError = errorCode;
-        // Clear only the password field for retry
-        studentResponse.formPassword = "";
+        showLoginError = error.errorId;
 
-        switch(errorCode)
+        switch (error.errorId)
         {
             case FormErrorCodes.StudentIdError:
+                errorInfo = studentResponse.studentId;
+
                 studentResponse.studentId = "";
                 studentResponse.formPassword = "";
                 return;
             case FormErrorCodes.ClassError:
+                errorInfo = studentResponse.classId.ToString();
+
                 studentResponse.classId = null;
                 studentResponse.formPassword = "";
                 return;
             case FormErrorCodes.PasswordError:
+                errorInfo = studentResponse.formPassword;
+
                 studentResponse.formPassword = "";
                 return;
             case FormErrorCodes.MultipleErrors:
@@ -289,17 +297,27 @@ Written by Ethan Maher
                 studentResponse.classId = null;
                 return;
             case FormErrorCodes.NoErrors:
-            default:
                 return;
+            default:
+                // Clear only the password field for retry
+                studentResponse.formPassword = "";
+
+                System.Diagnostics.Debug.WriteLine("Login failed - incorrect information. Raising error message.");
+                return;
+
         }
 
-        System.Diagnostics.Debug.WriteLine("Login failed - incorrect information. Showing error message.");     
     }
 
     // handle form submission
     private async Task SubmitForm()
     {
         isSubmitting = true;
+
+        // clear error field
+        showLoginError = 0;
+        errorInfo = "";
+
         try
         {
             // if student does not exist
@@ -311,7 +329,11 @@ Written by Ethan Maher
             if (!studentExists.IsSuccessStatusCode)
             {
                 System.Diagnostics.Debug.WriteLine("Student not found");
-                FormError(FormErrorCodes.StudentIdError);
+                FormError error = new FormError {
+                        errorId = FormErrorCodes.StudentIdError,
+                        studentResponse = studentResponse
+                    };
+                RaiseFormError(error);
                 return;
             }
 
@@ -322,9 +344,36 @@ Written by Ethan Maher
             if (!classExists.IsSuccessStatusCode)
             {
                 System.Diagnostics.Debug.WriteLine("Class not found");
-                FormError(FormErrorCodes.ClassError);
+                FormError error = new FormError
+                    {
+                        errorId = FormErrorCodes.ClassError,
+                        studentResponse = studentResponse
+                    };
+                RaiseFormError(error);
                 return;
             }
+
+
+            // if password is incorrect
+            var classPassword = await Http.GetFromJsonAsync<PasswordDto>($"api/password/class/{studentResponse.classId}");
+            System.Diagnostics.Debug.WriteLine(classPassword);
+
+            // checking response password to password from database
+            if (classPassword != null && studentResponse.formPassword != classPassword.PasswordText)
+            {
+                FormError error = new FormError
+                    {
+                        errorId = FormErrorCodes.PasswordError,
+                        studentResponse = studentResponse
+                    };
+                RaiseFormError(error);
+                System.Diagnostics.Debug.WriteLine("Entered incorrect password");
+                return;
+            }
+
+            //classPassword shot not be nullable or empty
+
+
 
             var studentIdEncoded = Uri.EscapeDataString(studentResponse.studentId ?? "");
             var classIdEncoded = Uri.EscapeDataString(studentResponse.classId.ToString() ?? "");
@@ -364,5 +413,16 @@ Written by Ethan Maher
         public const int PasswordError = 3;
         public const int MultipleErrors = 4; // For clearing multiple fields at once
         public const int NoErrors = 0; // for random case should never be called
+    }
+
+    /* 
+     * Form error type
+     * errorId which indicates which input field caused the error with FormErrorCodes type
+     * and studentResponse to use the current form state in error info output
+     */
+    public class FormError
+    {
+        public int errorId { get; set; }
+        public StudentResponse? studentResponse { get; set; }
     }
 }
