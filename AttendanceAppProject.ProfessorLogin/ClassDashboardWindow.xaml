@@ -149,6 +149,12 @@
                         </StackPanel>
                     </Expander>
 
+                    <Button Content="Import Student Data"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Margin="10"
+                            Click="ImportStudents_Click"/> 
+
+
                 </StackPanel>
             </ScrollViewer>
         </Border>

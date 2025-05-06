@@ -55,7 +55,7 @@ namespace AttendanceAppProject.ApiService.Services
         // Update a password by class ID
         public async Task<Password?> UpdatePasswordAsync(Guid inputClassId, PasswordDto updatedPassword)
         {
-            //get any password for that classs
+            //get any password for that class
             
             var password = await _context.Passwords.FirstOrDefaultAsync(p =>
                 p.ClassId == inputClassId
