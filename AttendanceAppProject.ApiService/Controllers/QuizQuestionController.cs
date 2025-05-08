@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿/** API Controller for Quiz Question
+ * Handles HTTP GET, POST, PUT, and DELETE requests for QuizQuestion
+ * Written by Ethan Maher
+ */
+
+using Microsoft.AspNetCore.Mvc;
 using AttendanceAppProject.ApiService.Data.Models;
 using AttendanceAppProject.ApiService.Services;
 using AttendanceAppProject.Dto.Models;
 using Microsoft.EntityFrameworkCore;
-
-// API Controller for Quiz Questions
 
 namespace AttendanceAppProject.ApiService.Controllers
 {

@@ -1,5 +1,5 @@
 ﻿/* Professor API Controller
- * Handles HTTP GET and POST requests for attendance instances, allowing for retrieval and creation of professors.
+ * Handles HTTP GET, POST, PUT, and DELETE requests for professor, allowing for retrieval and creation of professors.
  * Written by Maaz Raza 
  */
 using Microsoft.AspNetCore.Mvc;

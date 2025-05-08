@@ -1,5 +1,5 @@
 ﻿/* StudentClass API Controller
- * Handles HTTP GET and POST requests for StudentClass, allowing for retrieval and creation of StudentClass record which map students to classes, and to verify if a student is enrolled in a particular class.
+ * Handles HTTP GET, POST, UPDATE, DELETE requests for StudentClass, allowing for retrieval and creation of StudentClass record which map students to classes, and to verify if a student is enrolled in a particular class.
  * Written by Maaz Raza 
  */
 

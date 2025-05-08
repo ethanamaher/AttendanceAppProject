@@ -1,5 +1,5 @@
 ﻿/* Class API Controller
- * Handles HTTP GET and POST requests for classes, allowing for retrieval and creation of class records, retrieving a class by its ID, and checking if a class exists in the database.
+ * Handles HTTP GET, POST, PUT, and DELETE requests for ClassSchedule, allowing for retrieval and creation of ClassSchedule records, retrieving a ClassSchedule by its Class ID, etc.
  * Written by Ethan Maher, Maaz Raza
  */
 

@@ -1,5 +1,5 @@
 ﻿/* Student API Controller
- * Handles HTTP GET and POST requests for attendance instances, allowing for retrieval and creation of student records and verifying if a particular student exists in the database.
+ * Handles HTTP GET, POST, UPDATE, DELETE requests for students.
  * Written by Maaz Raza, Ethan Maher
  */
 

@@ -1,5 +1,5 @@
 ﻿/* AttendanceInstance API Controller
- * Handles HTTP GET and POST requests for attendance instances, allowing for retrieval and creation of attendance records.
+ * Handles HTTP GET, POST, PUT, and DELETE requests for attendance instances, allowing for retrieval and creation of attendance records.
  * Written by Maaz Raza 
  */
 

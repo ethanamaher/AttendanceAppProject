@@ -1,5 +1,5 @@
 ﻿/* Password API Controller
- * Handles HTTP GET and POST requests for attendance instances, allowing for retrieval and creation of passwords, as well as verifying if a password sent in by the client side exists in the database.
+ * Handles HTTP GET, POST, PUT, and DELETE requests for passwords, allowing for retrieval and creation of passwords, as well as verifying if a password sent in by the client side exists in the database.
  * Written by Maaz Raza 
  */
 
