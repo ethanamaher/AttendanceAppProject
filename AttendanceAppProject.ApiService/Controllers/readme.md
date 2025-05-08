@@ -1,43 +1,112 @@
 # API Overview 
 
-### Attendance Instance
-| Method | URI | Operation | Description | Request Body | Response Body |
-|--------|-----|-----------|-------------|--------------|----------------|
-| GET    | `api/AttendanceInstance` | Read | Get all attendance instances from the database | none | List of `AttendanceInstance` entities (deserialized into `List<AttendanceInstanceDto>` on client) |
-| POST   | `api/AttendanceInstance` | Create | Add an attendance instance to the database | `AttendanceInstanceDto` | `AttendanceInstance` entity (deserialized into `AttendanceInstanceDto` if used by client) |
+### AttendanceInstance API
 
-### Class
-| Method | URI | Operation | Description | Request Body | Response Body |
-|--------|-----|-----------|-------------|--------------|----------------|
-| GET    | `api/Class` | Read | Get all classes | none | List of `Class` entities (deserialized into `List<ClassDto>` on client) |
-| POST   | `api/Class` | Create | Add a class | `ClassDto` | `Class` entity (deserialized into `ClassDto` if used by client) |
+| Method | URI                                                                 | Operation | Description                                                                | Request Body              | Response Body                                                                 |
+|--------|---------------------------------------------------------------------|-----------|----------------------------------------------------------------------------|---------------------------|--------------------------------------------------------------------------------|
+| GET    | /api/AttendanceInstance                                             | Read      | Get all attendance records                                                 | None                      | IEnumerable\<AttendanceInstance\> (can be deserialized into List\<AttendanceInstanceDto\> on client side) |
+| GET    | /api/AttendanceInstance/class/{classId}                             | Read      | Get attendance records by class ID                                         | None                      | IEnumerable\<AttendanceInstance\> (can be deserialized into List\<AttendanceInstanceDto\> on client) |
+| GET    | /api/AttendanceInstance/student/{studentId}?date=...&classId=...   | Read      | Get a student's attendance, optionally filtered by date and class ID      | None                      | IEnumerable\<AttendanceInstance\> (can be deserialized into List\<AttendanceInstanceDto\>) |
+| GET    | /api/AttendanceInstance/class/{classId}/absent-on-date/{dateStr}   | Read      | Get students absent on a specific date for a class                         | None                      | IEnumerable\<Student\> (can be deserialized into List\<StudentDto\>)                     |
+| GET    | /api/AttendanceInstance/excused-absences?classId=...&date=...      | Read      | Get excused absences (optional filters)                                    | None                      | IEnumerable\<AttendanceInstance\> (can be deserialized into List\<AttendanceInstanceDto\>) |
+| GET    | /api/AttendanceInstance/lates?classId=...&date=...                 | Read      | Get late attendance records (optional filters)                             | None                      | IEnumerable\<AttendanceInstance\> (can be deserialized into List\<AttendanceInstanceDto\>) |
+| GET    | /api/AttendanceInstance/class/{classId}/consecutive-absences/{n}   | Read      | Get students with n consecutive absences                                   | None                      | IEnumerable\<Student\> (can be deserialized into List\<StudentDto\>)                     |
+| GET    | /api/AttendanceInstance/class/{classId}/total-absences/{n}         | Read      | Get students with n total absences                                         | None                      | IEnumerable\<Student\> (can be deserialized into List\<StudentDto\>)                     |
+| POST   | /api/AttendanceInstance                                             | Create    | Add a new attendance record                                                | AttendanceInstanceDto     | AttendanceInstance (can be deserialized into AttendanceInstanceDto)              |
+| POST   | /api/AttendanceInstance/absent-or-late                              | Create    | Add a record for an absent/late student (entered by professor)            | AttendanceInstanceDto     | AttendanceInstance (can be deserialized into AttendanceInstanceDto)              |
+| PUT    | /api/AttendanceInstance/{id}                                       | Update    | Update an existing attendance record                                       | AttendanceInstanceDto     | AttendanceInstance (can be deserialized into AttendanceInstanceDto)              |
+| DELETE | /api/AttendanceInstance/{id}                                       | Delete    | Delete a specific attendance record                                        | None                      | NoContent / NotFound                                                             |
 
-### Professor
-| Method | URI | Operation | Description | Request Body | Response Body |
-|--------|-----|-----------|-------------|--------------|----------------|
-| GET    | `api/Professor` | Read | Get all professors | none | List of `Professor` entities (deserialized into `List<ProfessorDto>` on client) |
-| POST   | `api/Professor` | Create | Add a professor | `ProfessorDto` | `Professor` entity (deserialized into `ProfessorDto` if used by client) |
+### Class API
 
-### StudentClass
-| Method | URI | Operation | Description | Request Body | Response Body |
-|--------|-----|-----------|-------------|--------------|----------------|
-| GET    | `api/StudentClass` | Read | Get all student-class mappings | none | List of `StudentClass` entities (deserialized into `List<StudentClassDto>` on client) |
-| POST   | `api/StudentClass` | Create | Add a student-class mapping | `StudentClassDto` | `StudentClass` entity (deserialized into `StudentClassDto` if used by client) |
-| POST   | `api/StudentClass/check-enrollment` | Read | Check if a student is enrolled in a class | `EnrollmentCheckDto` | `true` or `false` (Boolean) |
+| Method | URI                              | Operation | Description                            | Request Body | Response Body |
+|--------|----------------------------------|-----------|----------------------------------------|--------------|----------------|
+| GET    | /api/Class                       | Read      | Get all classes                        | None         | `IEnumerable<Class>` |
+| GET    | /api/Class/{id}                  | Read      | Get a class by ID                      | None         | Class (can be deserialized into `ClassDto`) |
+| GET    | /api/Class/professor/{profId}    | Read      | Get all classes for a professor        | None         | `IEnumerable<Class>` |
+| POST   | /api/Class                       | Create    | Add a new class                        | ClassDto     | Class |
+| POST   | /api/Class/exists                | Read      | Check if a class exists                | Guid         | Boolean |
+| PUT    | /api/Class/{id}                  | Update    | Update class by ID                     | ClassDto     | Class |
+| DELETE | /api/Class/{id}                  | Delete    | Delete class by ID                     | None         | NoContent |
 
-### Student
-| Method | URI | Operation | Description | Request Body | Response Body |
-|--------|-----|-----------|-------------|--------------|----------------|
-| GET    | `api/Student` | Read | Get all students | none | List of `Student` entities (deserialized into `List<StudentDto>` on client) |
-| POST   | `api/Student` | Create | Add a student | `StudentDto` | `Student` entity (deserialized into `StudentDto` if used by client) |
-| POST   | `api/Student/exists` | Read | Check if a student exists in the database | `StudentDto` | `true` or `false` (Boolean) |
+---
 
-### Password
-| Method | URI | Operation | Description | Request Body | Response Body |
-|--------|-----|-----------|-------------|--------------|----------------|
-| GET    | `api/Password` | Read | Get all password records | none | List of `Password` entities (deserialized into `List<PasswordDto>` on client) |
-| POST   | `api/Password` | Create | Add a password record | `PasswordDto` | `Password` entity (deserialized into `PasswordDto` if used by client) |
-| POST   | `api/Password/validate` | Read | Check if a password is valid for a given class and date | `PasswordDto` (containing `ClassId`, `PasswordText`, and `DateAssigned` sent over by client side) | `true` or `false` (Boolean) |
+### Professor API
+
+| Method | URI                           | Operation | Description               | Request Body   | Response Body |
+|--------|-------------------------------|-----------|---------------------------|----------------|----------------|
+| GET    | /api/Professor                | Read      | Get all professors        | None           | `IEnumerable<Professor>` |
+| GET    | /api/Professor/{UtdId}        | Read      | Get professor by UTD ID   | None           | Professor|
+| POST   | /api/Professor                | Create    | Add new professor         | ProfessorDto   | Professor |
+| POST   | /api/Professor/login          | Read      | Login with credentials    | ProfessorDto   | Professor |
+| PUT    | /api/Professor/{UtdId}        | Update    | Update professor          | ProfessorDto   | Professor |
+| DELETE | /api/Professor/{UtdId}        | Delete    | Delete professor          | None           | NoContent |
+
+---
+
+### Password API
+
+| Method | URI                               | Operation | Description                            | Request Body   | Response Body |
+|--------|-----------------------------------|-----------|----------------------------------------|----------------|----------------|
+| GET    | /api/Password                     | Read      | Get all password entries               | None           | `IEnumerable<Password>` |
+| GET    | /api/Password/class/{classId}     | Read      | Get password by class ID               | None           | Password|
+| POST   | /api/Password                     | Create    | Add new password                       | PasswordDto    | Password|
+| POST   | /api/Password/validate            | Read      | Validate password                      | PasswordDto    | Boolean |
+| PUT    | /api/Password/{classId}           | Update    | Update password by class ID            | PasswordDto    | Password |
+| DELETE | /api/Password/{id}                | Delete    | Delete password by ID                  | None           | NoContent |
+
+---
+
+### Student API
+
+| Method | URI                        | Operation | Description                  | Request Body | Response Body |
+|--------|----------------------------|-----------|------------------------------|--------------|----------------|
+| GET    | /api/Student               | Read      | Get all students             | None         | `IEnumerable<Student>`|
+| POST   | /api/Student               | Create    | Add a new student            | StudentDto   | Student |
+| POST   | /api/Student/exists        | Read      | Check if student exists      | string       | Boolean |
+| PUT    | /api/Student/{UtdId}       | Update    | Update student by ID         | StudentDto   | Student |
+| DELETE | /api/Student/{UtdId}       | Delete    | Delete student by ID         | None         | NoContent |
+
+---
+
+### StudentClass API
+
+| Method | URI                                      | Operation | Description                        | Request Body         | Response Body |
+|--------|------------------------------------------|-----------|------------------------------------|----------------------|----------------|
+| GET    | /api/StudentClass                        | Read      | Get all student-class mappings     | None                 | IEnumerable<StudentClass> (`List<StudentClassDto>`) |
+| POST   | /api/StudentClass                        | Create    | Add a student-class mapping        | StudentClassDto      | StudentClass |
+| POST   | /api/StudentClass/check-enrollment       | Read      | Check if student is enrolled       | EnrollmentCheckDto   | Boolean |
+| PUT    | /api/StudentClass/{studentClassId}       | Update    | Update a student-class mapping     | StudentClassDto      | StudentClass |
+| DELETE | /api/StudentClass/{studentClassId}       | Delete    | Delete a student-class mapping     | None                 | NoContent |
+
+### QuizInstance
+
+| Method | URI                                | Operation | Description                                                      | Request Body        | Response Body                          |
+|--------|-------------------------------------|-----------|------------------------------------------------------------------|---------------------|----------------------------------------|
+| GET    | `api/QuizInstance`                 | Read      | Get all quiz instances                                           | none                | `IEnumerable<QuizInstance>` (can deserialize into `List<QuizInstanceDto>`) |
+| GET    | `api/QuizInstance/{ClassId}`       | Read      | Get quiz instance for a class by `ClassId`                       | none                | `QuizInstance` (can deserialize into `QuizInstanceDto`) |
+| POST   | `api/QuizInstance`                 | Create    | Add a new quiz instance                                          | `QuizInstanceDto`   | `QuizInstance`                         |
+| PUT    | `api/QuizInstance/{QuizId}`        | Update    | Update class association only of an existing quiz instance       | `QuizInstanceDto` (only `ClassId` used) | `QuizInstance`                         |
+| PUT    | `api/QuizInstance/{quizId}`        | Update    | Update full quiz instance (entire object)                        | `QuizInstanceDto`   | `QuizInstance`                         |
+| DELETE | `api/QuizInstance/{QuizId}`        | Delete    | Delete quiz instance by `QuizId`                                 | none                | `204 NoContent` or `404 NotFound`      |
+
+### QuizQuestion
+
+| Method | URI                                       | Operation | Description                                               | Request Body         | Response Body                        |
+|--------|--------------------------------------------|-----------|-----------------------------------------------------------|----------------------|-------------------------------------|
+| GET    | `api/QuizQuestion/{QuizId}`                | Read      | Get all quiz questions by `QuizId`                        | none                 | `IEnumerable<QuizQuestion>` (can be deserialized into `List<QuizQuestionDto>`) |
+| POST   | `api/QuizQuestion`                         | Create    | Add a new quiz question                                   | `QuizQuestionDto`    | `QuizQuestion`                      |
+| PUT    | `api/QuizQuestion/{questionId}`            | Update    | Update a quiz question by `questionId`                    | `QuizQuestionDto`    | `QuizQuestion`                      |
+| DELETE | `api/QuizQuestion/{QuestionId}`            | Delete    | Delete quiz question by `QuestionId`                      | none                 | `204 NoContent` or `404 NotFound`   |
+
+### QuizAnswer
+
+| Method | URI                                  | Operation | Description                                               | Request Body       | Response Body                        |
+|--------|---------------------------------------|-----------|-----------------------------------------------------------|--------------------|-------------------------------------|
+| GET    | `api/QuizAnswer/{QuestionId}`         | Read      | Get all quiz answers by `QuestionId`                      | none               | `IEnumerable<QuizAnswer>` (can be deserialized into `List<QuizAnswerDto>`) |
+| POST   | `api/QuizAnswer`                      | Create    | Add a new quiz answer                                     | `QuizAnswerDto`    | `QuizAnswer`                        |
+| PUT    | `api/QuizAnswer/{answerId}`           | Update    | Update quiz answer by `answerId`                          | `QuizAnswerDto`    | `QuizAnswer`                        |
+| DELETE | `api/QuizAnswer/{AnswerId}`           | Delete    | Delete quiz answer by `AnswerId`                          | none               | `204 NoContent` or `404 NotFound`   |
 
 Note: The full response body of standard create POST requests which simply add another resource to the database is the HTTP 201 created code and a Location header pointing to where the new resource can be found, and the new resource itself in the response body. From the Blazor front-end we can check if a POST request was successful this way:
 ```
